@@ -1,4 +1,4 @@
-# cipher — Old paper & pencil ciphers in Rust.
+# old-crypto-rs — Old paper & pencil ciphers in Rust.
 
 [![dependency status](https://deps.rs/repo/github/keltia/old-crypto-rs/status.svg)](https://deps.rs/repo/github/keltia/old-crypto-rs)
 [![](https://img.shields.io/crates/v/old-crypto-rs.svg)](https://crates.io/crates/old-crypto-rs)
@@ -26,7 +26,7 @@ and an easy way to use it.
 
 ## Features
 
-It currently implement a few of the Ruby code, namely:
+It currently implement a few of the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
 - Playfair
@@ -36,8 +36,8 @@ It currently implement a few of the Ruby code, namely:
 - ADFGVX (6x6 square including numbers)
 - Straddling Checkerboard (for the Nihilist & VIC ciphers)
 - Nihilist cipher (transposition as super-encipherment)
-- Wheatstone cipher system
 - VIC Cipher (straddling checkerboard followed by a transposition)
+- Wheatstone cipher machine
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 

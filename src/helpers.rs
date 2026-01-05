@@ -26,7 +26,7 @@ use std::collections::HashSet;
 /// # Examples
 ///
 /// ```
-/// use cipher_rs::helpers::condense;
+/// use old_crypto_rs::helpers::condense;
 ///
 /// // Simple duplicates
 /// let result = condense("AAAAA");
@@ -118,7 +118,7 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 /// # Examples
 ///
 /// ```
-/// use cipher_rs::helpers::expand;
+/// use old_crypto_rs::helpers::expand;
 ///
 /// // Simple duplicate
 /// let input = b"AAA";
@@ -231,7 +231,7 @@ pub fn expand(src: &[u8]) -> Vec<u8> {
 ///
 /// Regular rectangle (key length divides alphabet evenly):
 /// ```
-/// use cipher_rs::helpers::shuffle;
+/// use old_crypto_rs::helpers::shuffle;
 ///
 /// let key = "ARABESQUE";  // Condenses to "ARBESQU" (length = 7)
 /// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 29 chars, height = 5
@@ -241,7 +241,7 @@ pub fn expand(src: &[u8]) -> Vec<u8> {
 ///
 /// Irregular rectangle (key length does not divide alphabet evenly):
 /// ```
-/// use cipher_rs::helpers::shuffle;
+/// use old_crypto_rs::helpers::shuffle;
 ///
 /// let key = "SUBWAY";  // Condenses to "SUBWAY" (length = 6)
 /// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 29 chars, height = 5
@@ -295,7 +295,7 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
 /// # Examples
 ///
 /// ```
-/// use cipher_rs::helpers::shuffle_next;
+/// use old_crypto_rs::helpers::shuffle_next;
 ///
 /// let key = "ARABESQUE";
 /// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";

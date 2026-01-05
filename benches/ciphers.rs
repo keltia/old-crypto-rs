@@ -1,8 +1,7 @@
-use cipher_rs::{
+use old_crypto_rs::{
     ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher,
-    StraddlingCheckerboard, Transposition, VicCipher, Wheatstone,
+    StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
 };
-use cipher_rs::helpers;
 
 use divan::Bencher;
 

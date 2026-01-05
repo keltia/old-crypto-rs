@@ -1,5 +1,5 @@
 use divan::bench;
-use cipher_rs::helpers::{shuffle, shuffle_next};
+use old_crypto_rs::helpers::{shuffle, shuffle_next};
 
 fn main() {
     divan::main();

@@ -1,4 +1,7 @@
-use cipher_rs::{Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher, StraddlingCheckerboard, Transposition, Wheatstone, ADFGVX, helpers};
+use old_crypto_rs::{
+    ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher,
+    StraddlingCheckerboard, Transposition, Wheatstone, helpers,
+};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";

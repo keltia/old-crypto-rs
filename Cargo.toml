@@ -11,10 +11,6 @@ description = "Rust implementation of my Go module called old-crypto."
 documentation = "https://docs.rs/cipher-rs"
 categories = ["command-line-utilities", "cryptography"]
 
-[[bin]]
-name = "old-crypto"
-path = "src/cmd/old-crypto/main.rs"
-
 [[bench]]
 name = "shuffle"
 harness = false

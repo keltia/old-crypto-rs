@@ -7,7 +7,7 @@
 [![SemVer](https://img.shields.io/badge/semver-2.0.0-blue)](https://semver.org/spec/v2.0.0.html)
 [![License](https://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/keltia/old-crypto-rs/main/LICENSE)
 
-`old-crypto-rs` is a [Rust](https://rust-lang.org/) port of my [cipher](https://github.com/keltia/cipher) Go package, 
+`old-crypto-rs` is a [Rust](https://rust-lang.org/) port of my [cipher](https://github.com/keltia/cipher) Go package,
 which was a port of my [old-crypto](https://github.com/keltia/old-crypto) Ruby code.
 
 Part of the conversion has been done through the AI plugin inside RustRover called Junie.
@@ -40,6 +40,7 @@ It currently implement a few of the Go/Ruby code, namely:
 - Wheatstone cipher machine
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
+Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.
 
 ## Installation
 
@@ -47,7 +48,7 @@ Like many Rust crates, the installation is straightforward:
 
     cargo install old-crypto-rs
 
->NOTE: the crate is not yet published on crates.io,
+> NOTE: the crate is not yet published on crates.io,
 
 or
 
@@ -55,12 +56,17 @@ or
     cd old-crypto-rs
     cargo run
 
-The library is fetched, compiled and installed.  The `old-crypto` binary will also be installed (on windows, this will 
-be called `old-crypto.exe`).
+The library is fetched, compiled and installed. You can find a "demo" program in the `examples` directory, to showcase
+all ciphers; it also check that you can decrypt back to the original plaintext.
+
+    cargo run --example demo
+
+There will also be a CLI tool called `old-crypto` which can be used to encrypt/decrypt text.
 
 ## Benchmarks & Tests
 
-I tried to provide benchmarks for all ciphers (including key scheduling/expansion) and in some cases several implementations (and associated benchamarks).
+I tried to provide benchmarks for all ciphers (including key scheduling/expansion) and in some cases several
+implementations.
 
 You can run them with
 

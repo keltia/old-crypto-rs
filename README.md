@@ -1,6 +1,5 @@
 # cipher — Old paper & pencil ciphers in Rust.
 
-[![CircleCI](https://circleci.com/gh/keltia/old-crypto-rs/tree/main.svg?style=shield)](https://circleci.com/gh/keltia/old-crypto-rs/tree/main)
 [![dependency status](https://deps.rs/repo/github/keltia/old-crypto-rs/status.svg)](https://deps.rs/repo/github/keltia/old-crypto-rs)
 [![](https://img.shields.io/crates/v/old-crypto-rs.svg)](https://crates.io/crates/old-crypto-rs)
 [![Docs](https://docs.rs/old-crypto-rs/badge.svg)](https://docs.rs/old-crypto-rs)

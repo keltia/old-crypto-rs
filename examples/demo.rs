@@ -1,7 +1,4 @@
-use old_crypto_rs::{
-    ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher,
-    StraddlingCheckerboard, Transposition, Wheatstone, helpers,
-};
+use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher, StraddlingCheckerboard, Transposition, Wheatstone, helpers, VicCipher};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -74,6 +71,12 @@ fn main() {
         name: "Wheatstone".to_string(),
         c: Box::new(Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap()),
         size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: "VIC".to_string(),
+        c: Box::new(VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap()),
+        size: PLAIN.len() * 2,
     });
 
     println!("==> Plain = \n{}", PLAIN);

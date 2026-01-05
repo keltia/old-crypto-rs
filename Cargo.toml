@@ -1,0 +1,37 @@
+[package]
+name = "old-crypto-rs"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ollivier Robert <roberto@keltia.net>"]
+keywords = ["cryptography", "old-crypto", "pen-and-paper", "education", "history"]
+repository = "https://github.com/keltia/old-crypto-rs"
+license = "MIT"
+readme = "README.md"
+description = "Rust implementation of my Go module called old-crypto."
+documentation = "https://docs.rs/cipher-rs"
+categories = ["command-line-utilities", "cryptography"]
+
+[[bin]]
+name = "old-crypto"
+path = "src/cmd/old-crypto/main.rs"
+
+[[bench]]
+name = "shuffle"
+harness = false
+
+[[bench]]
+name = "ciphers"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+
+[dev-dependencies]
+divan = "0.1.14"
+

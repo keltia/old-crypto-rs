@@ -28,14 +28,13 @@ and an easy way to use it.
 
 It currently implement a few of the Ruby code, namely:
 
-- null
 - Caesar (you can choose the shift number)
 - Playfair
 - Chaocipher
 - Simple transposition (can be used with other ciphers as super-encipherement)
 - Polybius square bigrammatic cipher (for ADFGVX = polybius + transposition)
 - ADFGVX (6x6 square including numbers)
-- Straddling Checkerboard (for the Nihilist cipher)
+- Straddling Checkerboard (for the Nihilist & VIC ciphers)
 - Nihilist cipher (transposition as super-encipherment)
 - Wheatstone cipher system
 - VIC Cipher (straddling checkerboard followed by a transposition)
@@ -79,3 +78,18 @@ You can run them with
 ## Contributing
 
 Please see CONTRIBUTING.md for some simple rules.
+
+## References
+
+- [Substitution](https://en.wikipedia.org/wiki/Substitution_cipher)
+- [Caesar cipher](https://en.wikipedia.org/wiki/Caesar_cipher)
+- [Polybius square](https://en.wikipedia.org/wiki/Polybius_square)
+- [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
+- [Playfair cipher](https://en.wikipedia.org/wiki/Playfair_cipher)
+- [Chaocipher](https://en.wikipedia.org/wiki/Chaocipher)
+- [ADFGVX](https://en.wikipedia.org/wiki/ADFGVX)
+- [Nihilist cipher](https://en.wikipedia.org/wiki/Nihilist_cipher)
+- [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
+- [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
+- [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
+- [Vigenère cipher](https://en.wikipedia.org/wiki/Vigenère_cipher)

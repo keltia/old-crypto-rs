@@ -10,6 +10,7 @@ mod straddling;
 mod nihilist;
 mod vic;
 mod wheatstone;
+mod solitaire;
 
 pub use null::NullCipher;
 pub use caesar::CaesarCipher;
@@ -22,6 +23,7 @@ pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;
 pub use vic::VicCipher;
 pub use wheatstone::Wheatstone;
+pub use solitaire::Solitaire;
 
 
 pub trait Block {

@@ -10,6 +10,7 @@ mod straddling;
 mod nihilist;
 mod vic;
 mod wheatstone;
+mod sigaba;
 mod solitaire;
 
 pub use null::NullCipher;
@@ -23,6 +24,7 @@ pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;
 pub use vic::VicCipher;
 pub use wheatstone::Wheatstone;
+pub use sigaba::Sigaba;
 pub use solitaire::Solitaire;
 
 

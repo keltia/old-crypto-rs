@@ -7,10 +7,6 @@ const LEN_PL: usize = ALPHABET.len() + 1;
 const LEN_CT: usize = ALPHABET.len();
 
 pub struct Wheatstone {
-    #[allow(dead_code)]
-    pkey: String,
-    #[allow(dead_code)]
-    ckey: String,
     aplw: Vec<u8>,
     actw: Vec<u8>,
     start: u8,
@@ -39,8 +35,6 @@ impl Wheatstone {
         let ctpos = actw.iter().position(|&x| x == start).unwrap_or(0);
 
         Ok(Wheatstone {
-            pkey: pkey_shuffled,
-            ckey: ckey_shuffled,
             aplw,
             actw,
             start,

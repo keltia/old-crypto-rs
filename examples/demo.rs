@@ -1,4 +1,7 @@
-use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher, StraddlingCheckerboard, Transposition, Wheatstone, helpers, VicCipher};
+use old_crypto_rs::{
+    ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher,
+    StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
+};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -77,6 +80,12 @@ fn main() {
         name: "VIC".to_string(),
         c: Box::new(VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap()),
         size: PLAIN.len() * 2,
+    });
+
+    allciphers.push(Cph {
+        name: "Solitaire".to_string(),
+        c: Box::new(Solitaire::new_unkeyed()),
+        size: PLAIN.len(),
     });
 
     println!("==> Plain = \n{}", PLAIN);

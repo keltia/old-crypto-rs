@@ -34,10 +34,6 @@ const LEN_CT: usize = ALPHABET.len();
 /// The cipher maintains internal state to track the current positions
 /// of both wheels during encryption and decryption operations.
 pub struct Wheatstone {
-    /// Original plaintext key (stored for reference)
-    #[allow(dead_code)]
-    pkey: String,
-    /// Original ciphertext key (stored for reference)
     #[allow(dead_code)]
     ckey: String,
     /// Plaintext wheel alphabet (27 characters)
@@ -99,8 +95,6 @@ impl Wheatstone {
         let ctpos = actw.iter().position(|&x| x == start).unwrap_or(0);
 
         Ok(Wheatstone {
-            pkey: pkey_shuffled,
-            ckey: ckey_shuffled,
             aplw,
             actw,
             start,

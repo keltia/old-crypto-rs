@@ -1,9 +1,44 @@
+//! Caesar cipher implementation.
+//!
+//! The Caesar cipher is one of the simplest and most widely known encryption techniques.
+//! It is a type of substitution cipher in which each letter in the plaintext is replaced
+//! by a letter some fixed number of positions down the alphabet.
+//!
+//! # Examples
+//!
+//! ```
+//! use old_crypto_rs::Block;
+//! use old_crypto_rs::caesar::CaesarCipher;
+//!
+//! let cipher = CaesarCipher::new(3);
+//! let plaintext = b"HELLO";
+//! let mut ciphertext = vec![0u8; plaintext.len()];
+//!
+//! cipher.encrypt(&mut ciphertext, plaintext);
+//! assert_eq!(&ciphertext, b"KHOOR");
+//!
+//! let mut decrypted = vec![0u8; ciphertext.len()];
+//! cipher.decrypt(&mut decrypted, &ciphertext);
+//! assert_eq!(&decrypted, plaintext);
+//! ```
+//! 
 use crate::Block;
 use std::collections::HashMap;
 
 const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ALPHABET_SIZE: usize = ALPHABET.len();
 
+/// A Caesar cipher implementation using lookup tables.
+///
+/// This struct maintains encryption and decryption mappings for the uppercase
+/// English alphabet (A-Z). Characters not in the alphabet are left unchanged.
+///
+/// # Fields
+///
+/// * `key` - The shift value used for the cipher (0-25)
+/// * `enc` - Encryption lookup table mapping plaintext characters to ciphertext
+/// * `dec` - Decryption lookup table mapping ciphertext characters to plaintext
+///
 pub struct CaesarCipher {
     #[allow(dead_code)]
     key: u8,
@@ -11,6 +46,19 @@ pub struct CaesarCipher {
     dec: HashMap<u8, u8>,
 }
 
+/// Expands the cipher key into encryption and decryption lookup tables.
+///
+/// This function populates the provided hash maps with the character mappings
+/// needed for encryption and decryption. Each letter in the alphabet is shifted
+/// by the key value (modulo 26) for encryption, and the reverse mapping is
+/// created for decryption.
+///
+/// # Arguments
+///
+/// * `key` - The shift value for the Caesar cipher
+/// * `enc` - Mutable reference to the encryption lookup table to populate
+/// * `dec` - Mutable reference to the decryption lookup table to populate
+///
 fn expand_key(key: u8, enc: &mut HashMap<u8, u8>, dec: &mut HashMap<u8, u8>) {
     for (i, &ch) in ALPHABET.iter().enumerate() {
         let transform = (i + key as usize) % ALPHABET_SIZE;
@@ -20,7 +68,28 @@ fn expand_key(key: u8, enc: &mut HashMap<u8, u8>, dec: &mut HashMap<u8, u8>) {
 }
 
 impl CaesarCipher {
-    /// NewCipher creates a new instance of cipher.Block
+    /// Creates a new Caesar cipher with the specified shift key.
+    ///
+    /// The key value is converted to a u8 and used to generate the encryption
+    /// and decryption lookup tables. The key effectively represents how many
+    /// positions each letter should be shifted in the alphabet.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The shift value for the cipher (typically 0-25, but larger values work due to modulo operation)
+    ///
+    /// # Returns
+    ///
+    /// A new `CaesarCipher` instance ready for encryption and decryption operations.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use old_crypto_rs::caesar::CaesarCipher;
+    ///
+    /// let cipher = CaesarCipher::new(3); // Classic Caesar cipher with shift of 3
+    /// ```
+    ///
     pub fn new(key: i32) -> Self {
         let mut enc = HashMap::new();
         let mut dec = HashMap::new();
@@ -35,12 +104,28 @@ impl CaesarCipher {
 }
 
 impl Block for CaesarCipher {
-    /// BlockSize is part of the interface
+    /// Returns the block size for the Caesar cipher.
+    ///
+    /// The Caesar cipher operates on single characters, so the block size is 1.
     fn block_size(&self) -> usize {
         1
     }
 
-    /// Encrypt is part of the interface
+    /// Encrypts the source data into the destination buffer.
+    ///
+    /// Each byte in the source is looked up in the encryption table and the
+    /// corresponding encrypted byte is written to the destination. Characters
+    /// not in the alphabet (A-Z) are copied unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer for encrypted data (must be at least as large as `src`)
+    /// * `src` - Source data to encrypt
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to the destination buffer (equal to `src.len()`).
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         for (i, &ch) in src.iter().enumerate() {
             dst[i] = *self.enc.get(&ch).unwrap_or(&ch);
@@ -48,7 +133,21 @@ impl Block for CaesarCipher {
         src.len()
     }
 
-    /// Decrypt is part of the interface
+    /// Decrypts the source data into the destination buffer.
+    ///
+    /// Each byte in the source is looked up in the decryption table and the
+    /// corresponding decrypted byte is written to the destination. Characters
+    /// not in the alphabet (A-Z) are copied unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer for decrypted data (must be at least as large as `src`)
+    /// * `src` - Source data to decrypt
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to the destination buffer (equal to `src.len()`).
+    /// 
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         for (i, &ch) in src.iter().enumerate() {
             dst[i] = *self.dec.get(&ch).unwrap_or(&ch);

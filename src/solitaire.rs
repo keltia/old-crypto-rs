@@ -26,35 +26,23 @@ impl Solitaire {
         Self::new(deck)
     }
 
+    /// new_with_passphrase creates a Solitaire cipher with a deck keyed by a passphrase.
+    pub fn new_with_passphrase(passphrase: &str) -> Self {
+        let mut deck: Vec<u8> = (1..=54).collect();
+        for ch in passphrase.chars() {
+            if !ch.is_ascii_alphabetic() {
+                continue;
+            }
+            let val = (ch.to_ascii_uppercase() as u8 - b'A' + 1) as usize;
+            Self::advance_deck(&mut deck);
+            Self::count_cut(&mut deck, val);
+        }
+        Self::new(deck)
+    }
+
     fn step(deck: &mut Vec<u8>) -> u8 {
         loop {
-            // 1. Move Joker A (53) one card down.
-            Self::move_joker(deck, 53, 1);
-
-            // 2. Move Joker B (54) two cards down.
-            Self::move_joker(deck, 54, 2);
-
-            // 3. Triple cut
-            let pos_a = deck.iter().position(|&x| x == 53).unwrap();
-            let pos_b = deck.iter().position(|&x| x == 54).unwrap();
-            let (top_j, bot_j) = if pos_a < pos_b { (pos_a, pos_b) } else { (pos_b, pos_a) };
-
-            let mut new_deck = Vec::with_capacity(54);
-            new_deck.extend_from_slice(&deck[bot_j + 1..]);
-            new_deck.extend_from_slice(&deck[top_j..bot_j + 1]);
-            new_deck.extend_from_slice(&deck[..top_j]);
-            *deck = new_deck;
-
-            // 4. Count cut
-            let last_val = deck[53];
-            let count = if last_val > 52 { 53 } else { last_val } as usize;
-            if count < 53 {
-                let mut new_deck = Vec::with_capacity(54);
-                new_deck.extend_from_slice(&deck[count..53]);
-                new_deck.extend_from_slice(&deck[..count]);
-                new_deck.push(last_val);
-                *deck = new_deck;
-            }
+            Self::advance_deck(deck);
 
             // 5. Output card
             let first_val = deck[0];
@@ -65,6 +53,45 @@ impl Solitaire {
                 return if output_card > 26 { output_card - 26 } else { output_card };
             }
             // If output card is a joker, repeat the process.
+        }
+    }
+
+    fn advance_deck(deck: &mut Vec<u8>) {
+        // 1. Move Joker A (53) one card down.
+        Self::move_joker(deck, 53, 1);
+
+        // 2. Move Joker B (54) two cards down.
+        Self::move_joker(deck, 54, 2);
+
+        // 3. Triple cut
+        let pos_a = deck.iter().position(|&x| x == 53).unwrap();
+        let pos_b = deck.iter().position(|&x| x == 54).unwrap();
+        let (top_j, bot_j) = if pos_a < pos_b {
+            (pos_a, pos_b)
+        } else {
+            (pos_b, pos_a)
+        };
+
+        let mut new_deck = Vec::with_capacity(54);
+        new_deck.extend_from_slice(&deck[bot_j + 1..]);
+        new_deck.extend_from_slice(&deck[top_j..bot_j + 1]);
+        new_deck.extend_from_slice(&deck[..top_j]);
+        *deck = new_deck;
+
+        // 4. Count cut
+        let last_val = deck[53];
+        let count = if last_val > 52 { 53 } else { last_val } as usize;
+        Self::count_cut(deck, count);
+    }
+
+    fn count_cut(deck: &mut Vec<u8>, count: usize) {
+        if count < 53 {
+            let last_val = deck[53];
+            let mut new_deck = Vec::with_capacity(54);
+            new_deck.extend_from_slice(&deck[count..53]);
+            new_deck.extend_from_slice(&deck[..count]);
+            new_deck.push(last_val);
+            *deck = new_deck;
         }
     }
 
@@ -183,5 +210,34 @@ mod tests {
         let mut dec = vec![0u8; src.len()];
         s.decrypt(&mut dec, &dst);
         assert_eq!(std::str::from_utf8(&dec).unwrap(), "CLEAN");
+    }
+
+    #[test]
+    fn test_solitaire_extra_examples() {
+        let tests = [
+            ("", "AAAAAAAAAAAAAAA", "EXKYIZSGEHUNTIQ"),
+            ("f", "AAAAAAAAAAAAAAA", "XYIUQBMHKKJBEGY"),
+            ("fo", "AAAAAAAAAAAAAAA", "TUJYMBERLGXNDIW"),
+            ("foo", "AAAAAAAAAAAAAAA", "ITHZUJIWGRFARMW"),
+            ("a", "AAAAAAAAAAAAAAA", "XODALGSCULIQNSC"),
+            ("aa", "AAAAAAAAAAAAAAA", "OHGWMXXCAIMCIQP"),
+            ("aaa", "AAAAAAAAAAAAAAA", "DCSQYHBQZNGDRUT"),
+            ("b", "AAAAAAAAAAAAAAA", "XQEEMOITLZVDSQS"),
+            ("bc", "AAAAAAAAAAAAAAA", "QNGRKQIHCLGWSCE"),
+            ("bcd", "AAAAAAAAAAAAAAA", "FMUBYBMAXHNQXCJ"),
+            ("cryptonomicon", "AAAAAAAAAAAAAAAAAAAAAAAAA", "SUGSRSXSWQRMXOHIPBFPXARYQ"),
+            ("cryptonomicon", "SOLITAIRE", "KIRAKSFJA"),
+        ];
+
+        for (pass, pt, ct) in tests {
+            let s = if pass.is_empty() {
+                Solitaire::new_unkeyed()
+            } else {
+                Solitaire::new_with_passphrase(pass)
+            };
+            let mut dst = vec![0u8; pt.len()];
+            s.encrypt(&mut dst, pt.as_bytes());
+            assert_eq!(std::str::from_utf8(&dst).unwrap(), ct, "Failed for key '{}'", pass);
+        }
     }
 }

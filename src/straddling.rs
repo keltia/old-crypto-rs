@@ -1,26 +1,117 @@
+//! Straddling Checkerboard cipher implementation.
+//!
+//! The straddling checkerboard is a substitution cipher that uses a 10-column grid
+//! to encode letters into digits. Common letters are encoded as single digits,
+//! while less common letters require two digits. This creates variable-length
+//! ciphertext that appears as a stream of digits.
+//!
+//! The cipher uses:
+//! - A keyword to shuffle the alphabet
+//! - Two "long" cipher digits that prefix two-digit codes
+//! - Eight "short" cipher digits for single-digit codes
+//! - A frequency string to determine which letters get single-digit codes
+//!
 use crate::Block;
 use crate::helpers;
 use std::collections::HashMap;
 
+/// Default alphabet containing A-Z plus special characters '/' and '-'.
+/// The '/' character is used as a digit escape marker in encryption.
 pub const ALPHABET_TXT: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
+
+/// All cipher digits from 0 to 9 used in the checkerboard.
 const ALL_CIPHER: &[u8] = b"0123456789";
 
+/// A straddling checkerboard cipher implementation.
+///
+/// This cipher maps plaintext characters to variable-length digit sequences.
+/// High-frequency letters are encoded as single digits, while low-frequency
+/// letters are encoded as two digits prefixed by one of the "long" cipher digits.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::straddling::StraddlingCheckerboard;
+/// use old_crypto_rs::Block;
+///
+/// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+/// let mut encrypted = vec![0u8; 100];
+/// let len = cipher.encrypt(&mut encrypted, b"ATTACK");
+/// encrypted.truncate(len);
+/// ```
+///
 #[derive(Debug)]
 pub struct StraddlingCheckerboard {
+    /// The keyword used to shuffle the alphabet.
     key: String,
+    /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
+    /// The eight digits used for single-digit codes (not currently used in implementation).
     #[allow(dead_code)]
     shortc: Vec<u8>,
+    /// The shuffled alphabet after applying the key.
     full: String,
+    /// Encoding map from plaintext byte to ciphertext digit string.
     pub enc: HashMap<u8, String>,
+    /// Decoding map from ciphertext digit string to plaintext byte.
     pub dec: HashMap<String, u8>,
 }
 
 impl StraddlingCheckerboard {
+    /// Creates a new straddling checkerboard cipher with default frequency.
+    ///
+    /// Uses "ESANTIRU" as the default high-frequency letters and the standard
+    /// alphabet (A-Z plus '/' and '-').
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The keyword used to shuffle the alphabet (must not be empty)
+    /// * `chrs` - A string of at least 2 digits that will be used as "long" cipher digits
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(StraddlingCheckerboard)` on success, or `Err(String)` if validation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - `key` is empty
+    /// - `chrs` contains fewer than 2 characters
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use old_crypto_rs::straddling::StraddlingCheckerboard;
+    ///
+    /// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+    /// ```
+    ///
     pub fn new(key: &str, chrs: &str) -> Result<Self, String> {
         Self::new_with_freq(key, chrs, "ESANTIRU", ALPHABET_TXT)
     }
 
+    /// Creates a new straddling checkerboard cipher with custom frequency and alphabet.
+    ///
+    /// Allows full customization of which letters get single-digit codes and
+    /// what alphabet to use.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The keyword used to shuffle the alphabet (must not be empty)
+    /// * `chrs` - A string of at least 2 digits for "long" cipher digit prefixes
+    /// * `freq_str` - Letters that should receive single-digit encodings
+    /// * `alphabet` - The alphabet to use for the checkerboard
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(StraddlingCheckerboard)` on success, or `Err(String)` if validation fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - `key` is empty
+    /// - `chrs` contains fewer than 2 characters
+    ///
     pub fn new_with_freq(key: &str, chrs: &str, freq_str: &str, alphabet: &str) -> Result<Self, String> {
         if key.is_empty() {
             return Err("key can not be empty".to_string());
@@ -51,10 +142,37 @@ impl StraddlingCheckerboard {
         Ok(c)
     }
 
+    /// Extracts elements from a set that are not in the exclusion list.
+    ///
+    /// Used to compute the "short" cipher digits by removing the "long" digits
+    /// from all possible cipher digits.
+    ///
+    /// # Arguments
+    ///
+    /// * `set` - The full set of digits (0-9)
+    /// * `two` - The two digits to exclude
+    ///
+    /// # Returns
+    ///
+    /// A vector containing all digits from `set` except those in `two`.
+    ///
     fn extract(set: &[u8], two: &[u8]) -> Vec<u8> {
         set.iter().cloned().filter(|&x| !two.contains(&x)).collect()
     }
 
+    /// Generates all two-digit combinations for a given prefix digit.
+    ///
+    /// Creates strings like "30", "31", ..., "39" for prefix '3'.
+    /// Special case: if prefix is '0', returns single digits "0" through "9".
+    ///
+    /// # Arguments
+    ///
+    /// * `c` - The prefix digit
+    ///
+    /// # Returns
+    ///
+    /// A vector of 10 strings representing all combinations with this prefix.
+    ///
     fn times10(c: u8) -> Vec<String> {
         let mut tmp = Vec::with_capacity(10);
         if c == b'0' {
@@ -71,6 +189,19 @@ impl StraddlingCheckerboard {
         tmp
     }
 
+    /// Generates all two-digit combinations for both long cipher digits.
+    ///
+    /// Combines the results of `times10()` for both long cipher digits,
+    /// producing 20 total two-digit codes.
+    ///
+    /// # Arguments
+    ///
+    /// * `set` - A slice containing the two long cipher digits
+    ///
+    /// # Returns
+    ///
+    /// A vector of 20 strings representing all two-digit codes.
+    ///
     fn set_times10(set: &[u8]) -> Vec<String> {
         let mut longc = Vec::with_capacity(20);
         longc.extend(Self::times10(set[0]));
@@ -78,6 +209,17 @@ impl StraddlingCheckerboard {
         longc
     }
 
+    /// Builds the encoding and decoding maps based on frequency analysis.
+    ///
+    /// Assigns single-digit codes to high-frequency letters and two-digit
+    /// codes to low-frequency letters. Populates both the `enc` and `dec`
+    /// hashmaps.
+    ///
+    /// # Arguments
+    ///
+    /// * `shortc` - The digits available for single-digit encoding
+    /// * `freq` - The high-frequency letters that should get single-digit codes
+    ///
     fn expand_key(&mut self, shortc: Vec<u8>, freq: &[u8]) {
         let longc = Self::set_times10(&self.longc);
 
@@ -104,10 +246,35 @@ impl StraddlingCheckerboard {
 }
 
 impl Block for StraddlingCheckerboard {
+    /// Returns the block size, which equals the key length.
+    ///
+    /// # Returns
+    ///
+    /// The length of the cipher key in bytes.
+    ///
     fn block_size(&self) -> usize {
         self.key.len()
     }
 
+    /// Encrypts plaintext into digit ciphertext.
+    ///
+    /// Each plaintext letter is replaced with its corresponding digit code
+    /// (either 1 or 2 digits). Numeric digits in the plaintext are escaped
+    /// by surrounding them with the '/' marker code and duplicating the digit.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Output buffer for the encrypted digit string
+    /// * `src` - Input plaintext bytes to encrypt
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to `dst`.
+    ///
+    /// # Examples
+    ///
+    /// Encrypting "ATTACK" with key "ARABESQUE" and long digits "89" produces "07708081".
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let mut offset = 0;
         for &ch in src {
@@ -131,6 +298,24 @@ impl Block for StraddlingCheckerboard {
         offset
     }
 
+    /// Decrypts digit ciphertext back into plaintext.
+    ///
+    /// Processes the digit stream, recognizing both single-digit and two-digit
+    /// codes. Handles escaped numeric digits by detecting the '/' marker pattern.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Output buffer for the decrypted plaintext
+    /// * `src` - Input ciphertext digit string to decrypt
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to `dst`.
+    ///
+    /// # Examples
+    ///
+    /// Decrypting "07708081" with key "ARABESQUE" and long digits "89" produces "ATTACK".
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let mut pt_offset = 0;
         let mut i = 0;

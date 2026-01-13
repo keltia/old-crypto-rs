@@ -1,12 +1,22 @@
+//! VIC cipher implementation.
+//!
+//! The VIC cipher is a sophisticated pencil-and-paper cipher used by Soviet spy Reino Häyhänen
+//! in the 1950s. It combines a straddling checkerboard with two transposition steps.
+//!
+//! Full description & test vectors: http://www.quadibloc.com/crypto/pp1324.htm
+//!
 use crate::Block;
 use crate::transposition::Transposition;
 use crate::straddling::{StraddlingCheckerboard, ALPHABET_TXT};
 use crate::helpers;
 
-/*
-Full description & test vectors: http://www.quadibloc.com/crypto/pp1324.htm
-*/
-
+/// VIC cipher implementation combining straddling checkerboard and transposition ciphers.
+///
+/// The VIC cipher uses a complex key derivation system and three main components:
+/// - A straddling checkerboard for initial encoding
+/// - A first regular transposition
+/// - A second irregular transposition
+/// 
 #[derive(Debug)]
 pub struct VicCipher {
     // First transposition
@@ -18,6 +28,39 @@ pub struct VicCipher {
 }
 
 impl VicCipher {
+    /// Creates a new VIC cipher instance with the specified key material.
+    ///
+    /// This constructor performs the complex key derivation process used in the VIC cipher,
+    /// which involves expanding the key material into three separate keys:
+    /// - A key for the first regular transposition
+    /// - A key for the second irregular transposition
+    /// - A key for the straddling checkerboard
+    ///
+    /// # Arguments
+    ///
+    /// * `persn` - Personal number used for the straddling checkerboard (typically 2 digits)
+    /// * `ind` - Indicator string containing at least 5 digits used in key derivation
+    /// * `phrase` - Key phrase that must be at least 20 characters long, used for key expansion
+    /// * `imsg` - Initial message number as a string of digits
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(VicCipher)` if the cipher was successfully constructed, or `Err(String)`
+    /// if any of the key material is invalid or if the transposition or straddling checkerboard
+    /// construction fails.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use old_crypto_rs::vic::VicCipher;
+    /// let cipher = VicCipher::new(
+    ///     "89",
+    ///     "741776",
+    ///     "IDREAMOFJEANNIEWITHT",
+    ///     "77651"
+    /// ).unwrap();
+    /// ```
+    ///
     pub fn new(persn: &str, ind: &str, phrase: &str, imsg: &str) -> Result<Self, String> {
         let imsg_int = str2int(imsg);
         let ikey5 = str2int(&ind[..5]);
@@ -42,13 +85,36 @@ impl VicCipher {
     }
 }
 
+/// Intermediate structure holding expanded key material.
+///
+/// This structure contains the derived keys used for the two transpositions
+/// and the straddling checkerboard.
+///
 #[derive(Debug)]
 struct ExpandedKey {
+    /// Key for the first (regular) transposition
     second: Vec<u8>,
+    /// Key for the second (irregular) transposition
     third: Vec<u8>,
+    /// Key for the straddling checkerboard
     sckey: Vec<u8>,
 }
 
+/// Expands the key material into the three keys needed for the VIC cipher.
+///
+/// This function performs the complex key derivation process using chain addition
+/// and modular arithmetic to generate the transposition and checkerboard keys.
+///
+/// # Arguments
+///
+/// * `phrase` - Key phrase (at least 20 characters) split into two parts
+/// * `imsg` - Initial message number as byte array
+/// * `ikey5` - First 5 digits of indicator as byte array
+///
+/// # Returns
+///
+/// Returns an `ExpandedKey` structure containing all derived key material.
+///
 fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
     let ph1 = to_numeric_one(&phrase[..10]);
     let ph2 = to_numeric_one(&phrase[10..]);
@@ -77,6 +143,28 @@ fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
     }
 }
 
+/// Converts a string to a numeric sequence based on alphabetical ordering.
+///
+/// This function ranks the characters in the input string by their alphabetical order
+/// and returns a vector where each position contains its rank (modulo 10).
+///
+/// # Arguments
+///
+/// * `key` - Input string to convert
+///
+/// # Returns
+///
+/// Returns a vector of bytes where each byte represents the rank (0-9) of the
+/// character at that position.
+///
+/// # Examples
+///
+/// ```
+/// # use old_crypto_rs::vic::to_numeric_one;
+/// let result = to_numeric_one("IDREAMOFJE");
+/// assert_eq!(result, vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4]);
+/// ```
+///
 fn to_numeric_one(key: &str) -> Vec<u8> {
     let letters = key.as_bytes();
     let mut indexed: Vec<(usize, u8)> = letters.iter().enumerate().map(|(i, &b)| (i, b)).collect();
@@ -89,18 +177,59 @@ fn to_numeric_one(key: &str) -> Vec<u8> {
     ar
 }
 
+/// Converts a string of digits to a vector of integers.
+///
+/// # Arguments
+///
+/// * `str` - String containing ASCII digits ('0'-'9')
+///
+/// # Returns
+///
+/// Returns a vector of bytes where each byte is the numeric value (0-9) of the digit.
+///
 fn str2int(str: &str) -> Vec<u8> {
     str.bytes().map(|b| b - b'0').collect()
 }
 
+/// Performs element-wise addition modulo 10 on two vectors.
+///
+/// # Arguments
+///
+/// * `a` - First vector of bytes
+/// * `b` - Second vector of bytes (must be same length as `a`)
+///
+/// # Returns
+///
+/// Returns a vector where each element is `(a[i] + b[i]) % 10`.
+///
 fn addmod10(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b).map(|(x, y)| (x + y) % 10).collect()
 }
 
+/// Performs element-wise subtraction modulo 10 on two vectors.
+///
+/// # Arguments
+///
+/// * `a` - First vector of bytes
+/// * `b` - Second vector of bytes (must be same length as `a`)
+///
+/// # Returns
+///
+/// Returns a vector where each element is `(a[i] + 10 - b[i]) % 10`.
+///
 fn submod10(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b).map(|(x, y)| (x + 10 - y) % 10).collect()
 }
 
+/// Performs chain addition in-place on a vector.
+///
+/// Chain addition adds each element to its right neighbor (wrapping around at the end)
+/// and stores the result modulo 10 in the original position.
+///
+/// # Arguments
+///
+/// * `a` - Mutable slice to perform chain addition on
+///
 fn chainadd_inplace(a: &mut [u8]) {
     let l = a.len();
     if l == 0 { return; }
@@ -109,18 +238,56 @@ fn chainadd_inplace(a: &mut [u8]) {
     }
 }
 
+/// Performs chain addition on a vector, returning a new vector.
+///
+/// This is a non-mutating version of `chainadd_inplace`.
+///
+/// # Arguments
+///
+/// * `a` - Slice to perform chain addition on
+///
+/// # Returns
+///
+/// Returns a new vector with chain addition applied.
+///
 fn chainadd(a: &[u8]) -> Vec<u8> {
     let mut b = a.to_vec();
     chainadd_inplace(&mut b);
     b
 }
 
+/// Expands a 5-element vector to 10 elements using chain addition.
+///
+/// The result contains the original 5 elements followed by the chain addition
+/// of those 5 elements.
+///
+/// # Arguments
+///
+/// * `a` - Input slice (typically 5 elements)
+///
+/// # Returns
+///
+/// Returns a vector with the original elements followed by their chain addition.
+///
 fn expand5to10(a: &[u8]) -> Vec<u8> {
     let mut res = a.to_vec();
     res.extend_from_slice(&chainadd(a));
     res
 }
 
+/// Encodes vector `a` using vector `b` as a lookup table.
+///
+/// Each element in `a` is used as an index (after adjustment) into vector `b`.
+///
+/// # Arguments
+///
+/// * `a` - Vector of indices
+/// * `b` - Lookup table vector
+///
+/// # Returns
+///
+/// Returns a vector where each element is `b[((a[i] + 10) % 10) - 1]`.
+///
 fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().map(|&v| b[((v as i32 + 10) % 10 - 1) as usize]).collect()
 }
@@ -130,6 +297,22 @@ impl Block for VicCipher {
         1
     }
 
+    /// Encrypts plaintext using the VIC cipher.
+    ///
+    /// The encryption process consists of three steps:
+    /// 1. Encode using the straddling checkerboard
+    /// 2. Apply the first (regular) transposition
+    /// 3. Apply the second (irregular) transposition
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer for ciphertext (must be large enough)
+    /// * `src` - Source plaintext as bytes
+    ///
+    /// # Returns
+    ///
+    /// Returns the number of bytes written to the destination buffer.
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // VIC Encipherment:
         // 1. Straddling Checkerboard
@@ -146,6 +329,22 @@ impl Block for VicCipher {
         self.secondtp.encrypt(dst, &buf_tp1[..tp1_len])
     }
 
+    /// Decrypts ciphertext using the VIC cipher.
+    ///
+    /// The decryption process reverses the encryption steps:
+    /// 1. Reverse the second (irregular) transposition
+    /// 2. Reverse the first (regular) transposition
+    /// 3. Decode using the straddling checkerboard
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer for plaintext (must be large enough)
+    /// * `src` - Source ciphertext as bytes
+    ///
+    /// # Returns
+    ///
+    /// Returns the number of bytes written to the destination buffer.
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // VIC Decipherment (Reverse of Encipherment):
         // 1. Second Transposition (irregular)

@@ -1,3 +1,33 @@
+//! Playfair cipher implementation.
+//!
+//! The Playfair cipher is a manual symmetric encryption technique and was the first literal
+//! digraph substitution cipher. The scheme was invented in 1854 by Charles Wheatstone but
+//! bears the name of Lord Playfair who promoted the use of the cipher.
+//!
+//! The Playfair cipher encrypts pairs of letters (bigrams or digraphs), instead of single
+//! letters as in the simple substitution cipher. The key is a 5×5 grid of letters constructed
+//! using a keyword. The letters I and J are typically combined into a single cell.
+//!
+//! # Algorithm
+//!
+//! 1. Create a 5×5 matrix using a keyword (duplicates removed) followed by remaining alphabet letters
+//! 2. Split plaintext into pairs of letters (digraphs)
+//! 3. Apply transformation rules based on the position of letter pairs in the matrix:
+//!    - Same row: shift each letter one position to the right (wrapping around)
+//!    - Same column: shift each letter one position down (wrapping around)
+//!    - Rectangle: swap columns of the two letters
+//!
+//! # Example
+//!
+//! ```rust
+//! use old_crypto_rs::{Block, PlayfairCipher};
+//!
+//! let cipher = PlayfairCipher::new("PLAYFAIREXAMPLE");
+//! let plaintext = b"HIDETHEGOLDINTHETREXESTUMP";
+//! let mut ciphertext = vec![0u8; plaintext.len()];
+//! cipher.encrypt(&mut ciphertext, plaintext);
+//! ```
+//! 
 use crate::Block;
 use crate::helpers;
 use std::collections::HashMap;
@@ -7,7 +37,18 @@ const OP_ENCRYPT: u8 = 1;
 const OP_DECRYPT: u8 = 4;
 const CODE_WORD: &str = "01234";
 
-// Cipher holds the key and transformation maps
+/// Playfair cipher implementation using a 5×5 keyed matrix.
+///
+/// The `PlayfairCipher` struct holds the cipher key and maintains bidirectional mappings
+/// between characters and their positions in the 5×5 Playfair matrix. This allows for
+/// efficient encryption and decryption operations.
+///
+/// # Fields
+///
+/// * `key` - The condensed key string used to build the cipher matrix
+/// * `i2c` - Maps from character (as u8) to its `Couple` position in the matrix
+/// * `c2i` - Maps from `Couple` position in the matrix to its character (as u8)
+/// 
 pub struct PlayfairCipher {
     #[allow(dead_code)]
     key: String,
@@ -15,6 +56,17 @@ pub struct PlayfairCipher {
     c2i: HashMap<Couple, u8>,
 }
 
+/// Represents a coordinate pair (row, column) in the 5×5 Playfair matrix.
+///
+/// A `Couple` is used to represent either:
+/// - The position of a character in the Playfair matrix (as a coordinate)
+/// - A pair of characters to be encrypted/decrypted (as indices)
+///
+/// # Fields
+///
+/// * `r` - Row index (0-4) or first character of a bigram
+/// * `c` - Column index (0-4) or second character of a bigram
+/// 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 struct Couple {
     r: u8,
@@ -22,7 +74,26 @@ struct Couple {
 }
 
 impl PlayfairCipher {
-    // transform is the cipher itself
+    /// Transforms a pair of characters using the Playfair cipher rules.
+    ///
+    /// This is the core encryption/decryption function that applies the Playfair transformation
+    /// rules based on the relative positions of two characters in the matrix.
+    ///
+    /// # Arguments
+    ///
+    /// * `pt` - A `Couple` where `r` and `c` represent the two characters to transform
+    /// * `opt` - Operation mode: `OP_ENCRYPT` (1) for encryption, `OP_DECRYPT` (4) for decryption
+    ///
+    /// # Returns
+    ///
+    /// A `Couple` containing the transformed character pair
+    ///
+    /// # Transformation Rules
+    ///
+    /// 1. **Same row**: Shift each character by `opt` positions to the right (modulo 5)
+    /// 2. **Same column**: Shift each character by `opt` positions down (modulo 5)
+    /// 3. **Rectangle**: Swap the columns of the two characters
+    /// 
     fn transform(&self, pt: Couple, opt: u8) -> Couple {
         let bg1 = self.i2c[&pt.r];
         let bg2 = self.i2c[&pt.c];
@@ -41,7 +112,29 @@ impl PlayfairCipher {
         Couple { r: self.c2i[&ct1], c: self.c2i[&ct2] }
     }
 
-    /// NewCipher is part of the interface
+    /// Creates a new Playfair cipher with the specified key.
+    ///
+    /// The key is used to construct a 5×5 matrix by:
+    /// 1. Condensing the key (removing duplicates and converting to uppercase)
+    /// 2. Appending the remaining alphabet letters (I and J are combined)
+    /// 3. Filling the matrix row by row with these characters
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The keyword used to generate the cipher matrix
+    ///
+    /// # Returns
+    ///
+    /// A new `PlayfairCipher` instance with initialized mapping tables
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use old_crypto_rs::PlayfairCipher;
+    ///
+    /// let cipher = PlayfairCipher::new("PLAYFAIREXAMPLE");
+    /// ```
+    /// 
     pub fn new(key: &str) -> Self {
         let condensed_key = helpers::condense(&format!("{}{}", key, ALPHABET));
         let mut i2c = HashMap::new();
@@ -73,7 +166,35 @@ impl Block for PlayfairCipher {
         2
     }
 
-    /// Encrypt is part of the interface
+    /// Encrypts plaintext using the Playfair cipher.
+    ///
+    /// This method processes the input plaintext in pairs of characters (digraphs) and applies
+    /// the Playfair transformation rules. If the plaintext has an odd length, an 'X' is
+    /// automatically appended as padding.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer where the ciphertext will be written. Must be at least as
+    ///           large as the source length (rounded up to the nearest even number if odd).
+    /// * `src` - Source plaintext bytes to encrypt. Each byte should represent an uppercase
+    ///           letter from the Playfair alphabet.
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to the destination buffer (always even).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use old_crypto_rs::{Block, PlayfairCipher};
+    ///
+    /// let cipher = PlayfairCipher::new("PLAYFAIREXAMPLE");
+    /// let plaintext = b"HIDETHEGOLD";
+    /// let mut ciphertext = vec![0u8; 12]; // Account for potential padding
+    /// let written = cipher.encrypt(&mut ciphertext, plaintext);
+    /// assert_eq!(written, 12); // 11 chars + 1 'X' padding = 12
+    /// ```
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let mut src_vec = src.to_vec();
         if src_vec.len() % 2 == 1 {
@@ -88,7 +209,39 @@ impl Block for PlayfairCipher {
         src_vec.len()
     }
 
-    /// Decrypt is part of the interface
+    /// Decrypts ciphertext using the Playfair cipher.
+    ///
+    /// This method processes the input ciphertext in pairs of characters (digraphs) and applies
+    /// the inverse Playfair transformation rules to recover the original plaintext.
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - Destination buffer where the plaintext will be written. Must be at least as
+    ///           large as the source length.
+    /// * `src` - Source ciphertext bytes to decrypt. Must have an even length, as Playfair
+    ///           operates on character pairs.
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to the destination buffer (equal to source length).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the source ciphertext has an odd number of bytes, as this violates the
+    /// Playfair cipher's requirement to operate on digraphs.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use old_crypto_rs::{Block, PlayfairCipher};
+    ///
+    /// let cipher = PlayfairCipher::new("PLAYFAIREXAMPLE");
+    /// let ciphertext = b"BMODZBXDNABEKUDMUIXMMOUVIF";
+    /// let mut plaintext = vec![0u8; ciphertext.len()];
+    /// let written = cipher.decrypt(&mut plaintext, ciphertext);
+    /// assert_eq!(written, ciphertext.len());
+    /// ```
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.len() % 2 == 1 {
             panic!("odd number of elements");

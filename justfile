@@ -11,4 +11,4 @@ push: push-github
 
 # Move changes to develop
 move:
-    jj b move --to @- develop
+    jj b move -t '@-' develop

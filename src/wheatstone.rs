@@ -261,14 +261,14 @@ mod tests {
     const LCIPHER_TXT: &str = "PIPTIADNMEWJYKGHGVEOIZUVWEPWVKCIMWBOKXHCLDAOGCRGPMWDNJKJVJDLDQYZEBMOXBKVAVSOABVDBJWBQFQPTWFEMPQRZNTXBHVWGLHIJLGFMMLBZHXYCDUTUOCYNYQJYABYX";
 
     #[test]
-    fn test_new_cipher() {
+    fn test_new_wheatstone_cipher() {
         let c = Wheatstone::new(b'M', KEY1, KEY2).unwrap();
         assert_eq!(c.aplw.len(), 27);
         assert_eq!(c.actw.len(), 26);
     }
 
     #[test]
-    fn test_encode() {
+    fn test_wheatstone_encode() {
         let c = Wheatstone::new(b'M', KEY1, KEY2).unwrap();
         assert_eq!(c.state.borrow().curpos, 0);
         assert_eq!(c.state.borrow().ctpos, 0);
@@ -295,7 +295,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode() {
+    fn test_wheatstone_decode() {
         let c = Wheatstone::new(b'M', KEY1, KEY2).unwrap();
         assert_eq!(c.state.borrow().curpos, 0);
         assert_eq!(c.state.borrow().ctpos, 0);

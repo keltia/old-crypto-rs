@@ -30,4 +30,5 @@ maintenance = { status = "actively-developed" }
 
 [dev-dependencies]
 divan = "0.1.14"
+rstest = "0.24.0"
 

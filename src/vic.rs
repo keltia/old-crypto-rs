@@ -365,66 +365,47 @@ impl Block for VicCipher {
 mod tests {
     use crate::helpers::output_as_block;
     use super::*;
+    use rstest::rstest;
 
     #[test]
     fn test_new_cipher() {
         let _c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
     }
 
-    #[test]
-    fn test_to_numeric_one() {
-        let test_data = [
-            ("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4]),
-            ("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9]),
-        ];
-        for (s, r) in test_data {
-            assert_eq!(to_numeric_one(s), r);
-        }
+    #[rstest]
+    #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
+    #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
+    fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
+        assert_eq!(to_numeric_one(s), r);
     }
 
-    #[test]
-    fn test_addmod10() {
-        let test_data = [
-            (vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![0, 6, 0, 0, 6]),
-            (vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![4, 1, 7, 2, 8]),
-        ];
-        for (a, b, c) in test_data {
-            assert_eq!(addmod10(&a, &b), c);
-        }
+    #[rstest]
+    #[case(vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![0, 6, 0, 0, 6])]
+    #[case(vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![4, 1, 7, 2, 8])]
+    fn test_addmod10(#[case] a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
+        assert_eq!(addmod10(&a, &b), c);
     }
 
-    #[test]
-    fn test_submod10() {
-        let test_data = [
-            (vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![6, 6, 2, 0, 2]),
-            (vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![0, 3, 5, 8, 4]),
-        ];
-        for (a, b, c) in test_data {
-            assert_eq!(submod10(&a, &b), c);
-        }
+    #[rstest]
+    #[case(vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![6, 6, 2, 0, 2])]
+    #[case(vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![0, 3, 5, 8, 4])]
+    fn test_submod10(#[case] a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
+        assert_eq!(submod10(&a, &b), c);
     }
 
-    #[test]
-    fn test_chainadd() {
-        let test_data = [
-            (vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 8]),
-            (vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 5]),
-        ];
-        for (a, b) in test_data {
-            assert_eq!(chainadd(&a), b);
-        }
+    #[rstest]
+    #[case(vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 8])]
+    #[case(vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 5])]
+    fn test_chainadd(#[case] a: Vec<u8>, #[case] b: Vec<u8>) {
+        assert_eq!(chainadd(&a), b);
     }
 
-    #[test]
-    fn test_expand5to10() {
-        let test_data = [
-            (vec![8, 6, 1, 5, 4], vec![8, 6, 1, 5, 4, 4, 7, 6, 9, 8]),
-            (vec![7, 7, 6, 5, 1], vec![7, 7, 6, 5, 1, 4, 3, 1, 6, 5]),
-            (vec![0, 3, 5, 8, 4], vec![0, 3, 5, 8, 4, 3, 8, 3, 2, 7]),
-        ];
-        for (a, b) in test_data {
-            assert_eq!(expand5to10(&a), b);
-        }
+    #[rstest]
+    #[case(vec![8, 6, 1, 5, 4], vec![8, 6, 1, 5, 4, 4, 7, 6, 9, 8])]
+    #[case(vec![7, 7, 6, 5, 1], vec![7, 7, 6, 5, 1, 4, 3, 1, 6, 5])]
+    #[case(vec![0, 3, 5, 8, 4], vec![0, 3, 5, 8, 4, 3, 8, 3, 2, 7])]
+    fn test_expand5to10(#[case] a: Vec<u8>, #[case] b: Vec<u8>) {
+        assert_eq!(expand5to10(&a), b);
     }
 
     #[test]

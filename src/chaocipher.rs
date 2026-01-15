@@ -270,6 +270,8 @@ impl Block for Chaocipher {
 mod tests {
     use super::*;
 
+    use rstest::rstest;
+
     const PLAIN_TXT: &str = "WELLDONEISBETTERTHANWELLSAID";
     const CIPHER_TXT: &str = "OAHQHCNYNXTSZJRRHJBYHQKSOUJY";
     const LPLAIN_TXT: &str = "IFYOUCANREADTHISYOUEITHERDOWNLOADEDMYOWNIMPLEMENTATIONOFCHAOCIPHERORYOUWROTEONEOFYOUROWNINEITHERCASELETMEKNOWANDACCEPTMYCONGRATULATIONSX";
@@ -288,67 +290,41 @@ mod tests {
         assert!(Chaocipher::new("AB", "CD").is_err());
     }
 
-    #[test]
-    fn test_chaocipher_encrypt() {
+    #[rstest]
+    #[case(PLAIN_TXT, CIPHER_TXT)]
+    #[case(LPLAIN_TXT, LCIPHER_TXT)]
+    fn test_chaocipher_encrypt(#[case] pt: &str, #[case] ct: &str) {
         let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let src = PLAIN_TXT.as_bytes();
+        let src = pt.as_bytes();
         let mut dst = vec![0u8; src.len()];
         c.encrypt(&mut dst, src);
-        assert_eq!(dst, CIPHER_TXT.as_bytes());
+        assert_eq!(dst, ct.as_bytes());
     }
 
-    #[test]
-    fn test_chaocipher_encrypt_long() {
+    #[rstest]
+    #[case(CIPHER_TXT, PLAIN_TXT)]
+    #[case(LCIPHER_TXT, LPLAIN_TXT)]
+    fn test_chaocipher_decrypt(#[case] ct: &str, #[case] pt: &str) {
         let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let src = LPLAIN_TXT.as_bytes();
-        let mut dst = vec![0u8; src.len()];
-        c.encrypt(&mut dst, src);
-        assert_eq!(dst, LCIPHER_TXT.as_bytes());
-    }
-
-    #[test]
-    fn test_chaocipher_decrypt() {
-        let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let src = CIPHER_TXT.as_bytes();
+        let src = ct.as_bytes();
         let mut dst = vec![0u8; src.len()];
         c.decrypt(&mut dst, src);
-        assert_eq!(dst, PLAIN_TXT.as_bytes());
+        assert_eq!(dst, pt.as_bytes());
     }
 
-    #[test]
-    fn test_chaocipher_decrypt_long() {
+    #[rstest]
+    #[case('A', 12, "PFJRIGTWOBNYQEHXUCZVAMDSLK", "VZGJRIHWXUMCPKTLNBQDEOYSFA")]
+    #[case('W', 21, "ONYQHXUCZVAMDBSLKPEFJRIGTW", "XUCPTLNBQDEOYMSFAVZKGJRIHW")]
+    fn test_advance(#[case] c_find: char, #[case] expected_idx: usize, #[case] expected_cw: &str, #[case] expected_pw: &str) {
         let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let src = LCIPHER_TXT.as_bytes();
-        let mut dst = vec![0u8; src.len()];
-        c.decrypt(&mut dst, src);
-        assert_eq!(dst, LPLAIN_TXT.as_bytes());
-    }
-
-    #[test]
-    fn test_advance() {
-        let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let idx = KEY_PLAIN.find('A').unwrap();
-        assert_eq!(idx, 12);
+        let idx = KEY_PLAIN.find(c_find).unwrap();
+        assert_eq!(idx, expected_idx);
 
         {
             let mut state = c.state.borrow_mut();
             Chaocipher::advance(&mut state, idx);
         }
-        assert_eq!(String::from_utf8_lossy(&c.state.borrow().cw), "PFJRIGTWOBNYQEHXUCZVAMDSLK");
-        assert_eq!(String::from_utf8_lossy(&c.state.borrow().pw), "VZGJRIHWXUMCPKTLNBQDEOYSFA");
-    }
-
-    #[test]
-    fn test_advance_real() {
-        let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let idx = KEY_PLAIN.find('W').unwrap();
-        assert_eq!(idx, 21);
-
-        {
-            let mut state = c.state.borrow_mut();
-            Chaocipher::advance(&mut state, idx);
-        }
-        assert_eq!(String::from_utf8_lossy(&c.state.borrow().cw), "ONYQHXUCZVAMDBSLKPEFJRIGTW");
-        assert_eq!(String::from_utf8_lossy(&c.state.borrow().pw), "XUCPTLNBQDEOYMSFAVZKGJRIHW");
+        assert_eq!(String::from_utf8_lossy(&c.state.borrow().cw), expected_cw);
+        assert_eq!(String::from_utf8_lossy(&c.state.borrow().pw), expected_pw);
     }
 }

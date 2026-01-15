@@ -202,6 +202,8 @@ impl Block for Transposition {
 mod tests {
     use super::*;
 
+    use rstest::rstest;
+
     #[test]
     fn test_new_cipher() {
         let c = Transposition::new("ABCDE").unwrap();
@@ -221,67 +223,27 @@ mod tests {
         assert_eq!(c.block_size(), 5);
     }
 
-    #[test]
-    fn test_transposition_encrypt() {
-        let pt = "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123";
-        let cts = [
-            ("ARABESQUE", "AATNIITN2MIHAAXOOTCT2RNXDNENNAOXMB2TW4DTGKP3ES1TISUY3"),
-            ("SUBWAY", "CWI2DUNG3TDP2EEIN1AAATXOIBTTTT4SRTYXAAOXNMOI2KNN3MNSH"),
-            ("PORTABLE", "CA2DIN3KTXMTITO3ROHAP2OIGTANSMSXADIXENTTWTEUB1AN4NNY2"),
-        ];
-
-        for (key, ct) in cts {
-            let c = Transposition::new(key).unwrap();
-            let mut dst = vec![0u8; pt.len()];
-            c.encrypt(&mut dst, pt.as_bytes());
-            assert_eq!(String::from_utf8(dst).unwrap(), ct);
-        }
+    #[rstest]
+    #[case("ARABESQUE", "AATNIITN2MIHAAXOOTCT2RNXDNENNAOXMB2TW4DTGKP3ES1TISUY3", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("SUBWAY", "CWI2DUNG3TDP2EEIN1AAATXOIBTTTT4SRTYXAAOXNMOI2KNN3MNSH", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("PORTABLE", "CA2DIN3KTXMTITO3ROHAP2OIGTANSMSXADIXENTTWTEUB1AN4NNY2", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("SUBWAY", "AFDFADAGAAAAVVVVGFGVGGGX", "AVAGAGAVDFFGAVAGDGAVGVFX")]
+    fn test_transposition_encrypt(#[case] key: &str, #[case] ct: &str, #[case] pt: &str) {
+        let c = Transposition::new(key).unwrap();
+        let mut dst = vec![0u8; pt.len()];
+        c.encrypt(&mut dst, pt.as_bytes());
+        assert_eq!(String::from_utf8(dst).unwrap(), ct);
     }
 
-    #[test]
-    fn test_transposition_encrypt1() {
-        let pt = "AVAGAGAVDFFGAVAGDGAVGVFX";
-        let cts = [
-            ("SUBWAY", "AFDFADAGAAAAVVVVGFGVGGGX"),
-        ];
-
-        for (key, ct) in cts {
-            let c = Transposition::new(key).unwrap();
-            let mut dst = vec![0u8; pt.len()];
-            c.encrypt(&mut dst, pt.as_bytes());
-            assert_eq!(String::from_utf8(dst).unwrap(), ct);
-        }
-    }
-
-    #[test]
-    fn test_transposition_decrypt() {
-        let pt = "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123";
-        let cts = [
-            ("ARABESQUE", "AATNIITN2MIHAAXOOTCT2RNXDNENNAOXMB2TW4DTGKP3ES1TISUY3"),
-            ("SUBWAY", "CWI2DUNG3TDP2EEIN1AAATXOIBTTTT4SRTYXAAOXNMOI2KNN3MNSH"),
-            ("PORTABLE", "CA2DIN3KTXMTITO3ROHAP2OIGTANSMSXADIXENTTWTEUB1AN4NNY2"),
-        ];
-
-        for (key, ct) in cts {
-            let c = Transposition::new(key).unwrap();
-            let mut dst = vec![0u8; pt.len()];
-            c.decrypt(&mut dst, ct.as_bytes());
-            assert_eq!(String::from_utf8(dst).unwrap(), pt);
-        }
-    }
-
-    #[test]
-    fn test_transposition_decrypt1() {
-        let pt = "AVAGAGAVDFFGAVAGDGAVGVFX";
-        let cts = [
-            ("SUBWAY", "AFDFADAGAAAAVVVVGFGVGGGX"),
-        ];
-
-        for (key, ct) in cts {
-            let c = Transposition::new(key).unwrap();
-            let mut dst = vec![0u8; pt.len()];
-            c.decrypt(&mut dst, ct.as_bytes());
-            assert_eq!(String::from_utf8(dst).unwrap(), pt);
-        }
+    #[rstest]
+    #[case("ARABESQUE", "AATNIITN2MIHAAXOOTCT2RNXDNENNAOXMB2TW4DTGKP3ES1TISUY3", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("SUBWAY", "CWI2DUNG3TDP2EEIN1AAATXOIBTTTT4SRTYXAAOXNMOI2KNN3MNSH", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("PORTABLE", "CA2DIN3KTXMTITO3ROHAP2OIGTANSMSXADIXENTTWTEUB1AN4NNY2", "ATTACKATDAWNATPOINT42X23XSENDMOREMUNITIONSBYNIGHTX123")]
+    #[case("SUBWAY", "AFDFADAGAAAAVVVVGFGVGGGX", "AVAGAGAVDFFGAVAGDGAVGVFX")]
+    fn test_transposition_decrypt(#[case] key: &str, #[case] ct: &str, #[case] pt: &str) {
+        let c = Transposition::new(key).unwrap();
+        let mut dst = vec![0u8; pt.len()];
+        c.decrypt(&mut dst, ct.as_bytes());
+        assert_eq!(String::from_utf8(dst).unwrap(), pt);
     }
 }

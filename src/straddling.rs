@@ -365,6 +365,8 @@ impl Block for StraddlingCheckerboard {
 mod tests {
     use super::*;
 
+    use rstest::rstest;
+
     #[test]
     fn test_new_cipher() {
         let c = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
@@ -390,54 +392,48 @@ mod tests {
         assert_eq!(c.dec.get("0").unwrap(), &b'A');
     }
 
-    #[test]
-    fn test_times10() {
-        assert_eq!(StraddlingCheckerboard::times10(b'3'), vec!["30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]);
-        assert_eq!(StraddlingCheckerboard::times10(b'1'), vec!["10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]);
+    #[rstest]
+    #[case(b'3', vec!["30", "31", "32", "33", "34", "35", "36", "37", "38", "39"])]
+    #[case(b'1', vec!["10", "11", "12", "13", "14", "15", "16", "17", "18", "19"])]
+    fn test_times10(#[case] c: u8, #[case] expected: Vec<&str>) {
+        assert_eq!(StraddlingCheckerboard::times10(c), expected);
     }
 
-    #[test]
-    fn test_extract() {
-        assert_eq!(StraddlingCheckerboard::extract(ALL_CIPHER, b"25"), b"01346789");
-        assert_eq!(StraddlingCheckerboard::extract(ALL_CIPHER, b"16"), b"02345789");
-        assert_eq!(StraddlingCheckerboard::extract(ALL_CIPHER, b"42"), b"01356789");
+    #[rstest]
+    #[case(b"25", b"01346789")]
+    #[case(b"16", b"02345789")]
+    #[case(b"42", b"01356789")]
+    fn test_extract(#[case] two: &[u8], #[case] expected: &[u8]) {
+        assert_eq!(StraddlingCheckerboard::extract(ALL_CIPHER, two), expected);
     }
 
-    #[test]
-    fn test_straddling_encrypt() {
-        let test_data = [
-            ("ARABESQUE", "89", "ATTACKAT2AM", "0770808107972297088"),
-            ("ARABESQUE", "36", "ATTACKAT2AM", "0990303109672267038"),
-            ("ARABESQUE", "37", "IFYOUCANREADTHIS", "6377173830041203397265"),
-            ("ARABESQUE", "89", "ATTACK", "07708081"),
-            ("SUBWAY", "89", "TOLKIEN", "6819388137"),
-            ("PORTABLE", "89", "RETRIBUTION", "1721693526840"),
-        ];
-        for (key, chrs, pt, ct) in test_data {
-            let c = StraddlingCheckerboard::new(key, chrs).unwrap();
-            let mut dst = vec![0u8; 100];
-            c.encrypt(&mut dst, pt.as_bytes());
-            let sct = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();
-            assert_eq!(sct, ct);
-        }
+    #[rstest]
+    #[case("ARABESQUE", "89", "ATTACKAT2AM", "0770808107972297088")]
+    #[case("ARABESQUE", "36", "ATTACKAT2AM", "0990303109672267038")]
+    #[case("ARABESQUE", "37", "IFYOUCANREADTHIS", "6377173830041203397265")]
+    #[case("ARABESQUE", "89", "ATTACK", "07708081")]
+    #[case("SUBWAY", "89", "TOLKIEN", "6819388137")]
+    #[case("PORTABLE", "89", "RETRIBUTION", "1721693526840")]
+    fn test_straddling_encrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
+        let c = StraddlingCheckerboard::new(key, chrs).unwrap();
+        let mut dst = vec![0u8; 100];
+        c.encrypt(&mut dst, pt.as_bytes());
+        let sct = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();
+        assert_eq!(sct, ct);
     }
 
-    #[test]
-    fn test_straddling_decrypt() {
-        let test_data = [
-            ("ARABESQUE", "89", "ATTACKAT2AM", "0770808107972297088"),
-            ("ARABESQUE", "36", "ATTACKAT2AM", "0990303109672267038"),
-            ("ARABESQUE", "37", "IFYOUCANREADTHIS", "6377173830041203397265"),
-            ("ARABESQUE", "89", "ATTACK", "07708081"),
-            ("SUBWAY", "89", "TOLKIEN", "6819388137"),
-            ("PORTABLE", "89", "RETRIBUTION", "1721693526840"),
-        ];
-        for (key, chrs, pt, ct) in test_data {
-            let c = StraddlingCheckerboard::new(key, chrs).unwrap();
-            let mut dst = vec![0u8; 100];
-            c.decrypt(&mut dst, ct.as_bytes());
-            let spt = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();
-            assert_eq!(spt, pt);
-        }
+    #[rstest]
+    #[case("ARABESQUE", "89", "ATTACKAT2AM", "0770808107972297088")]
+    #[case("ARABESQUE", "36", "ATTACKAT2AM", "0990303109672267038")]
+    #[case("ARABESQUE", "37", "IFYOUCANREADTHIS", "6377173830041203397265")]
+    #[case("ARABESQUE", "89", "ATTACK", "07708081")]
+    #[case("SUBWAY", "89", "TOLKIEN", "6819388137")]
+    #[case("PORTABLE", "89", "RETRIBUTION", "1721693526840")]
+    fn test_straddling_decrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
+        let c = StraddlingCheckerboard::new(key, chrs).unwrap();
+        let mut dst = vec![0u8; 100];
+        c.decrypt(&mut dst, ct.as_bytes());
+        let spt = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();
+        assert_eq!(spt, pt);
     }
 }

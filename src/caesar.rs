@@ -160,17 +160,16 @@ impl Block for CaesarCipher {
 mod tests {
     use super::*;
 
-    struct CaesarTest {
-        key: i32,
-        pt: &'static str,
-        ct: &'static str,
-    }
+    use rstest::rstest;
 
-    const ENCRYPT_CAESAR_TESTS: [CaesarTest; 3] = [
-        CaesarTest { key: 3, pt: "ABCDE", ct: "DEFGH" },
-        CaesarTest { key: 4, pt: "COUCOU", ct: "GSYGSY" },
-        CaesarTest { key: 13, pt: "COUCOU", ct: "PBHPBH" },
-    ];
+    #[rstest]
+    #[case(3, "ABCDE", "DEFGH")]
+    #[case(4, "COUCOU", "GSYGSY")]
+    #[case(13, "COUCOU", "PBHPBH")]
+    fn test_caesar_cipher_block_size(#[case] key: i32, #[case] _pt: &str, #[case] _ct: &str) {
+        let c = CaesarCipher::new(key);
+        assert_eq!(c.block_size(), 1);
+    }
 
     #[test]
     fn test_expand_key() {
@@ -202,33 +201,27 @@ mod tests {
         assert_eq!(mydec, dec);
     }
 
-    #[test]
-    fn test_caesar_cipher_block_size() {
-        for test in ENCRYPT_CAESAR_TESTS {
-            let c = CaesarCipher::new(test.key);
-            assert_eq!(c.block_size(), 1);
-        }
+    #[rstest]
+    #[case(3, "ABCDE", "DEFGH")]
+    #[case(4, "COUCOU", "GSYGSY")]
+    #[case(13, "COUCOU", "PBHPBH")]
+    fn test_caesar_cipher_encrypt(#[case] key: i32, #[case] pt: &str, #[case] ct: &str) {
+        let c = CaesarCipher::new(key);
+        let plain = pt.as_bytes();
+        let mut cipher = vec![0u8; plain.len()];
+        c.encrypt(&mut cipher, plain);
+        assert_eq!(cipher, ct.as_bytes());
     }
 
-    #[test]
-    fn test_caesar_cipher_encrypt() {
-        for test in ENCRYPT_CAESAR_TESTS {
-            let c = CaesarCipher::new(test.key);
-            let plain = test.pt.as_bytes();
-            let mut cipher = vec![0u8; plain.len()];
-            c.encrypt(&mut cipher, plain);
-            assert_eq!(cipher, test.ct.as_bytes());
-        }
-    }
-
-    #[test]
-    fn test_caesar_cipher_decrypt() {
-        for test in ENCRYPT_CAESAR_TESTS {
-            let c = CaesarCipher::new(test.key);
-            let cipher = test.ct.as_bytes();
-            let mut plain = vec![0u8; cipher.len()];
-            c.decrypt(&mut plain, cipher);
-            assert_eq!(plain, test.pt.as_bytes());
-        }
+    #[rstest]
+    #[case(3, "ABCDE", "DEFGH")]
+    #[case(4, "COUCOU", "GSYGSY")]
+    #[case(13, "COUCOU", "PBHPBH")]
+    fn test_caesar_cipher_decrypt(#[case] key: i32, #[case] pt: &str, #[case] ct: &str) {
+        let c = CaesarCipher::new(key);
+        let cipher = ct.as_bytes();
+        let mut plain = vec![0u8; cipher.len()];
+        c.decrypt(&mut plain, cipher);
+        assert_eq!(plain, pt.as_bytes());
     }
 }

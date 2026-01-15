@@ -1,3 +1,16 @@
+//! Implementation of the SIGABA (ECM Mark II) cipher machine.
+//!
+//! SIGABA was a rotor machine used by the United States during World War II and into the 1950s.
+//! It was considered highly secure and was never known to have been broken during its service life.
+//!
+//! The machine consists of three banks of rotors:
+//! * **Cipher Bank**: Five rotors that perform the actual encryption of the message.
+//! * **Control Bank**: Five rotors that determine which cipher rotors step.
+//! * **Index Bank**: Five small rotors (stationary in this implementation) that further scramble the control bank's output.
+//!
+//! # References
+//! * [Wikipedia: SIGABA](https://en.wikipedia.org/wiki/SIGABA)
+//! * [The SIGABA (ECM Mark II) Cipher Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 use crate::Block;
 use std::cell::RefCell;
 
@@ -16,6 +29,8 @@ const CIPHER_WIRINGS: [&[u8; 26]; 10] = [
     b"AXLTZOYQUVREBKSPLMNHIDGWJR", // Rotor 9
 ];
 
+/// Rotor wirings for the control bank.
+/// In most Sigaba models, these were identical to the cipher bank wirings.
 const CONTROL_WIRINGS: [&[u8; 26]; 10] = [
     b"WJKZREDSXOTYPUAGVHCBFMQLNI", // Same as cipher for now as per common Sigaba models
     b"DZWXPHSGBYRFOTKJVCNAEILMUQ",
@@ -29,6 +44,8 @@ const CONTROL_WIRINGS: [&[u8; 26]; 10] = [
     b"AXLTZOYQUVREBKSPLMNHIDGWJR",
 ];
 
+/// Rotor wirings for the index bank.
+/// These were smaller rotors with only 10 active positions (0-9).
 const INDEX_WIRINGS: [&[u8; 26]; 5] = [
     b"0918273645ABCDEFGHIJKLMNOP", // Rotor 0 (Only 0-9 used)
     b"1032547698ABCDEFGHIJKLMNOP", // Rotor 1
@@ -37,16 +54,22 @@ const INDEX_WIRINGS: [&[u8; 26]; 5] = [
     b"4321056789ABCDEFGHIJKLMNOP", // Rotor 4
 ];
 
+/// Represents a single rotor in the SIGABA machine.
 #[derive(Clone, Copy)]
 struct Rotor {
+    /// The wiring permutation of the rotor.
     wiring: [u8; 26],
+    /// The inverse wiring permutation for backward transformation.
     inverse: [u8; 26],
+    /// Current rotational position of the rotor (0-25).
     position: usize,
+    /// Whether the rotor is inserted in reverse.
     #[allow(dead_code)]
     reversed: bool,
 }
 
 impl Rotor {
+    /// Creates a new rotor with the given wiring, initial position, and orientation.
     fn new(wiring: &[u8; 26], position: usize, reversed: bool) -> Self {
         let mut w = [0u8; 26];
         if !reversed {
@@ -92,6 +115,7 @@ impl Rotor {
         }
     }
 
+    /// Performs a forward signal transformation through the rotor.
     fn forward(&self, input: u8) -> u8 {
         let base = if input >= b'A' && input <= b'Z' { b'A' } else { b'0' };
         let mod_val = if base == b'A' { 26 } else { 10 };
@@ -103,6 +127,7 @@ impl Rotor {
         (offset_out as u8) + out_base
     }
 
+    /// Performs a backward signal transformation through the rotor (used during decryption).
     fn backward(&self, input: u8) -> u8 {
         let base = if input >= b'A' && input <= b'Z' { b'A' } else { b'0' };
         let mod_val = if base == b'A' { 26 } else { 10 };
@@ -114,24 +139,44 @@ impl Rotor {
         (offset_out as u8) + out_base
     }
 
+    /// Steps the rotor forward by one position.
     fn step(&mut self) {
         self.position = (self.position + 1) % 26;
     }
 }
 
+/// Internal state of the SIGABA machine, containing all rotor banks.
 #[derive(Clone)]
 struct SigabaState {
+    /// The bank of five cipher rotors.
     cipher_bank: [Rotor; 5],
+    /// The bank of five control rotors.
     control_bank: [Rotor; 5],
+    /// The bank of five index rotors.
     index_bank: [Rotor; 5],
 }
 
+/// The SIGABA (ECM Mark II) cipher machine.
 pub struct Sigaba {
+    /// Initial state for resetting the machine.
     initial_state: SigabaState,
+    /// Mutable current state of the machine.
     state: RefCell<SigabaState>,
 }
 
 impl Sigaba {
+    /// Creates a new SIGABA machine instance.
+    ///
+    /// # Arguments
+    /// * `cipher_indices` - Indices (0-9) of the rotors used in the cipher bank.
+    /// * `cipher_pos` - Initial positions (0-25) of the cipher rotors.
+    /// * `cipher_rev` - Whether each cipher rotor is reversed.
+    /// * `control_indices` - Indices (0-9) of the rotors used in the control bank.
+    /// * `control_pos` - Initial positions (0-25) of the control rotors.
+    /// * `control_rev` - Whether each control rotor is reversed.
+    /// * `index_indices` - Indices (0-4) of the rotors used in the index bank.
+    /// * `index_pos` - Initial positions (0-25) of the index rotors.
+    /// * `index_rev` - Whether each index rotor is reversed.
     pub fn new(
         cipher_indices: [usize; 5], cipher_pos: [usize; 5], cipher_rev: [bool; 5],
         control_indices: [usize; 5], control_pos: [usize; 5], control_rev: [bool; 5],
@@ -159,6 +204,7 @@ impl Sigaba {
         }
     }
 
+    /// Advanced the state of the machine by stepping the rotors.
     fn step_rotors(state: &mut SigabaState) {
         // 1. Control bank steps
         // The middle control rotor (index 2) always steps.
@@ -215,6 +261,7 @@ impl Sigaba {
         // Reserved for future use if non-sequential access is needed
     }
 
+    /// Performs a single character transformation through the cipher rotors.
     fn transform(state: &SigabaState, input: u8, decrypt: bool) -> u8 {
         if !input.is_ascii_alphabetic() {
             return input;
@@ -234,16 +281,20 @@ impl Sigaba {
         val
     }
 
+    /// Resets the machine to its initial state.
     fn reset(&self) {
         *self.state.borrow_mut() = self.initial_state.clone();
     }
 }
 
 impl Block for Sigaba {
+    /// SIGABA is a stream cipher conceptually, but here it processes blocks of size 1.
     fn block_size(&self) -> usize {
         1
     }
 
+    /// Encrypts the source buffer into the destination buffer.
+    /// Note: This implementation resets the machine state before encryption.
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         self.reset();
         for (i, &ch) in src.iter().enumerate() {
@@ -256,6 +307,8 @@ impl Block for Sigaba {
         src.len()
     }
 
+    /// Decrypts the source buffer into the destination buffer.
+    /// Note: This implementation resets the machine state before decryption.
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         self.reset();
         for (i, &ch) in src.iter().enumerate() {

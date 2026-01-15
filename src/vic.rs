@@ -116,8 +116,8 @@ struct ExpandedKey {
 /// Returns an `ExpandedKey` structure containing all derived key material.
 ///
 fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
-    let ph1 = to_numeric_one(&phrase[..10]);
-    let ph2 = to_numeric_one(&phrase[10..]);
+    let ph1: Vec<u8> = helpers::to_numeric(&phrase[..10]).into_iter().map(|x| (x + 1) % 10).collect();
+    let ph2: Vec<u8> = helpers::to_numeric(&phrase[10..]).into_iter().map(|x| (x + 1) % 10).collect();
 
     let res = submod10(imsg, ikey5);
     let first = expand5to10(&res);
@@ -143,39 +143,6 @@ fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
     }
 }
 
-/// Converts a string to a numeric sequence based on alphabetical ordering.
-///
-/// This function ranks the characters in the input string by their alphabetical order
-/// and returns a vector where each position contains its rank (modulo 10).
-///
-/// # Arguments
-///
-/// * `key` - Input string to convert
-///
-/// # Returns
-///
-/// Returns a vector of bytes where each byte represents the rank (0-9) of the
-/// character at that position.
-///
-/// # Examples
-///
-/// ```
-/// # use old_crypto_rs::vic::to_numeric_one;
-/// let result = to_numeric_one("IDREAMOFJE");
-/// assert_eq!(result, vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4]);
-/// ```
-///
-fn to_numeric_one(key: &str) -> Vec<u8> {
-    let letters = key.as_bytes();
-    let mut indexed: Vec<(usize, u8)> = letters.iter().enumerate().map(|(i, &b)| (i, b)).collect();
-    indexed.sort_by_key(|&(_, b)| b);
-
-    let mut ar = vec![0u8; letters.len()];
-    for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
-        ar[original_idx] = ((rank + 1) % 10) as u8;
-    }
-    ar
-}
 
 /// Converts a string of digits to a vector of integers.
 ///
@@ -376,7 +343,8 @@ mod tests {
     #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
     #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
     fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
-        assert_eq!(to_numeric_one(s), r);
+        let res: Vec<u8> = helpers::to_numeric(s).into_iter().map(|x| (x + 1) % 10).collect();
+        assert_eq!(res, r);
     }
 
     #[rstest]

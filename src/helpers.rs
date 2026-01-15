@@ -355,20 +355,12 @@ pub fn shuffle_next(key: &str, alphabet: &str) -> String {
 
 pub fn to_numeric(key: &str) -> Vec<u8> {
     let letters = key.as_bytes();
-    let mut sorted = letters.to_vec();
-    sorted.sort_unstable();
+    let mut indexed: Vec<(usize, u8)> = letters.iter().enumerate().map(|(i, &b)| (i, b)).collect();
+    indexed.sort_by_key(|&(_, b)| b);
 
-    let mut used_sorted = vec![false; sorted.len()];
-    let mut ar = Vec::with_capacity(letters.len());
-
-    for &ch in letters {
-        for (k, &s_ch) in sorted.iter().enumerate() {
-            if s_ch == ch && !used_sorted[k] {
-                ar.push(k as u8);
-                used_sorted[k] = true;
-                break;
-            }
-        }
+    let mut ar = vec![0u8; letters.len()];
+    for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
+        ar[original_idx] = rank as u8;
     }
     ar
 }

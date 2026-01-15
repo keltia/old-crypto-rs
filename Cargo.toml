@@ -26,6 +26,10 @@ rustdoc-args = ["--cfg", "docsrs"]
 [badges]
 maintenance = { status = "actively-developed" }
 
+[features]
+default = []
+sigaba = []
+
 [dependencies]
 
 [dev-dependencies]

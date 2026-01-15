@@ -10,6 +10,7 @@ mod straddling;
 mod nihilist;
 mod vic;
 mod wheatstone;
+#[cfg(feature = "sigaba")]
 mod sigaba;
 mod solitaire;
 
@@ -24,6 +25,7 @@ pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;
 pub use vic::VicCipher;
 pub use wheatstone::Wheatstone;
+#[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;
 pub use solitaire::Solitaire;
 

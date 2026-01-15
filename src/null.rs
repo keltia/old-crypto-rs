@@ -1,5 +1,6 @@
 use crate::Block;
 
+/// A basic, do-nothing, cipher.
 pub struct NullCipher;
 
 impl NullCipher {

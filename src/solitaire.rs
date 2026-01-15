@@ -51,6 +51,40 @@
 use crate::Block;
 use std::cell::RefCell;
 
+/// A Solitaire cipher implementation using a 54-card deck.
+///
+/// The `Solitaire` struct maintains the state of a deck of cards used for encryption
+/// and decryption operations. It stores both the initial deck configuration (for
+/// resetting between operations) and the current deck state (which is modified during
+/// keystream generation).
+///
+/// # Structure
+///
+/// - `initial_deck`: The original deck configuration, preserved for resetting
+/// - `deck`: The working deck state, wrapped in `RefCell` for interior mutability
+///
+/// # Thread Safety
+///
+/// This type is not thread-safe due to the use of `RefCell`. Each thread should
+/// create its own instance if parallel encryption/decryption is needed.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::solitaire::Solitaire;
+/// use old_crypto_rs::Block;
+///
+/// // Create with default unkeyed deck
+/// let cipher = Solitaire::new_unkeyed();
+///
+/// // Create with a passphrase
+/// let cipher = Solitaire::new_with_passphrase("SECRET");
+///
+/// // Create with custom deck
+/// let custom_deck: Vec<u8> = (1..=54).collect();
+/// let cipher = Solitaire::new(custom_deck);
+/// ```
+/// 
 #[derive(Clone)]
 pub struct Solitaire {
     initial_deck: Vec<u8>,

@@ -34,8 +34,6 @@ const LEN_CT: usize = ALPHABET.len();
 /// The cipher maintains internal state to track the current positions
 /// of both wheels during encryption and decryption operations.
 pub struct Wheatstone {
-    #[allow(dead_code)]
-    ckey: String,
     /// Plaintext wheel alphabet (27 characters)
     aplw: Vec<u8>,
     /// Ciphertext wheel alphabet (26 characters)

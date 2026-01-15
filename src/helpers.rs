@@ -149,7 +149,6 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 ///
 /// # See Also
 ///
-/// * [`expand_broken`] - An alternative implementation with different behavior
 /// * [`insert`] - The helper function used to insert characters
 /// 
 pub fn expand(src: &[u8]) -> Vec<u8> {

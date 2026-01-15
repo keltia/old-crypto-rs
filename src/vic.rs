@@ -3,7 +3,7 @@
 //! The VIC cipher is a sophisticated pencil-and-paper cipher used by Soviet spy Reino Häyhänen
 //! in the 1950s. It combines a straddling checkerboard with two transposition steps.
 //!
-//! Full description & test vectors: http://www.quadibloc.com/crypto/pp1324.htm
+//! Full description & test vectors: <http://www.quadibloc.com/crypto/pp1324.htm>
 //!
 use crate::Block;
 use crate::transposition::Transposition;

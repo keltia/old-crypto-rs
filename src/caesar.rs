@@ -8,7 +8,7 @@
 //!
 //! ```
 //! use old_crypto_rs::Block;
-//! use old_crypto_rs::caesar::CaesarCipher;
+//! use old_crypto_rs::CaesarCipher;
 //!
 //! let cipher = CaesarCipher::new(3);
 //! let plaintext = b"HELLO";
@@ -85,7 +85,7 @@ impl CaesarCipher {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::caesar::CaesarCipher;
+    /// use old_crypto_rs::CaesarCipher;
     ///
     /// let cipher = CaesarCipher::new(3); // Classic Caesar cipher with shift of 3
     /// ```

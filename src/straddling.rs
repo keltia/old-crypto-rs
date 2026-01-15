@@ -31,7 +31,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// # Examples
 ///
 /// ```
-/// use old_crypto_rs::straddling::StraddlingCheckerboard;
+/// use old_crypto_rs::StraddlingCheckerboard;
 /// use old_crypto_rs::Block;
 ///
 /// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
@@ -81,7 +81,7 @@ impl StraddlingCheckerboard {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::straddling::StraddlingCheckerboard;
+    /// use old_crypto_rs::StraddlingCheckerboard;
     ///
     /// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
     /// ```

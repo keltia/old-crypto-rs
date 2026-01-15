@@ -10,7 +10,7 @@
 //! # Example
 //!
 //! ```
-//! use old_crypto_rs::{Block, chaocipher::Chaocipher};
+//! use old_crypto_rs::{Block, Chaocipher};
 //!
 //! let pkey = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 //! let ckey = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -72,7 +72,7 @@ impl Chaocipher {
     /// # Example
     ///
     /// ```
-    /// use old_crypto_rs::chaocipher::Chaocipher;
+    /// use old_crypto_rs::Chaocipher;
     ///
     /// let cipher = Chaocipher::new(
     ///     "PTLNBQDEOYSFAVZKGJRIHWXUMC",
@@ -208,7 +208,7 @@ impl Block for Chaocipher {
     /// # Example
     ///
     /// ```
-    /// use old_crypto_rs::{Block, chaocipher::Chaocipher};
+    /// use old_crypto_rs::{Block, Chaocipher};
     ///
     /// let cipher = Chaocipher::new(
     ///     "PTLNBQDEOYSFAVZKGJRIHWXUMC",
@@ -245,7 +245,7 @@ impl Block for Chaocipher {
     /// # Example
     ///
     /// ```
-    /// use old_crypto_rs::{Block, chaocipher::Chaocipher};
+    /// use old_crypto_rs::{Block, Chaocipher};
     ///
     /// let cipher = Chaocipher::new(
     ///     "PTLNBQDEOYSFAVZKGJRIHWXUMC",

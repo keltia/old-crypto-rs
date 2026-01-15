@@ -13,7 +13,7 @@
 //! # Examples
 //!
 //! ```
-//! # use old_crypto_rs::adfgvx::ADFGVX;
+//! # use old_crypto_rs::ADFGVX;
 //! # use old_crypto_rs::Block;
 //! let cipher = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
 //! let plaintext = b"ATTACKATDAWN";
@@ -52,7 +52,7 @@ impl ADFGVX {
     /// # Examples
     ///
     /// ```
-    /// # use old_crypto_rs::adfgvx::ADFGVX;
+    /// # use old_crypto_rs::ADFGVX;
     /// let cipher = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
     /// ```
     ///

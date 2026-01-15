@@ -23,7 +23,7 @@
 //! # Usage
 //!
 //! ```
-//! use old_crypto_rs::solitaire::Solitaire;
+//! use old_crypto_rs::Solitaire;
 //! use old_crypto_rs::Block;
 //!
 //! // Create cipher with unkeyed (sorted) deck
@@ -71,7 +71,7 @@ use std::cell::RefCell;
 /// # Examples
 ///
 /// ```
-/// use old_crypto_rs::solitaire::Solitaire;
+/// use old_crypto_rs::Solitaire;
 /// use old_crypto_rs::Block;
 ///
 /// // Create with default unkeyed deck
@@ -111,7 +111,7 @@ impl Solitaire {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::solitaire::Solitaire;
+    /// use old_crypto_rs::Solitaire;
     ///
     /// // Create with a custom deck order
     /// let mut custom_deck: Vec<u8> = (1..=54).collect();
@@ -136,7 +136,7 @@ impl Solitaire {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::solitaire::Solitaire;
+    /// use old_crypto_rs::Solitaire;
     /// use old_crypto_rs::Block;
     ///
     /// let cipher = Solitaire::new_unkeyed();
@@ -174,7 +174,7 @@ impl Solitaire {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::solitaire::Solitaire;
+    /// use old_crypto_rs::Solitaire;
     /// use old_crypto_rs::Block;
     ///
     /// // Passphrase can contain spaces and punctuation (ignored)
@@ -413,7 +413,7 @@ impl Block for Solitaire {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::solitaire::Solitaire;
+    /// use old_crypto_rs::Solitaire;
     /// use old_crypto_rs::Block;
     ///
     /// let cipher = Solitaire::new_unkeyed();
@@ -488,7 +488,7 @@ impl Block for Solitaire {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::solitaire::Solitaire;
+    /// use old_crypto_rs::Solitaire;
     /// use old_crypto_rs::Block;
     ///
     /// let cipher = Solitaire::new_unkeyed();

@@ -7,8 +7,7 @@
 //! # Examples
 //!
 //! ```
-//! use old_crypto_rs::Block;
-//! use old_crypto_rs::nihilist::Nihilist;
+//! use old_crypto_rs::{Block, Nihilist};
 //!
 //! let cipher = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
 //! let plaintext = b"IFYOUCANREADTHIS";
@@ -52,7 +51,7 @@ impl Nihilist {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::nihilist::Nihilist;
+    /// use old_crypto_rs::Nihilist;
     ///
     /// let cipher = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
     /// ```

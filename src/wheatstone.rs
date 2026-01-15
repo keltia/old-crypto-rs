@@ -9,7 +9,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use old_crypto_rs::{Block, wheatstone::Wheatstone};
+//! use old_crypto_rs::{Block, Wheatstone};
 //!
 //! let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
 //! let plaintext = b"HELLO";
@@ -73,7 +73,7 @@ impl Wheatstone {
     /// # Example
     ///
     /// ```no_run
-    /// use old_crypto_rs::wheatstone::Wheatstone;
+    /// use old_crypto_rs::Wheatstone;
     ///
     /// let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
     /// ```
@@ -196,7 +196,7 @@ impl Block for Wheatstone {
     /// # Example
     ///
     /// ```no_run
-    /// use old_crypto_rs::{Block, wheatstone::Wheatstone};
+    /// use old_crypto_rs::{Block, Wheatstone};
     ///
     /// let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
     /// let plaintext = b"HELLO";
@@ -231,7 +231,7 @@ impl Block for Wheatstone {
     /// # Example
     ///
     /// ```no_run
-    /// use old_crypto_rs::{Block, wheatstone::Wheatstone};
+    /// use old_crypto_rs::{Block, Wheatstone};
     ///
     /// let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
     /// let ciphertext = b"BYVLQ";

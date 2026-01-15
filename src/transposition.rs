@@ -56,7 +56,7 @@ impl Transposition {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::Transposition;
+    /// use old_crypto_rs::{Block, Transposition};
     ///
     /// let cipher = Transposition::new("ZEBRAS").unwrap();
     /// assert_eq!(cipher.block_size(), 6);

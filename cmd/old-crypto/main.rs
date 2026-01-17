@@ -221,7 +221,10 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> 
+where
+    io::Error: From<B::Error>,
+{
     loop {
         terminal.draw(|f| ui(f, app))?;
 

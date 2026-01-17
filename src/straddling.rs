@@ -279,16 +279,18 @@ impl Block for StraddlingCheckerboard {
         let mut offset = 0;
         for &ch in src {
             if ch.is_ascii_digit() {
-                let marker = self.enc.get(&b'/').unwrap();
-                dst[offset..offset + marker.len()].copy_from_slice(marker.as_bytes());
-                offset += marker.len();
-                
-                dst[offset] = ch;
-                dst[offset + 1] = ch;
-                offset += 2;
-                
-                dst[offset..offset + marker.len()].copy_from_slice(marker.as_bytes());
-                offset += marker.len();
+                if let Some(marker) = self.enc.get(&b'/') {
+                    let marker_bytes = marker.as_bytes();
+                    dst[offset..offset + marker_bytes.len()].copy_from_slice(marker_bytes);
+                    offset += marker_bytes.len();
+                    
+                    dst[offset] = ch;
+                    dst[offset + 1] = ch;
+                    offset += 2;
+                    
+                    dst[offset..offset + marker_bytes.len()].copy_from_slice(marker_bytes);
+                    offset += marker_bytes.len();
+                }
             } else if let Some(s) = self.enc.get(&ch) {
                 let s_bytes = s.as_bytes();
                 dst[offset..offset + s_bytes.len()].copy_from_slice(s_bytes);
@@ -321,40 +323,56 @@ impl Block for StraddlingCheckerboard {
         let mut i = 0;
         while i < src.len() {
             let ch = src[i];
-            let mut ptc;
-            let mut db_str = String::new();
+            let ptc;
+            let mut db_len = 1;
 
             if self.longc.contains(&ch) {
                 if i + 1 < src.len() {
-                    db_str.push(ch as char);
-                    db_str.push(src[i + 1] as char);
-                    ptc = *self.dec.get(&db_str).unwrap_or(&0);
-                    i += 2;
+                    let combined = [ch, src[i + 1]];
+                    let combined_str = unsafe { std::str::from_utf8_unchecked(&combined) };
+                    ptc = self.dec.get(combined_str).copied().unwrap_or(0);
+                    db_len = 2;
                 } else {
                     i += 1;
                     continue;
                 }
             } else {
-                db_str.push(ch as char);
-                ptc = *self.dec.get(&db_str).unwrap_or(&0);
-                i += 1;
+                let single = [ch];
+                let single_str = unsafe { std::str::from_utf8_unchecked(&single) };
+                ptc = self.dec.get(single_str).copied().unwrap_or(0);
             }
+            i += db_len;
 
             if ptc == b'/' {
                 if i + 4 <= src.len() {
-                    let numb = &src[i..i+4];
-                    if numb[0] == numb[1] {
-                        let row_check = (numb[2] as char).to_string() + &(numb[3] as char).to_string();
-                        if row_check == db_str || self.dec.get(&row_check) == Some(&b'/') {
-                            ptc = numb[0];
+                    if src[i] == src[i + 1] {
+                        let row_check = unsafe { std::str::from_utf8_unchecked(&src[i + 2..i + 4]) };
+                        let is_match = if db_len == 2 {
+                             let combined = [src[i - 2], src[i - 1]];
+                             let db_str = unsafe { std::str::from_utf8_unchecked(&combined) };
+                             row_check == db_str
+                        } else {
+                             let single = [src[i - 1]];
+                             let db_str = unsafe { std::str::from_utf8_unchecked(&single) };
+                             row_check == db_str
+                        };
+
+                        if is_match || self.dec.get(row_check) == Some(&b'/') {
+                            if pt_offset < dst.len() {
+                                dst[pt_offset] = src[i];
+                                pt_offset += 1;
+                            }
                             i += 4;
+                            continue;
                         }
                     }
                 }
             }
             if ptc != 0 {
-                dst[pt_offset] = ptc;
-                pt_offset += 1;
+                if pt_offset < dst.len() {
+                    dst[pt_offset] = ptc;
+                    pt_offset += 1;
+                }
             }
         }
         pt_offset

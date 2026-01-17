@@ -117,21 +117,17 @@ impl Block for Transposition {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let klen = self.tkey.len();
-        let mut table = vec![Vec::new(); klen];
-
-        // Fill-in the table
-        for (i, &ch) in src.iter().enumerate() {
-            table[i % klen].push(ch);
-        }
-
-        let mut res = Vec::with_capacity(src.len());
-        // Extract each column in order
+        let mut offset = 0;
         for i in 0..klen {
             let j = self.tkey.iter().position(|&x| x == i as u8).unwrap();
-            res.extend_from_slice(&table[j]);
+            let mut curr = j;
+            while curr < src.len() {
+                dst[offset] = src[curr];
+                offset += 1;
+                curr += klen;
+            }
         }
-        dst[..res.len()].copy_from_slice(&res);
-        res.len()
+        src.len()
     }
 
     /// Decrypts ciphertext using the transposition cipher.
@@ -164,36 +160,28 @@ impl Block for Transposition {
     ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let klen = self.tkey.len();
-        let mut table = vec![Vec::new(); klen];
-        let scol = (src.len() + klen - 1) / klen;
+        if klen == 0 || src.is_empty() {
+            return 0;
+        }
 
-        // Find how many columns are not filled in (irregular table)
-        let pad = src.len() % klen; // col 0..pad-1 are complete
-        let _num_complete = if pad == 0 { klen } else { pad };
+        let scol = src.len() / klen;
+        let extra = src.len() % klen;
 
         let mut current = 0;
         for j in 0..klen {
             let ind = self.tkey.iter().position(|&x| x == j as u8).unwrap();
             
-            let mut how_many = scol;
-            if pad != 0 && ind >= pad {
-                how_many -= 1;
-            }
+            let how_many = if ind < extra { scol + 1 } else { scol };
 
-            if current + how_many <= src.len() {
-                table[ind].extend_from_slice(&src[current..current + how_many]);
-                current += how_many;
+            // Fill the column in dst
+            let mut dst_idx = ind;
+            for k in 0..how_many {
+                dst[dst_idx] = src[current + k];
+                dst_idx += klen;
             }
+            current += how_many;
         }
 
-        // Now get all text
-        for i in 0..src.len() {
-            let col = i % klen;
-            let row = i / klen;
-            if row < table[col].len() {
-                dst[i] = table[col][row];
-            }
-        }
         src.len()
     }
 }

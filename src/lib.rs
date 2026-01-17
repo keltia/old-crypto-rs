@@ -20,6 +20,7 @@ pub use playfair::PlayfairCipher;
 pub use chaocipher::Chaocipher;
 pub use square::SquareCipher;
 pub use transposition::Transposition;
+pub use transposition::IrregularTransposition;
 pub use adfgvx::ADFGVX;
 pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;

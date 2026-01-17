@@ -119,11 +119,11 @@ fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
     let ph1: Vec<u8> = helpers::to_numeric(&phrase[..10]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
     let ph2: Vec<u8> = helpers::to_numeric(&phrase[10..20]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
 
-    let res = submod10(imsg, ikey5);
-    let first = expand5to10(&res);
+    let mut first = submod10(imsg, ikey5);
+    first = chainadd_extend(&first, 5);
 
-    let tmp = addmod10(&first, &ph1);
-    let second = first_encode(&tmp, &ph2);
+    addmod10_inplace(&mut first, &ph1);
+    let second = first_encode(&first, &ph2);
 
     let mut r = second.clone();
     for _ in 0..5 {
@@ -159,33 +159,23 @@ fn str2int(str: &str) -> Vec<u8> {
     str.bytes().map(|b| b - b'0').collect()
 }
 
-/// Performs element-wise addition modulo 10 on two vectors.
+/// Adds two vectors element-wise modulo 10 in-place.
+///
+/// Each element in `a` is replaced with `(a[i] + b[i]) % 10`. The operation
+/// stops when either vector is exhausted.
 ///
 /// # Arguments
 ///
-/// * `a` - First vector of bytes
-/// * `b` - Second vector of bytes (must be same length as `a`)
-///
-/// # Returns
-///
-/// Returns a vector where each element is `(a[i] + b[i]) % 10`.
+/// * `a` - Mutable slice that will be modified with the result
+/// * `b` - Slice to add to `a`
 ///
 #[inline]
-fn addmod10(a: &[u8], b: &[u8]) -> Vec<u8> {
-    a.iter().zip(b).map(|(x, y)| (x + y) % 10).collect()
+fn addmod10_inplace(a: &mut [u8], b: &[u8]) {
+    for (x, y) in a.iter_mut().zip(b) {
+        *x = (*x + *y) % 10;
+    }
 }
 
-/// Performs element-wise subtraction modulo 10 on two vectors.
-///
-/// # Arguments
-///
-/// * `a` - First vector of bytes
-/// * `b` - Second vector of bytes (must be same length as `a`)
-///
-/// # Returns
-///
-/// Returns a vector where each element is `(a[i] + 10 - b[i]) % 10`.
-///
 #[inline]
 fn submod10(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b).map(|(x, y)| (x + 10 - y) % 10).collect()
@@ -220,7 +210,8 @@ fn chainadd_inplace(a: &mut [u8]) {
 /// * `n` - Number of elements to add
 ///
 fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
-    let mut res = a.to_vec();
+    let mut res = Vec::with_capacity(a.len() + n);
+    res.extend_from_slice(a);
     for i in 0..n {
         let sum = (res[i] + res[i+1]) % 10;
         res.push(sum);
@@ -242,6 +233,7 @@ fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
 /// Returns a 10-element vector.
 ///
 #[inline]
+#[cfg(test)]
 fn expand5to10(a: &[u8]) -> Vec<u8> {
     chainadd_extend(a, 5)
 }
@@ -293,10 +285,9 @@ impl Block for VicCipher {
 
         let mut buf_sc = vec![0u8; src.len() * 3]; // Straddling can expand
         let sc_len = self.sc.encrypt(&mut buf_sc, src);
-        let sc_res = &buf_sc[..sc_len];
 
-        let mut buf_tp1 = vec![0u8; sc_res.len()];
-        let tp1_len = self.firsttp.encrypt(&mut buf_tp1, sc_res);
+        let mut buf_tp1 = vec![0u8; sc_len];
+        let tp1_len = self.firsttp.encrypt(&mut buf_tp1, &buf_sc[..sc_len]);
 
         self.secondtp.encrypt(dst, &buf_tp1[..tp1_len])
     }
@@ -354,8 +345,9 @@ mod tests {
     #[rstest]
     #[case(vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![0, 6, 0, 0, 6])]
     #[case(vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![4, 1, 7, 2, 8])]
-    fn test_addmod10(#[case] a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
-        assert_eq!(addmod10(&a, &b), c);
+    fn test_addmod10(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
+        addmod10_inplace(&mut a, &b);
+        assert_eq!(a, c);
     }
 
     #[rstest]
@@ -478,7 +470,8 @@ mod tests {
         // 6 2 0 3 1 8 9 5 7 4
         // -------------------
         // 0 1 8 7 3 1 6 7 3 9
-        let l = addmod10(&k, &ph1);
+        let mut l = k.clone();
+        addmod10_inplace(&mut l, &ph1);
         assert_eq!(l, vec![0, 1, 8, 7, 3, 1, 6, 7, 3, 9]);
 
         // Step 4: First Encoding

@@ -1,7 +1,4 @@
-use old_crypto_rs::{
-    ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher,
-    StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
-};
+use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -31,6 +28,12 @@ fn main() {
     allciphers.push(Cph {
         name: "Transp".to_string(),
         c: Box::new(Transposition::new("SUBWAY").unwrap()),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: "Irr. Transp.".to_string(),
+        c: Box::new(IrregularTransposition::new("SUBWAY").unwrap()),
         size: PLAIN.len(),
     });
 

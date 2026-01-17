@@ -61,7 +61,11 @@ all ciphers; it also check that you can decrypt back to the original plaintext.
 
     cargo run --example demo
 
-There will also be a CLI tool called `old-crypto` which can be used to encrypt/decrypt text.
+There will also be a TUI tool called `old-crypto` which can be used to encrypt/decrypt text.
+
+To run the TUI:
+
+    cargo run --bin old-crypto
 
 ## Benchmarks & Tests
 

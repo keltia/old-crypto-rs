@@ -19,6 +19,10 @@ harness = false
 name = "ciphers"
 harness = false
 
+[[bin]]
+name = "old-crypto"
+path = "cmd/old-crypto/main.rs"
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
@@ -31,6 +35,8 @@ default = []
 sigaba = []
 
 [dependencies]
+ratatui = "0.29"
+crossterm = "0.28"
 
 [dev-dependencies]
 divan = "0.1.14"

@@ -32,12 +32,15 @@ It currently implement a few of the Go/Ruby code, namely:
 - Playfair
 - Chaocipher
 - Simple transposition (can be used with other ciphers as super-encipherement)
+- Irregular transposition (can be used with other ciphers as super-encipherement cf. VIC Cipher)
 - Polybius square bigrammatic cipher (for ADFGVX = polybius + transposition)
 - ADFGVX (6x6 square including numbers)
 - Straddling Checkerboard (for the Nihilist & VIC ciphers)
 - Nihilist cipher (transposition as super-encipherment)
-- VIC Cipher (straddling checkerboard followed by a transposition)
+- VIC Cipher (straddling checkerboard followed by two transpositions, one regular
+  and an irregular one)
 - Wheatstone cipher machine
+- SIGABA, a US cipher machine from WWII
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.
@@ -54,7 +57,8 @@ or
 
     git clone https://github.com/keltia/old-crypto-rs.git
     cd old-crypto-rs
-    cargo run
+    cargo nextest run
+    cargo bench
 
 The library is fetched, compiled and installed. You can find a "demo" program in the `examples` directory, to showcase
 all ciphers; it also check that you can decrypt back to the original plaintext.

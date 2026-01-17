@@ -1,6 +1,6 @@
 [package]
 name = "old-crypto-rs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
 keywords = ["cryptography", "old-crypto", "pen-and-paper", "education", "history"]

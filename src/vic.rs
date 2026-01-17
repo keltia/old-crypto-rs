@@ -387,17 +387,19 @@ mod tests {
         
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];
-        c.encrypt(&mut ct, pt.as_bytes());
+        let ct_actual_len = c.encrypt(&mut ct, pt.as_bytes());
         
-        let ct_len = ct.iter().position(|&x| x == 0).unwrap_or(ct.len());
-        let ct_trimmed = &ct[..ct_len];
+        let ct_trimmed = &ct[..ct_actual_len];
 
-        dbg!(ct_trimmed);
+        // Last digit of ind "741776" is 6.
+        // imsg is "77651".
+        // ct_trimmed should have imsg inserted at index 6.
+        assert!(ct_trimmed.len() >= 11);
 
         let mut decrypted = vec![0u8; 100];
-        c.decrypt(&mut decrypted, ct_trimmed);
+        let dec_len = c.decrypt(&mut decrypted, ct_trimmed);
         
-        let res = String::from_utf8_lossy(&decrypted).trim_matches('\0').to_string();
+        let res = String::from_utf8_lossy(&decrypted[..dec_len]).to_string();
         assert_eq!(res, pt);
     }
 

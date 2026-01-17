@@ -90,6 +90,8 @@ pub struct IrregularTransposition {
     #[allow(dead_code)]
     key: String,
     tkey: Vec<u8>,
+    rank_pos: [usize; 2],
+    tkey_order: Vec<usize>,
 }
 
 impl IrregularTransposition {
@@ -98,38 +100,30 @@ impl IrregularTransposition {
         if key.is_empty() {
             return Err("key can not be empty".to_string());
         }
+        let tkey = helpers::to_numeric(key);
+        let pos0 = tkey.iter().position(|&x| x == 0).unwrap();
+        let pos1 = tkey.iter().position(|&x| x == 1).unwrap();
+        
+        let klen = tkey.len();
+        let mut tkey_order = vec![0; klen];
+        for i in 0..klen {
+            tkey_order[i] = tkey.iter().position(|&x| x == i as u8).unwrap();
+        }
+
         Ok(IrregularTransposition {
             key: key.to_string(),
-            tkey: helpers::to_numeric(key),
+            tkey,
+            rank_pos: [pos0, pos1],
+            tkey_order,
         })
     }
 
     /// Computes which cells are "irregular" (triangular areas) for a given message length.
-    fn get_triangular_mask(&self, len: usize) -> Vec<bool> {
-        let klen = self.tkey.len();
-        let rows = (len + klen - 1) / klen;
-        let mut mask = vec![false; rows * klen];
-
-        let mut areas_done = 0;
-        for rank in 0..klen {
-            if areas_done >= 2 { break; }
-            
-            let start_col = self.tkey.iter().position(|&x| x == rank as u8).unwrap();
-            
-            let mut curr_col = start_col;
-            let mut curr_row = 0;
-            
-            while curr_row < rows && curr_col < klen {
-                for c in curr_col..klen {
-                    mask[curr_row * klen + c] = true;
-                }
-                curr_row += 1;
-                curr_col += 1;
-            }
-            areas_done += 1;
-        }
-
-        mask
+    #[inline]
+    fn is_in_triangular_area(&self, r: usize, c: usize) -> bool {
+        // The triangle starts at (row 0, start_col)
+        // It expands to the right: at row `i`, it covers columns `start_col + i` to `klen - 1`
+        (c >= self.rank_pos[0] + r || c >= self.rank_pos[1] + r) && c < self.tkey.len()
     }
 }
 
@@ -141,21 +135,23 @@ impl Block for IrregularTransposition {
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let klen = self.tkey.len();
         let len = src.len();
-        if klen == 0 || len == 0 { return 0; }
+        if klen == 0 || len == 0 {
+            return 0;
+        }
         let rows = (len + klen - 1) / klen;
-        let mask = self.get_triangular_mask(len);
 
         let mut grid = vec![0u8; rows * klen];
-        let mut active = vec![false; rows * klen];
+        let mut active = vec![0u8; (rows * klen + 7) / 8];
         let mut src_idx = 0;
 
         // Phase 1: Fill non-triangular areas row by row
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if idx < rows * klen && !mask[idx] && src_idx < len {
+                if !self.is_in_triangular_area(r, c) && src_idx < len {
+                    let idx = row_off + c;
                     grid[idx] = src[src_idx];
-                    active[idx] = true;
+                    active[idx >> 3] |= 1 << (idx & 7);
                     src_idx += 1;
                 }
             }
@@ -163,11 +159,12 @@ impl Block for IrregularTransposition {
 
         // Phase 2: Fill triangular areas row by row
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if idx < rows * klen && mask[idx] && src_idx < len {
+                if self.is_in_triangular_area(r, c) && src_idx < len {
+                    let idx = row_off + c;
                     grid[idx] = src[src_idx];
-                    active[idx] = true;
+                    active[idx >> 3] |= 1 << (idx & 7);
                     src_idx += 1;
                 }
             }
@@ -175,11 +172,10 @@ impl Block for IrregularTransposition {
 
         // Read out column by column according to tkey
         let mut dst_idx = 0;
-        for i in 0..klen {
-            let col = self.tkey.iter().position(|&x| x == i as u8).unwrap();
+        for &col in &self.tkey_order {
             for r in 0..rows {
                 let idx = r * klen + col;
-                if idx < rows * klen && active[idx] {
+                if (active[idx >> 3] & (1 << (idx & 7))) != 0 {
                     dst[dst_idx] = grid[idx];
                     dst_idx += 1;
                 }
@@ -192,27 +188,30 @@ impl Block for IrregularTransposition {
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let klen = self.tkey.len();
         let len = src.len();
-        if klen == 0 || len == 0 { return 0; }
+        if klen == 0 || len == 0 {
+            return 0;
+        }
         let rows = (len + klen - 1) / klen;
-        let mask = self.get_triangular_mask(len);
 
         // Determine active cells
-        let mut active = vec![false; rows * klen];
+        let mut active = vec![0u8; (rows * klen + 7) / 8];
         let mut count = 0;
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if idx < rows * klen && !mask[idx] && count < len {
-                    active[idx] = true;
+                if !self.is_in_triangular_area(r, c) && count < len {
+                    let idx = row_off + c;
+                    active[idx >> 3] |= 1 << (idx & 7);
                     count += 1;
                 }
             }
         }
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if idx < rows * klen && mask[idx] && count < len {
-                    active[idx] = true;
+                if self.is_in_triangular_area(r, c) && count < len {
+                    let idx = row_off + c;
+                    active[idx >> 3] |= 1 << (idx & 7);
                     count += 1;
                 }
             }
@@ -221,11 +220,10 @@ impl Block for IrregularTransposition {
         // Fill grid from src column by column
         let mut grid = vec![0u8; rows * klen];
         let mut src_idx = 0;
-        for i in 0..klen {
-            let col = self.tkey.iter().position(|&x| x == i as u8).unwrap();
+        for &col in &self.tkey_order {
             for r in 0..rows {
                 let idx = r * klen + col;
-                if idx < rows * klen && active[idx] {
+                if (active[idx >> 3] & (1 << (idx & 7))) != 0 {
                     grid[idx] = src[src_idx];
                     src_idx += 1;
                 }
@@ -235,18 +233,20 @@ impl Block for IrregularTransposition {
         // Read out row by row, first non-mask then mask
         let mut dst_idx = 0;
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if active[idx] && !mask[idx] {
+                let idx = row_off + c;
+                if ((active[idx >> 3] & (1 << (idx & 7))) != 0) && !self.is_in_triangular_area(r, c) {
                     dst[dst_idx] = grid[idx];
                     dst_idx += 1;
                 }
             }
         }
         for r in 0..rows {
+            let row_off = r * klen;
             for c in 0..klen {
-                let idx = r * klen + c;
-                if active[idx] && mask[idx] {
+                let idx = row_off + c;
+                if ((active[idx >> 3] & (1 << (idx & 7))) != 0) && self.is_in_triangular_area(r, c) {
                     dst[dst_idx] = grid[idx];
                     dst_idx += 1;
                 }
@@ -308,49 +308,26 @@ mod tests {
 
     #[test]
     fn test_irregular_transposition_mask() {
-        // Key "94735236270398134" -> klen 17
-        // Ranking it:
-        // 0: 0 (pos 10)
-        // 1: 1 (pos 14)
-        // 2: 2 (pos 5)
-        // 3: 3 (pos 3)
-        // ... and so on.
-        // Rank 0 is at pos 10.
-        // Rank 1 is at pos 14.
-        
         let key = "94735236270398134";
         let c = IrregularTransposition::new(key).unwrap();
-        let mask = c.get_triangular_mask(150);
-        let klen = 17;
-        
+
         // Row 0:
-        // rank 0 is at col 10. So col 10..17 should be true in row 0.
-        // rank 1 is at col 14. Wait, the description says:
-        // "The first triangular area starts at the top of the column which will be read out first, and extends to the end of the first row."
-        // First to be read out is rank 0.
-        // Second to be read out is rank 1.
-        
         // Rank 0 is at pos 10.
         // Rank 1 is at pos 14.
-        
-        // Row 0: col 10 to 16 are true.
         for col in 10..17 {
-            assert!(mask[0 * klen + col], "Row 0 col {} should be true", col);
+            assert!(c.is_in_triangular_area(0, col), "Row 0 col {} should be true", col);
         }
         for col in 0..10 {
-            assert!(!mask[0 * klen + col], "Row 0 col {} should be false", col);
+            assert!(!c.is_in_triangular_area(0, col), "Row 0 col {} should be false", col);
         }
-        
-        // Row 1: col 11 to 16 are true. (starts one column later)
-        for col in 11..17 {
-            assert!(mask[1 * klen + col], "Row 1 col {} should be true", col);
-        }
-        assert!(!mask[1 * klen + 10]);
 
-        // Second triangular area starts at rank 1 column (pos 14)
-        // Row 0: col 14 to 16 are true. (already set by first area)
-        // Wait, "Then, after one space, the second triangular area starts"
-        // Row 0: rank 1 is at pos 14. It starts there.
-        assert!(mask[0 * klen + 14]);
+        // Row 1: col 11 to 16 are true for the first triangle.
+        for col in 11..17 {
+            assert!(c.is_in_triangular_area(1, col), "Row 1 col {} should be true", col);
+        }
+        assert!(!c.is_in_triangular_area(1, 10));
+
+        // Row 0: rank 1 is at pos 14.
+        assert!(c.is_in_triangular_area(0, 14));
     }
 }

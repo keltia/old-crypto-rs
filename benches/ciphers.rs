@@ -1,6 +1,6 @@
 use old_crypto_rs::{
-    ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, SquareCipher,
-    StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
+    ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
+    SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
 };
 
 use divan::Bencher;
@@ -50,6 +50,16 @@ mod encryption {
     #[divan::bench]
     fn transposition(bencher: Bencher) {
         let c = Transposition::new("SUBWAY").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn irregular_transposition(bencher: Bencher) {
+        let c = IrregularTransposition::new("SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
@@ -164,6 +174,18 @@ mod decryption {
     #[divan::bench]
     fn transposition(bencher: Bencher) {
         let c = Transposition::new("SUBWAY").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn irregular_transposition(bencher: Bencher) {
+        let c = IrregularTransposition::new("SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);

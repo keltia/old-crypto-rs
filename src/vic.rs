@@ -6,7 +6,7 @@
 //! Full description & test vectors: <http://www.quadibloc.com/crypto/pp1324.htm>
 //!
 use crate::Block;
-use crate::transposition::Transposition;
+use crate::transposition::{Transposition, IrregularTransposition};
 use crate::straddling::{StraddlingCheckerboard, ALPHABET_TXT};
 use crate::helpers;
 
@@ -22,7 +22,7 @@ pub struct VicCipher {
     // First transposition
     firsttp: Transposition,
     // Second transposition
-    secondtp: Transposition,
+    secondtp: IrregularTransposition,
     // Straddling Checkerboard
     pub sc: StraddlingCheckerboard,
 }
@@ -71,7 +71,7 @@ impl VicCipher {
         let firsttp = Transposition::new(&String::from_utf8_lossy(&expanded.second))?;
 
         // Second transposition is irregular, using 'third' as key
-        let secondtp = Transposition::new(&String::from_utf8_lossy(&expanded.third))?;
+        let secondtp = IrregularTransposition::new(&String::from_utf8_lossy(&expanded.third))?;
 
         // Straddling Checkerboard using 'sckey' (converted to letters) and 'persn'
         let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();

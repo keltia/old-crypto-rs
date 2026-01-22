@@ -13,7 +13,16 @@
 //!
 use crate::Block;
 use crate::helpers;
-use std::collections::HashMap;
+
+/// Compact encoding entry for a single plaintext byte.
+///
+/// `len` is 0 for unmapped bytes, or 1/2 for the number of output digits.
+/// `bytes` stores the digit bytes for the code.
+#[derive(Copy, Clone, Debug, Default)]
+struct EncEntry {
+    len: u8,
+    bytes: [u8; 2],
+}
 
 /// Default alphabet containing A-Z plus special characters '/' and '-'.
 /// The '/' character is used as a digit escape marker in encryption.
@@ -46,15 +55,16 @@ pub struct StraddlingCheckerboard {
     key: String,
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
-    /// The eight digits used for single-digit codes (not currently used in implementation).
-    #[allow(dead_code)]
-    shortc: Vec<u8>,
     /// The shuffled alphabet after applying the key.
     full: String,
-    /// Encoding map from plaintext byte to ciphertext digit string.
-    pub enc: HashMap<u8, String>,
-    /// Decoding map from ciphertext digit string to plaintext byte.
-    pub dec: HashMap<String, u8>,
+    /// Fast encoding table indexed by plaintext byte.
+    enc_table: [EncEntry; 256],
+    /// Fast decoding table for single-digit codes.
+    dec1: [u8; 10],
+    /// Fast decoding table for two-digit codes.
+    dec2: [[u8; 10]; 10],
+    /// Fast lookup for whether a digit is a long-code prefix.
+    longc_mask: [bool; 10],
 }
 
 impl StraddlingCheckerboard {
@@ -134,10 +144,16 @@ impl StraddlingCheckerboard {
             key: key.to_string(),
             full: full_clean,
             longc,
-            shortc: shortc.clone(),
-            enc: HashMap::new(),
-            dec: HashMap::new(),
+            enc_table: [EncEntry::default(); 256],
+            dec1: [0; 10],
+            dec2: [[0; 10]; 10],
+            longc_mask: [false; 10],
         };
+        for &c_digit in &c.longc {
+            if c_digit.is_ascii_digit() {
+                c.longc_mask[(c_digit - b'0') as usize] = true;
+            }
+        }
         c.expand_key(shortc, freq_str.as_bytes());
         Ok(c)
     }
@@ -209,11 +225,10 @@ impl StraddlingCheckerboard {
         longc
     }
 
-    /// Builds the encoding and decoding maps based on frequency analysis.
+    /// Builds the encoding and decoding tables based on frequency analysis.
     ///
     /// Assigns single-digit codes to high-frequency letters and two-digit
-    /// codes to low-frequency letters. Populates both the `enc` and `dec`
-    /// hashmaps.
+    /// codes to low-frequency letters. Populates the encode/decode tables.
     ///
     /// # Arguments
     ///
@@ -228,16 +243,20 @@ impl StraddlingCheckerboard {
         for &ch in self.full.as_bytes() {
             if freq.contains(&ch) {
                 if i < shortc.len() {
-                    let s = (shortc[i] as char).to_string();
-                    self.enc.insert(ch, s.clone());
-                    self.dec.insert(s, ch);
+                    let digit = shortc[i];
+                    self.enc_table[ch as usize] = EncEntry { len: 1, bytes: [digit, 0] };
+                    self.dec1[(digit - b'0') as usize] = ch;
                     i += 1;
                 }
             } else {
                 if j < longc.len() {
-                    let s = longc[j].clone();
-                    self.enc.insert(ch, s.clone());
-                    self.dec.insert(s, ch);
+                    let bytes = longc[j].as_bytes();
+                    if bytes.len() == 2 {
+                        let d0 = bytes[0];
+                        let d1 = bytes[1];
+                        self.enc_table[ch as usize] = EncEntry { len: 2, bytes: [d0, d1] };
+                        self.dec2[(d0 - b'0') as usize][(d1 - b'0') as usize] = ch;
+                    }
                     j += 1;
                 }
             }
@@ -277,24 +296,35 @@ impl Block for StraddlingCheckerboard {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let mut offset = 0;
+        let marker = self.enc_table[b'/' as usize];
         for &ch in src {
             if ch.is_ascii_digit() {
-                if let Some(marker) = self.enc.get(&b'/') {
-                    let marker_bytes = marker.as_bytes();
-                    dst[offset..offset + marker_bytes.len()].copy_from_slice(marker_bytes);
-                    offset += marker_bytes.len();
-                    
+                if marker.len != 0 {
+                    dst[offset] = marker.bytes[0];
+                    if marker.len == 2 {
+                        dst[offset + 1] = marker.bytes[1];
+                    }
+                    offset += marker.len as usize;
+
                     dst[offset] = ch;
                     dst[offset + 1] = ch;
                     offset += 2;
-                    
-                    dst[offset..offset + marker_bytes.len()].copy_from_slice(marker_bytes);
-                    offset += marker_bytes.len();
+
+                    dst[offset] = marker.bytes[0];
+                    if marker.len == 2 {
+                        dst[offset + 1] = marker.bytes[1];
+                    }
+                    offset += marker.len as usize;
                 }
-            } else if let Some(s) = self.enc.get(&ch) {
-                let s_bytes = s.as_bytes();
-                dst[offset..offset + s_bytes.len()].copy_from_slice(s_bytes);
-                offset += s_bytes.len();
+            } else {
+                let entry = self.enc_table[ch as usize];
+                if entry.len != 0 {
+                    dst[offset] = entry.bytes[0];
+                    if entry.len == 2 {
+                        dst[offset + 1] = entry.bytes[1];
+                    }
+                    offset += entry.len as usize;
+                }
             }
         }
         offset
@@ -326,38 +356,45 @@ impl Block for StraddlingCheckerboard {
             let ptc;
             let mut db_len = 1;
 
-            if self.longc.contains(&ch) {
+            if !ch.is_ascii_digit() {
+                i += 1;
+                continue;
+            }
+
+            let d0 = (ch - b'0') as usize;
+            if self.longc_mask[d0] {
                 if i + 1 < src.len() {
-                    let combined = [ch, src[i + 1]];
-                    let combined_str = unsafe { std::str::from_utf8_unchecked(&combined) };
-                    ptc = self.dec.get(combined_str).copied().unwrap_or(0);
-                    db_len = 2;
+                    let ch1 = src[i + 1];
+                    if ch1.is_ascii_digit() {
+                        let d1 = (ch1 - b'0') as usize;
+                        ptc = self.dec2[d0][d1];
+                        db_len = 2;
+                    } else {
+                        i += 2;
+                        continue;
+                    }
                 } else {
                     i += 1;
                     continue;
                 }
             } else {
-                let single = [ch];
-                let single_str = unsafe { std::str::from_utf8_unchecked(&single) };
-                ptc = self.dec.get(single_str).copied().unwrap_or(0);
+                ptc = self.dec1[d0];
             }
             i += db_len;
 
             if ptc == b'/' {
-                if i + 4 <= src.len() {
-                    if src[i] == src[i + 1] {
-                        let row_check = unsafe { std::str::from_utf8_unchecked(&src[i + 2..i + 4]) };
-                        let is_match = if db_len == 2 {
-                             let combined = [src[i - 2], src[i - 1]];
-                             let db_str = unsafe { std::str::from_utf8_unchecked(&combined) };
-                             row_check == db_str
-                        } else {
-                             let single = [src[i - 1]];
-                             let db_str = unsafe { std::str::from_utf8_unchecked(&single) };
-                             row_check == db_str
-                        };
+                if i + 4 <= src.len() && src[i] == src[i + 1] {
+                    let row0 = src[i + 2];
+                    let row1 = src[i + 3];
+                    if row0.is_ascii_digit() && row1.is_ascii_digit() {
+                        let rd0 = (row0 - b'0') as usize;
+                        let rd1 = (row1 - b'0') as usize;
+                        let mut is_match = false;
+                        if db_len == 2 {
+                            is_match = row0 == src[i - 2] && row1 == src[i - 1];
+                        }
 
-                        if is_match || self.dec.get(row_check) == Some(&b'/') {
+                        if is_match || self.dec2[rd0][rd1] == b'/' {
                             if pt_offset < dst.len() {
                                 dst[pt_offset] = src[i];
                                 pt_offset += 1;
@@ -389,7 +426,6 @@ mod tests {
     fn test_new_cipher() {
         let c = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
         assert_eq!(c.full, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
-        assert_eq!(c.shortc, b"01234567");
         assert_eq!(c.longc, b"89");
     }
 
@@ -402,12 +438,20 @@ mod tests {
     #[test]
     fn test_expand_key() {
         let c = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
-        assert_eq!(c.enc.get(&b'V').unwrap(), "82");
-        assert_eq!(c.enc.get(&b'K').unwrap(), "81");
-        assert_eq!(c.enc.get(&b'A').unwrap(), "0");
-        assert_eq!(c.enc.get(&b'E').unwrap(), "2");
-        assert_eq!(c.dec.get("82").unwrap(), &b'V');
-        assert_eq!(c.dec.get("0").unwrap(), &b'A');
+        let v = c.enc_table[b'V' as usize];
+        let k = c.enc_table[b'K' as usize];
+        let a = c.enc_table[b'A' as usize];
+        let e = c.enc_table[b'E' as usize];
+        assert_eq!(v.len, 2);
+        assert_eq!(v.bytes, *b"82");
+        assert_eq!(k.len, 2);
+        assert_eq!(k.bytes, *b"81");
+        assert_eq!(a.len, 1);
+        assert_eq!(a.bytes[0], b'0');
+        assert_eq!(e.len, 1);
+        assert_eq!(e.bytes[0], b'2');
+        assert_eq!(c.dec2[8][2], b'V');
+        assert_eq!(c.dec1[0], b'A');
     }
 
     #[rstest]

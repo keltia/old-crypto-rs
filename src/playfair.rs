@@ -30,7 +30,6 @@
 //! 
 use crate::Block;
 use crate::helpers;
-use std::collections::HashMap;
 
 const ALPHABET: &str = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 const OP_ENCRYPT: u8 = 1;
@@ -39,21 +38,21 @@ const CODE_WORD: &str = "01234";
 
 /// Playfair cipher implementation using a 5×5 keyed matrix.
 ///
-/// The `PlayfairCipher` struct holds the cipher key and maintains bidirectional mappings
+/// The `PlayfairCipher` struct holds the cipher key and maintains bidirectional tables
 /// between characters and their positions in the 5×5 Playfair matrix. This allows for
 /// efficient encryption and decryption operations.
 ///
 /// # Fields
 ///
 /// * `key` - The condensed key string used to build the cipher matrix
-/// * `i2c` - Maps from character (as u8) to its `Couple` position in the matrix
-/// * `c2i` - Maps from `Couple` position in the matrix to its character (as u8)
+/// * `i2c` - Table from character (as u8) to its `Couple` position in the matrix
+/// * `c2i` - Table from matrix position to its character (as u8)
 /// 
 pub struct PlayfairCipher {
     #[allow(dead_code)]
     key: String,
-    i2c: HashMap<u8, Couple>,
-    c2i: HashMap<Couple, u8>,
+    i2c: [Couple; 256],
+    c2i: [u8; 25],
 }
 
 /// Represents a coordinate pair (row, column) in the 5×5 Playfair matrix.
@@ -67,13 +66,23 @@ pub struct PlayfairCipher {
 /// * `r` - Row index (0-4) or first character of a bigram
 /// * `c` - Column index (0-4) or second character of a bigram
 /// 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Couple {
     r: u8,
     c: u8,
 }
 
+const INVALID_COUPLE: Couple = Couple { r: 0xFF, c: 0xFF };
+
 impl PlayfairCipher {
+    fn lookup(&self, ch: u8) -> Couple {
+        let couple = self.i2c[ch as usize];
+        if couple.r == 0xFF {
+            panic!("invalid character");
+        }
+        couple
+    }
+
     /// Transforms a pair of characters using the Playfair cipher rules.
     ///
     /// This is the core encryption/decryption function that applies the Playfair transformation
@@ -95,21 +104,30 @@ impl PlayfairCipher {
     /// 3. **Rectangle**: Swap the columns of the two characters
     /// 
     fn transform(&self, pt: Couple, opt: u8) -> Couple {
-        let bg1 = self.i2c[&pt.r];
-        let bg2 = self.i2c[&pt.c];
+        let bg1 = self.lookup(pt.r);
+        let bg2 = self.lookup(pt.c);
         if bg1.r == bg2.r {
             let ct1 = Couple { r: bg1.r, c: (bg1.c + opt) % 5 };
             let ct2 = Couple { r: bg2.r, c: (bg2.c + opt) % 5 };
-            return Couple { r: self.c2i[&ct1], c: self.c2i[&ct2] };
+            return Couple {
+                r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
+                c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+            };
         }
         if bg1.c == bg2.c {
             let ct1 = Couple { r: (bg1.r + opt) % 5, c: bg1.c };
             let ct2 = Couple { r: (bg2.r + opt) % 5, c: bg2.c };
-            return Couple { r: self.c2i[&ct1], c: self.c2i[&ct2] };
+            return Couple {
+                r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
+                c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+            };
         }
         let ct1 = Couple { r: bg1.r, c: bg2.c };
         let ct2 = Couple { r: bg2.r, c: bg1.c };
-        Couple { r: self.c2i[&ct1], c: self.c2i[&ct2] }
+        Couple {
+            r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
+            c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+        }
     }
 
     /// Creates a new Playfair cipher with the specified key.
@@ -137,8 +155,8 @@ impl PlayfairCipher {
     /// 
     pub fn new(key: &str) -> Self {
         let condensed_key = helpers::condense(&format!("{}{}", key, ALPHABET));
-        let mut i2c = HashMap::new();
-        let mut c2i = HashMap::new();
+        let mut i2c = [INVALID_COUPLE; 256];
+        let mut c2i = [0u8; 25];
         
         let mut ind = 0;
         let key_bytes = condensed_key.as_bytes();
@@ -146,8 +164,8 @@ impl PlayfairCipher {
             for j in 0..CODE_WORD.len() {
                 let c = key_bytes[ind];
                 let couple = Couple { r: i as u8, c: j as u8 };
-                i2c.insert(c, couple);
-                c2i.insert(couple, c);
+                i2c[c as usize] = couple;
+                c2i[i * 5 + j] = c;
                 ind += 1;
             }
         }

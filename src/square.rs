@@ -24,7 +24,16 @@
 //! 
 use crate::Block;
 use crate::helpers;
-use std::collections::HashMap;
+
+/// Compact encoding entry for a single plaintext byte.
+///
+/// `len` is 0 for unmapped bytes, or 2 for the bigram length.
+/// `bytes` stores the bigram bytes for the code.
+#[derive(Copy, Clone, Debug, Default)]
+struct EncEntry {
+    len: u8,
+    bytes: [u8; 2],
+}
 
 /// Base alphabet used for creating the cipher square.
 /// Contains all uppercase letters A-Z followed by digits 0-9.
@@ -42,15 +51,15 @@ pub const BASE36: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 /// * `key` - The keyword used to initialize the cipher square
 /// * `chrs` - The character set used for bigram generation (e.g., "ADFGVX" or "012345")
 /// * `alpha` - The condensed alphabet used to populate the cipher square
-/// * `enc` - Encryption mapping from plaintext byte to bigram string
-/// * `dec` - Decryption mapping from bigram string to plaintext byte
+/// * `enc_table` - Fast encryption table from plaintext byte to bigram bytes
+/// * `dec_table` - Fast decryption table from bigram bytes to plaintext byte
 /// 
 pub struct SquareCipher {
     key: String,
     chrs: String,
     alpha: Vec<u8>,
-    enc: HashMap<u8, String>,
-    dec: HashMap<String, u8>,
+    enc_table: [EncEntry; 256],
+    dec_table: [u8; 256 * 256],
 }
 
 impl SquareCipher {
@@ -96,8 +105,8 @@ impl SquareCipher {
             key: key.to_string(),
             chrs: chrs.to_string(),
             alpha,
-            enc: HashMap::new(),
-            dec: HashMap::new(),
+            enc_table: [EncEntry::default(); 256],
+            dec_table: [0; 256 * 256],
         };
         c.expand_key();
         Ok(c)
@@ -129,14 +138,19 @@ impl SquareCipher {
 
                 // Calculate linear index in the square (row * width + column)
                 let ind = i * klen + j;
-                let bigr_str = String::from_utf8(bigr.clone()).unwrap();
 
                 // Only map if we haven't exceeded the alphabet length
                 if ind < self.alpha.len() {
                     // Forward mapping: alphabet character → bigram
-                    self.enc.insert(self.alpha[ind], bigr_str.clone());
+                    let pt = self.alpha[ind];
+                    let entry = EncEntry {
+                        len: 2,
+                        bytes: [bigr[0], bigr[1]],
+                    };
+                    self.enc_table[pt as usize] = entry;
                     // Reverse mapping: bigram → alphabet character
-                    self.dec.insert(bigr_str, self.alpha[ind]);
+                    let idx = ((bigr[0] as usize) << 8) | (bigr[1] as usize);
+                    self.dec_table[idx] = pt;
                 }
             }
         }
@@ -178,11 +192,11 @@ impl Block for SquareCipher {
     /// 
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         for (i, &ch) in src.iter().enumerate() {
-            if let Some(ct) = self.enc.get(&ch) {
-                let ct_bytes = ct.as_bytes();
+            let entry = self.enc_table[ch as usize];
+            if entry.len == 2 {
                 // Write the two-character bigram to destination
-                dst[i * 2] = ct_bytes[0];
-                dst[i * 2 + 1] = ct_bytes[1];
+                dst[i * 2] = entry.bytes[0];
+                dst[i * 2 + 1] = entry.bytes[1];
             }
         }
         src.len() * 2
@@ -209,8 +223,9 @@ impl Block for SquareCipher {
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // Process source in steps of 2 (each bigram)
         for i in (0..src.len()).step_by(2) {
-            let pt_str = String::from_utf8(vec![src[i], src[i + 1]]).unwrap();
-            if let Some(&pt) = self.dec.get(&pt_str) {
+            let idx = ((src[i] as usize) << 8) | (src[i + 1] as usize);
+            let pt = self.dec_table[idx];
+            if pt != 0 {
                 // Write the recovered character to destination
                 dst[i / 2] = pt;
             }

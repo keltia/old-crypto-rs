@@ -24,6 +24,7 @@
 use crate::Block;
 use crate::square::SquareCipher;
 use crate::transposition::Transposition;
+use std::cell::RefCell;
 
 /// ADFGVX cipher combining Polybius square substitution with columnar transposition.
 ///
@@ -34,6 +35,7 @@ use crate::transposition::Transposition;
 pub struct ADFGVX {
     sqr: SquareCipher,
     transp: Transposition,
+    buf: RefCell<Vec<u8>>,
 }
 
 impl ADFGVX {
@@ -70,6 +72,7 @@ impl ADFGVX {
         Ok(ADFGVX {
             sqr,
             transp,
+            buf: RefCell::new(Vec::new()),
         })
     }
 }
@@ -106,8 +109,12 @@ impl Block for ADFGVX {
     /// The number of bytes written to `dst`.
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let mut buf = vec![0u8; 2 * src.len()];
-        let n = self.sqr.encrypt(&mut buf, src);
+        let mut buf = self.buf.borrow_mut();
+        let needed = 2 * src.len();
+        if buf.len() < needed {
+            buf.resize(needed, 0);
+        }
+        let n = self.sqr.encrypt(&mut buf[..needed], src);
         self.transp.encrypt(dst, &buf[..n])
     }
 
@@ -128,8 +135,12 @@ impl Block for ADFGVX {
     /// The number of bytes written to `dst`.
     ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let mut buf = vec![0u8; src.len()];
-        let n = self.transp.decrypt(&mut buf, src);
+        let mut buf = self.buf.borrow_mut();
+        let needed = src.len();
+        if buf.len() < needed {
+            buf.resize(needed, 0);
+        }
+        let n = self.transp.decrypt(&mut buf[..needed], src);
         self.sqr.decrypt(dst, &buf[..n])
     }
 }

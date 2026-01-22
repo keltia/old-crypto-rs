@@ -26,24 +26,27 @@ and an easy way to use it.
 
 ## Features
 
-It currently implement a few of the Go/Ruby code, namely:
+It currently implements a few of the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
+- Simple transposition (can be used with other ciphers as super-encipherment)
+- Polybius square bi-grammatic cipher (for ADFGVX = polybius + transposition)
 - Playfair
-- Chaocipher
-- Simple transposition (can be used with other ciphers as super-encipherement)
-- Irregular transposition (can be used with other ciphers as super-encipherement cf. VIC Cipher)
-- Polybius square bigrammatic cipher (for ADFGVX = polybius + transposition)
+- Irregular transposition (can be used with other ciphers as super-encipherment cf. VIC Cipher)
 - ADFGVX (6x6 square including numbers)
 - Straddling Checkerboard (for the Nihilist & VIC ciphers)
 - Nihilist cipher (transposition as super-encipherment)
 - VIC Cipher (straddling checkerboard followed by two transpositions, one regular
   and an irregular one)
+
+It also implements simulation for some cipher devices/machines:
+- Chaocipher
 - Wheatstone cipher machine
 - SIGABA, a US cipher machine from WWII
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
-Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.
+Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.  Some implementations were pretty
+naive, so I am now working to improve them.
 
 ## Installation
 
@@ -78,7 +81,7 @@ implementations.
 
 You can run them with
 
-    cargo test
+    cargo nextest run
     cargo bench
 
 ## TODO
@@ -107,3 +110,4 @@ Please see CONTRIBUTING.md for some simple rules.
 - [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
 - [Vigenère cipher](https://en.wikipedia.org/wiki/Vigenère_cipher)
+- [SIGABA](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)

@@ -1,5 +1,5 @@
 use divan::bench;
-use old_crypto_rs::helpers::{shuffle, shuffle_next};
+use old_crypto_rs::helpers::shuffle;
 
 fn main() {
     divan::main();
@@ -11,9 +11,4 @@ const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 #[bench]
 fn bench_shuffle() {
     shuffle(KEY, ALPHABET);
-}
-
-#[bench]
-fn bench_shuffle_next() {
-    shuffle_next(KEY, ALPHABET);
 }

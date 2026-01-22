@@ -254,98 +254,42 @@ pub fn expand(src: &[u8]) -> Vec<u8> {
 /// Space complexity: O(n + m) for the working vector and result string
 /// 
 pub fn shuffle(key: &str, alphabet: &str) -> String {
-    let mut word: Vec<u8> = condense(&format!("{}{}", key, alphabet)).into_bytes();
-    let length = condense(key).len();
+    let mut word = Vec::with_capacity(key.len() + alphabet.len());
+    let mut seen = [false; 256];
+    let mut length = 0;
+    for c in key.chars() {
+        if (c as usize) < 256 && !seen[c as usize] {
+            seen[c as usize] = true;
+            word.push(c as u8);
+            length += 1;
+        }
+    }
+    if length == 0 {
+        return alphabet.to_string();
+    }
+
+    for c in alphabet.chars() {
+        if (c as usize) < 256 && !seen[c as usize] {
+            seen[c as usize] = true;
+            word.push(c as u8);
+        }
+    }
 
     let mut height = alphabet.len() / length;
     if alphabet.len() % length != 0 {
         height += 1;
     }
 
-    let mut res = String::new();
+    let mut res = String::with_capacity(word.len());
     for i in (0..length).rev() {
         for j in 0..=height {
             if word.len() <= height.saturating_sub(1) {
-                res.push_str(&String::from_utf8_lossy(&word));
+                res.push_str(std::str::from_utf8(&word).unwrap());
                 return res;
             } else {
                 if i * j < word.len() {
                     let c = word.remove(i * j);
                     res.push(c as char);
-                }
-            }
-        }
-    }
-    res
-}
-
-/// Optimized version of shuffle that uses index tracking instead of vector removals.
-///
-/// This function provides the same functionality as `shuffle` but with better performance
-/// by using a boolean array to track used characters instead of repeatedly removing elements
-/// from a vector, which causes O(n) shifts on each removal.
-///
-/// # Performance
-///
-/// Time complexity: O(n * m) where n is the key length and m is the height (same as shuffle)
-/// However, the constant factor is much better due to avoiding vector element removals.
-/// Space complexity: O(n + m) for the working vector, result string, and used array
-///
-/// # Examples
-///
-/// ```
-/// use old_crypto_rs::helpers::shuffle_next;
-///
-/// let key = "ARABESQUE";
-/// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
-/// let result = shuffle_next(key, alphabet);
-/// assert_eq!(result, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
-/// ```
-///
-/// # See Also
-///
-/// * [`shuffle`] - The original implementation
-///
-pub fn shuffle_next(key: &str, alphabet: &str) -> String {
-    let word: Vec<u8> = condense(&format!("{}{}", key, alphabet)).into_bytes();
-    let length = condense(key).len();
-
-    let mut height = alphabet.len() / length;
-    if alphabet.len() % length != 0 {
-        height += 1;
-    }
-
-    let mut res = String::new();
-    let mut used = vec![false; word.len()];
-    let mut remaining = word.len();
-
-    for i in (0..length).rev() {
-        for j in 0..=height {
-            if remaining <= height.saturating_sub(1) {
-                for (idx, &ch) in word.iter().enumerate() {
-                    if !used[idx] {
-                        res.push(ch as char);
-                    }
-                }
-                return res;
-            } else {
-                let target_index = i * j;
-                if target_index < remaining {
-                    let mut actual_index = 0;
-                    let mut count = 0;
-                    for (idx, &is_used) in used.iter().enumerate() {
-                        if !is_used {
-                            if count == target_index {
-                                actual_index = idx;
-                                break;
-                            }
-                            count += 1;
-                        }
-                    }
-
-                    res.push(word[actual_index] as char);
-                    used[actual_index] = true;
-                    remaining -= 1;
                 }
             }
         }
@@ -465,22 +409,6 @@ mod tests {
         let key = "SUBWAY";
         let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
         let res = shuffle(key, alphabet);
-        assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
-    }
-
-    #[test]
-    fn test_shuffle_next() {
-        let key = "ARABESQUE";
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
-        let res = shuffle_next(key, alphabet);
-        assert_eq!(res, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
-    }
-
-    #[test]
-    fn test_shuffle_next_odd() {
-        let key = "SUBWAY";
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
-        let res = shuffle_next(key, alphabet);
         assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
     }
 

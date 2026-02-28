@@ -367,7 +367,6 @@ impl Block for VicCipher {
         if let Some(dash_pos) = sc_plain.iter().position(|&b| b == b'-') {
             let after = &sc_plain[dash_pos + 1..];
             let before = &sc_plain[..dash_pos];
-            let total_len = after.len() + before.len();
             let mut out_len = 0;
 
             if out_len + after.len() <= dst.len() {

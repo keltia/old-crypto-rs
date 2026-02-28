@@ -356,6 +356,7 @@ pub fn fix_double(str: &str, fill: char) -> String {
 
 #[cfg(test)]
 mod tests {
+    use crate::straddling::ALPHABET_TXT;
     use super::*;
 
     #[test]
@@ -399,16 +400,14 @@ mod tests {
     #[test]
     fn test_shuffle() {
         let key = "ARABESQUE";
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
-        let res = shuffle(key, alphabet);
+        let res = shuffle(key, ALPHABET_TXT);
         assert_eq!(res, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
     }
 
     #[test]
     fn test_shuffle_odd() {
         let key = "SUBWAY";
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
-        let res = shuffle(key, alphabet);
+        let res = shuffle(key, ALPHABET_TXT);
         assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
     }
 

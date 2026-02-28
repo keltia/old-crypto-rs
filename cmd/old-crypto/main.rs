@@ -10,7 +10,7 @@ use ratatui::{
 };
 use old_crypto_rs::{
     Block as CipherBlock, ADFGVX, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher,
-    Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone,
+    Solitaire, SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone,
 };
 
 enum InputMode {
@@ -68,6 +68,7 @@ impl App {
                 "Straddling",
                 "Nihilist",
                 "VIC",
+                "SECOM",
                 "Wheatstone",
                 "Sigaba",
             ],
@@ -177,6 +178,16 @@ impl App {
                 match VicCipher::new(&self.key1, &self.key2, &self.key3, &self.key4) {
                     Ok(cipher) => {
                         let mut d = vec![0u8; src.len() * 4];
+                        let n = cipher.encrypt(&mut d, src);
+                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
+                    }
+                    Err(e) => self.result = format!("Error: {}", e),
+                }
+            }
+            "SECOM" => {
+                match SecomCipher::new(&self.key1, &self.key2) {
+                    Ok(cipher) => {
+                        let mut d = vec![0u8; src.len() * 2];
                         let n = cipher.encrypt(&mut d, src);
                         self.result = String::from_utf8_lossy(&d[..n]).to_string();
                     }
@@ -347,6 +358,10 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Date/Index", &app.key2),
             ("Phrase", &app.key3),
             ("Key Message", &app.key4),
+        ],
+        "SECOM" => vec![
+            ("Key", &app.key1),
+            ("ATONESI", &app.key2)
         ],
         "Wheatstone" => vec![
             ("Start Character", &app.key1),

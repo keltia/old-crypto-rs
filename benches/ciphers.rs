@@ -1,6 +1,6 @@
 use old_crypto_rs::{
     ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
-    SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
+    SquareCipher, SecomCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
 };
 
 use divan::Bencher;
@@ -20,6 +20,16 @@ mod encryption {
     #[divan::bench]
     fn vic(bencher: Bencher) {
         let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len() * 3];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn secom(bencher: Bencher) {
+        let c = SecomCipher::new("IDREAMOFJEANNIEWITHT", "ATONESI").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 3];
         bencher.bench_local(|| {
@@ -138,6 +148,20 @@ mod decryption {
         let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 3];
+        c.encrypt(&mut ct, src);
+        let ct_len = ct.iter().position(|&x| x == 0).unwrap_or(ct.len());
+        let ct_trimmed = &ct[..ct_len];
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, ct_trimmed);
+        });
+    }
+
+    #[divan::bench]
+    fn secom(bencher: Bencher) {
+        let c = SecomCipher::new("IDREAMOFJEANNIEWITHT", "ATONESI").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);
         let ct_len = ct.iter().position(|&x| x == 0).unwrap_or(ct.len());
         let ct_trimmed = &ct[..ct_len];

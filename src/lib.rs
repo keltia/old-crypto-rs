@@ -8,11 +8,12 @@ mod transposition;
 mod adfgvx;
 mod straddling;
 mod nihilist;
+mod secom;
+mod solitaire;
 mod vic;
 mod wheatstone;
 #[cfg(feature = "sigaba")]
 mod sigaba;
-mod solitaire;
 
 pub use null::NullCipher;
 pub use caesar::CaesarCipher;
@@ -24,11 +25,12 @@ pub use transposition::IrregularTransposition;
 pub use adfgvx::ADFGVX;
 pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;
+pub use solitaire::Solitaire;
+pub use secom::SecomCipher;
 pub use vic::VicCipher;
 pub use wheatstone::Wheatstone;
 #[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;
-pub use solitaire::Solitaire;
 
 
 pub trait Block {

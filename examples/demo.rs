@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition};
+use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -82,6 +82,12 @@ fn main() {
     allciphers.push(Cph {
         name: "VIC".to_string(),
         c: Box::new(VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap()),
+        size: PLAIN.len() * 2,
+    });
+
+    allciphers.push(Cph {
+        name: "SECOM".to_string(),
+        c: Box::new(SecomCipher::new("ANTICONSTITUTIONNELLEMENT", "ESANTIR").unwrap()),
         size: PLAIN.len() * 2,
     });
 

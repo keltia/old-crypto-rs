@@ -219,6 +219,27 @@ fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
     res
 }
 
+/// In the original VIC cipher, in order to confuse the adversary even more, plaintext is cut
+/// around the middle, and the two parts are swapped with a marker in between.
+///
+/// (cf. Kahn on Codes)
+///
+/// NOTE: our current implementation does not do this.
+///
+//     let ml = pt.len() / 2;
+//     let intv = rand::rng().random_range(1..=(ml / 2));
+//     let ml = ml - intv;
+/// Example:
+/// "ABCDEFGH" is split around the middle and becomes "EFGH-ABCD".
+///
+fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
+    let mut beg = pt[0..ml].to_vec();
+    let mut res = pt[ml..].to_vec();
+    res.append(&mut vec![b'-' as u8]);
+    res.append(&mut beg);
+    res
+}
+
 /// Expands a 5-element vector to 10 elements using chain addition.
 ///
 /// The result contains the original 5 elements followed by 5 elements
@@ -532,6 +553,35 @@ mod tests {
         // Pos 9: digit 0 -> rank 2
         // Ranks: 0 7 9 4 1 6 3 5 8 2
         assert_eq!(sckey, vec![0, 7, 9, 4, 1, 6, 3, 5, 8, 2]);
+    }
+
+    #[rstest]
+    #[case(b"ABCDEFGH", 1, b"BCDEFGH-A")]
+    #[case(b"ABCDEFGH", 4, b"EFGH-ABCD")]
+    #[case(b"ABCDEFGH", 7, b"H-ABCDEFG")]
+    fn test_split_plaintext_cases(#[case] pt: &[u8], #[case] ml: usize, #[case] expected: &[u8]) {
+        let out = split_plaintext(pt, ml);
+        assert_eq!(out, expected);
+    }
+
+    #[test]
+    fn test_split_plaintext_invariants() {
+        let pt = b"ABCDEFGHIJKLMNOP";
+        let ml = 6;
+        let out = split_plaintext(pt, ml);
+        assert_eq!(out.len(), pt.len() + 1);
+
+        let dash_positions: Vec<usize> = out.iter().enumerate().filter_map(|(i, &b)| if b == b'-' { Some(i) } else { None }).collect();
+        assert_eq!(dash_positions.len(), 1);
+
+        let dash_pos = dash_positions[0];
+        assert_eq!(dash_pos, pt.len() - ml);
+
+        let mut without_dash = out.clone();
+        without_dash.retain(|&b| b != b'-');
+        let mut expected = pt[ml..].to_vec();
+        expected.extend_from_slice(&pt[..ml]);
+        assert_eq!(without_dash, expected);
     }
 
 }

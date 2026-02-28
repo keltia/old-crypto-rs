@@ -15,15 +15,19 @@
 //!
 //! ```rust
 //! use old_crypto_rs::SecomCipher;
+//! use old_crypto_rs::Block;
 //!
+//! let key_phrase = "MAKE NEW FRIENDS BUT KEEP THE OLD";
 //! let freq = "ESTONIA";
-//! let pt = "HELLO WORLD";
 //!
-//! let secom = SecomCipher::new("MAKENEWFRIENDSBUTKEEPTHEOLD", freq);
-//! 
-//! let ct = secom.encrypt(pt);
-//! let npt = secom.decrypt(ct);
-//! assert_eq!(pt, npt);
+//! let cipher = SecomCipher::new(key_phrase, freq).unwrap();
+//! let pt = b"HELLO WORLD";
+//!
+//! let mut ct = vec![0u8; 128];
+//! let ct_len = cipher.encrypt(&mut ct, pt);
+//! let mut dec = vec![0u8; 128];
+//! let dec_len = cipher.decrypt(&mut dec, &ct[..ct_len]);
+//! assert_eq!(&dec[..dec_len], pt);
 //! ```
 //!
 use crate::{Block, Transposition};
@@ -537,12 +541,7 @@ impl Block for SecomCipher {
         let pt = Self::preprocess_plaintext(src);
         let mut buf_sc = vec![0u8; pt.len() * 2];
         let sc_len = self.checker.encrypt(&mut buf_sc, &pt);
-        let mut digits = buf_sc[..sc_len].to_vec();
-
-        // pad with null digit to multiple of 5
-        while digits.len() % 5 != 0 {
-            digits.push(b'0');
-        }
+        let digits = buf_sc[..sc_len].to_vec();
 
         let mut tp1_key_str = String::with_capacity(self.tp1_key.len());
         for &d in &self.tp1_key {
@@ -581,15 +580,6 @@ impl Block for SecomCipher {
 
         let mut digits = vec![0u8; tp1_encoded.len()];
         tp1_cipher.decrypt(&mut digits, &tp1_encoded);
-        let mut removed = 0;
-        while removed < 4 {
-            if digits.last() == Some(&b'0') {
-                digits.pop();
-                removed += 1;
-            } else {
-                break;
-            }
-        }
 
         let mut buf_pt = vec![0u8; digits.len()];
         let pt_len = self.checker.decrypt(&mut buf_pt, &digits);
@@ -876,7 +866,7 @@ mod tests {
         let mut ct = vec![0u8; 256];
         let ct_len = cipher.encrypt(&mut ct, pt);
         let ct_str = String::from_utf8_lossy(&ct[..ct_len]).to_string();
-        assert_eq!(ct_str, "777193862200032042396003829683146080607178016736060606463536069686740369681890014021906662606660863160549");
+        assert_eq!(ct_str, "37719386226003204230600382968314608060517801673776060646936069686740369681890014021906662606660863160549");
 
         let mut dec = vec![0u8; 256];
         let dec_len = cipher.decrypt(&mut dec, ct_str.as_bytes());

@@ -38,6 +38,7 @@ It currently implements a few of the Go/Ruby code, namely:
 - Nihilist cipher (transposition as super-encipherment)
 - VIC Cipher (straddling checkerboard followed by two transpositions, one regular
   and an irregular one)
+- SECOM (a field cipher closely related to the VIC cipher, but different)
 
 It also implements simulation for some cipher devices/machines:
 - Chaocipher
@@ -111,3 +112,4 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
 - [Vigenère cipher](https://en.wikipedia.org/wiki/Vigenère_cipher)
 - [SIGABA](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
+- [SECOM](https://www.ciphermachinesandcryptology.com/en/secom.htm)

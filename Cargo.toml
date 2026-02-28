@@ -37,6 +37,7 @@ sigaba = []
 [dependencies]
 ratatui = "0.30"
 crossterm = "0.29"
+rand = "0.10"
 
 [dev-dependencies]
 divan = "0.1"

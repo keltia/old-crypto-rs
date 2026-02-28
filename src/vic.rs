@@ -4,6 +4,8 @@
 //! in the 1950s. It combines a straddling checkerboard with two transposition steps.
 //!
 //! Full description & test vectors: <http://www.quadibloc.com/crypto/pp1324.htm>
+//! Additional information in [Kahn on Codes, 1984](https://www.goodreads.com/book/show/457215.Kahn_on_Codes)
+//!  ISBN: 978-0-02-560640-1
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
@@ -224,8 +226,6 @@ fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
 ///
 /// (cf. Kahn on Codes)
 ///
-/// NOTE: our current implementation does not do this.
-///
 //     let ml = pt.len() / 2;
 //     let intv = rand::rng().random_range(1..=(ml / 2));
 //     let ml = ml - intv;
@@ -300,12 +300,30 @@ impl Block for VicCipher {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // VIC Encipherment:
+        // 0. Split plaintext around the middle and swap halves (with marker).
         // 1. Straddling Checkerboard
         // 2. First Transposition (regular)
         // 3. Second Transposition (irregular)
 
-        let mut buf_sc = vec![0u8; src.len() * 3]; // Straddling can expand
-        let sc_len = self.sc.encrypt(&mut buf_sc, src);
+        let split = if src.len() < 2 {
+            src.to_vec()
+        } else {
+            use rand;
+            use rand::RngExt;
+            let mid = src.len() / 2;
+            let delta = src.len() / 3;
+            let min_ml = mid.saturating_sub(delta);
+            let max_ml = (mid + delta).min(src.len() - 1);
+            let ml = if min_ml == max_ml {
+                min_ml
+            } else {
+                rand::rng().random_range(min_ml..=max_ml)
+            };
+            split_plaintext(src, ml)
+        };
+
+        let mut buf_sc = vec![0u8; split.len() * 3]; // Straddling can expand
+        let sc_len = self.sc.encrypt(&mut buf_sc, &split);
 
         let mut buf_tp1 = vec![0u8; sc_len];
         let tp1_len = self.firsttp.encrypt(&mut buf_tp1, &buf_sc[..sc_len]);
@@ -334,6 +352,7 @@ impl Block for VicCipher {
         // 1. Second Transposition (irregular)
         // 2. First Transposition (regular)
         // 3. Straddling Checkerboard
+        // 4. Unsplit plaintext by removing marker and swapping halves back.
 
         let mut buf_tp2 = vec![0u8; src.len()];
         let tp2_len = self.secondtp.decrypt(&mut buf_tp2, src);
@@ -341,7 +360,40 @@ impl Block for VicCipher {
         let mut buf_tp1 = vec![0u8; tp2_len];
         let tp1_len = self.firsttp.decrypt(&mut buf_tp1, &buf_tp2[..tp2_len]);
 
-        self.sc.decrypt(dst, &buf_tp1[..tp1_len])
+        let mut buf_sc = vec![0u8; tp1_len];
+        let sc_len = self.sc.decrypt(&mut buf_sc, &buf_tp1[..tp1_len]);
+        let sc_plain = &buf_sc[..sc_len];
+
+        if let Some(dash_pos) = sc_plain.iter().position(|&b| b == b'-') {
+            let after = &sc_plain[dash_pos + 1..];
+            let before = &sc_plain[..dash_pos];
+            let total_len = after.len() + before.len();
+            let mut out_len = 0;
+
+            if out_len + after.len() <= dst.len() {
+                dst[..after.len()].copy_from_slice(after);
+                out_len += after.len();
+            } else {
+                let n = dst.len().saturating_sub(out_len);
+                dst[..n].copy_from_slice(&after[..n]);
+                return out_len + n;
+            }
+
+            if out_len + before.len() <= dst.len() {
+                dst[out_len..out_len + before.len()].copy_from_slice(before);
+                out_len += before.len();
+            } else {
+                let n = dst.len().saturating_sub(out_len);
+                dst[out_len..out_len + n].copy_from_slice(&before[..n]);
+                out_len += n;
+            }
+
+            out_len
+        } else {
+            let n = sc_plain.len().min(dst.len());
+            dst[..n].copy_from_slice(&sc_plain[..n]);
+            n
+        }
     }
 }
 

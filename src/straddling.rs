@@ -18,10 +18,19 @@ use crate::helpers;
 ///
 /// `len` is 0 for unmapped bytes, or 1/2 for the number of output digits.
 /// `bytes` stores the digit bytes for the code.
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Default)]
 struct EncEntry {
     len: u8,
     bytes: [u8; 2],
+}
+
+impl std::fmt::Debug for EncEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let b0 = if self.bytes[0] == 0 { b'.' } else { self.bytes[0] };
+        let b1 = if self.bytes[1] == 0 { b'.' } else { self.bytes[1] };
+        let code = [b0, b1];
+        f.write_str(std::str::from_utf8(&code).unwrap_or(".."))
+    }
 }
 
 /// Default alphabet containing A-Z plus special characters '/' and '-'.
@@ -421,6 +430,18 @@ mod tests {
     use super::*;
 
     use rstest::rstest;
+
+    #[test]
+    fn test_encentry_debug_formats_two_chars() {
+        let entry = EncEntry { len: 2, bytes: *b"82" };
+        assert_eq!(format!("{entry:?}"), "82");
+    }
+
+    #[test]
+    fn test_encentry_debug_formats_empty_as_dots() {
+        let entry = EncEntry { len: 0, bytes: [0, 0] };
+        assert_eq!(format!("{entry:?}"), "..");
+    }
 
     #[test]
     fn test_new_cipher() {

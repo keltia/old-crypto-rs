@@ -20,26 +20,20 @@ fn main() {
     });
 
     allciphers.push(Cph {
-        name: "Square".to_string(),
+        name: "Polybius Square".to_string(),
         c: Box::new(SquareCipher::new("ARABESQUE", "012345").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "Transp".to_string(),
+        name: "Transposition".to_string(),
         c: Box::new(Transposition::new("SUBWAY").unwrap()),
         size: PLAIN.len(),
     });
 
     allciphers.push(Cph {
-        name: "Irr. Transp.".to_string(),
+        name: "Irregular. Transposition.".to_string(),
         c: Box::new(IrregularTransposition::new("SUBWAY").unwrap()),
-        size: PLAIN.len(),
-    });
-
-    allciphers.push(Cph {
-        name: "Chaocipher".to_string(),
-        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
         size: PLAIN.len(),
     });
 
@@ -74,12 +68,6 @@ fn main() {
     });
 
     allciphers.push(Cph {
-        name: "Wheatstone".to_string(),
-        c: Box::new(Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap()),
-        size: PLAIN.len(),
-    });
-
-    allciphers.push(Cph {
         name: "VIC".to_string(),
         c: Box::new(VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap()),
         size: PLAIN.len() * 2,
@@ -92,8 +80,20 @@ fn main() {
     });
 
     allciphers.push(Cph {
+        name: "Chaocipher".to_string(),
+        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
         name: "Solitaire".to_string(),
         c: Box::new(Solitaire::new_unkeyed()),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: "Wheatstone".to_string(),
+        c: Box::new(Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap()),
         size: PLAIN.len(),
     });
 

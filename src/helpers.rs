@@ -338,19 +338,36 @@ pub fn output_as_block(input: &str) -> String {
     by_n(input, 5)
 }
 
-/// Replace all instance of NN with NQN
+/// Replaces consecutive identical characters by inserting a fill character between them.
+///
+/// For example, "AA" becomes "AQA" if the fill character is 'Q'. This is often used
+/// in classical ciphers to handle double letters.
+///
+/// # Arguments
+///
+/// * `str` - The input string to process.
+/// * `fill` - The character to insert between identical consecutive characters.
+///
+/// # Returns
+///
+/// A new `String` with the fill character inserted where necessary.
+/// 
 pub fn fix_double(str: &str, fill: char) -> String {
-    let mut fixed = String::new();
-    let mut prev = None;
-    for ch in str.chars() {
-        if let Some(p) = prev {
-            if ch == p {
+    let mut fixed = String::with_capacity(str.len());
+    let mut chars = str.chars();
+
+    if let Some(first) = chars.next() {
+        fixed.push(first);
+        let mut prev = first;
+        for ch in chars {
+            if ch == prev {
                 fixed.push(fill);
             }
+            fixed.push(ch);
+            prev = ch;
         }
-        fixed.push(ch);
-        prev = Some(ch);
     }
+
     fixed
 }
 

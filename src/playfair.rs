@@ -214,7 +214,9 @@ impl Block for PlayfairCipher {
     /// ```
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let mut src_vec = src.to_vec();
+        let src = String::from_utf8_lossy(src);
+        let src = helpers::fix_double(&src, 'X');
+        let mut src_vec = src.as_bytes().to_vec();
         if src_vec.len() % 2 == 1 {
             src_vec.push(b'X');
         }
@@ -292,7 +294,7 @@ mod tests {
     #[test]
     fn test_playfair_cipher_encrypt() {
         let c = PlayfairCipher::new("PLAYFAIREXAMPLE");
-        let pt = b"HIDETHEGOLDINTHETREXESTUMP";
+        let pt = b"HIDETHEGOLDINTHETREESTUMP";
         let ct = b"BMODZBXDNABEKUDMUIXMMOUVIF";
         let mut dst = vec![0u8; ct.len()];
         c.encrypt(&mut dst, pt);

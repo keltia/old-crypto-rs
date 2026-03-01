@@ -14,7 +14,8 @@ which was a port of my [old-crypto](https://github.com/keltia/old-crypto) Ruby c
 Part of the conversion has been done through the AI plugin inside RustRover called Junie.
 
 It features a simple CLI-based tool called `old-crypto` which serve both as a collection of use-cases for the library,
-and an easy way to use it.
+and an easy way to use it.  It now uses [ratatui](https://crates.io/crates/ratatui) to provide an interactive
+TUI.  Key bindings and the whole UI are still a work in progress, my first TUI program, in fact.
 
 **Work in progress, still incomplete**
 

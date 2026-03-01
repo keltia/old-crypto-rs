@@ -192,8 +192,9 @@ impl Block for PlayfairCipher {
     ///
     /// # Arguments
     ///
-    /// * `dst` - Destination buffer where the ciphertext will be written. Must be at least as
-    ///           large as the source length (rounded up to the nearest even number if odd).
+    /// * `dst` - Destination buffer where the ciphertext will be written. Must be large enough
+    ///           to hold the expanded plaintext (considering double letters and padding).
+    ///           A safe size is at least 2x the source length.
     /// * `src` - Source plaintext bytes to encrypt. Each byte should represent an uppercase
     ///           letter from the Playfair alphabet.
     ///

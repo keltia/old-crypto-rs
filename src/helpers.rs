@@ -297,6 +297,33 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
     res
 }
 
+/// Converts a string key into a numeric representation based on alphabetical order.
+///
+/// This function is commonly used to derive numeric keys for transposition ciphers.
+/// It assigns a rank to each character in the key based on its Unicode scalar value.
+/// If characters are identical, their original positions determine their relative rank.
+///
+/// # Arguments
+///
+/// * `key` - The string slice to be converted.
+///
+/// # Returns
+///
+/// A `Vec<u8>` where each element corresponds to the alphabetical rank (0-indexed)
+/// of the character at that position in the original string.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::to_numeric;
+///
+/// let key = "ZEBRAS";
+/// let numeric = to_numeric(key);
+/// // A=0, B=1, E=2, R=3, S=4, Z=5
+/// // Z (5), E (2), B (1), R (3), A (0), S (4)
+/// assert_eq!(numeric, vec![5, 2, 1, 3, 0, 4]);
+/// ```
+///
 pub fn to_numeric(key: &str) -> Vec<u8> {
     let letters = key.as_bytes();
     let mut indexed: Vec<(usize, u8)> = letters.iter().enumerate().map(|(i, &b)| (i, b)).collect();
@@ -309,6 +336,29 @@ pub fn to_numeric(key: &str) -> Vec<u8> {
     ar
 }
 
+/// Inserts a space every `n` characters in a string.
+///
+/// This is typically used to format ciphertext into readable blocks.
+///
+/// # Arguments
+///
+/// * `ct` - The input string slice.
+/// * `n` - The number of characters in each block.
+///
+/// # Returns
+///
+/// A new `String` with spaces inserted every `n` characters.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::by_n;
+///
+/// let input = "ABCDEFGHIJ";
+/// let result = by_n(input, 5);
+/// assert_eq!(result, "ABCDE FGHIJ");
+/// ```
+///
 pub fn by_n(ct: &str, n: usize) -> String {
     let mut out = String::new();
     let mut count = 0;

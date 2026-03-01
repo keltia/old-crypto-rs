@@ -46,7 +46,7 @@ fn main() {
     allciphers.push(Cph {
         name: "Playfair".to_string(),
         c: Box::new(PlayfairCipher::new("ARABESQUE")),
-        size: PLAIN.len(),
+        size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
@@ -100,7 +100,7 @@ fn main() {
     println!("==> Plain = \n{}", PLAIN);
 
     for cp in allciphers {
-        let fixpt: String;
+        let mut fixpt: String;
         let mut dst: Vec<u8>;
         let mut dst1: Vec<u8>;
 
@@ -108,10 +108,19 @@ fn main() {
             fixpt = helpers::fix_double(PLAIN, 'Q');
             dst = vec![0u8; fixpt.len()];
             dst1 = vec![0u8; fixpt.len()];
+        } else if cp.name == "Playfair" {
+            fixpt = helpers::fix_double(PLAIN, 'X');
+            let mut pt_vec = fixpt.as_bytes().to_vec();
+            if pt_vec.len() % 2 == 1 {
+                pt_vec.push(b'X');
+            }
+            fixpt = String::from_utf8_lossy(&pt_vec).to_string();
+            dst = vec![0u8; fixpt.len()];
+            dst1 = vec![0u8; fixpt.len()];
         } else {
             fixpt = PLAIN.to_string();
             dst = vec![0u8; cp.size];
-            dst1 = vec![0u8; PLAIN.len()];
+            dst1 = vec![0u8; cp.size];
         }
 
         let n = cp.c.encrypt(&mut dst, fixpt.as_bytes());

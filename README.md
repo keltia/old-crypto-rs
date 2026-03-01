@@ -99,6 +99,11 @@ You can run them with
 
 Please see CONTRIBUTING.md for some simple rules.
 
+## Bibliography
+
+- [The Codebreakers, 2nd Edition, David Kahn, 1996, Scribner](https://www.amazon.com/Codebreakers-Comprehensive-History-Communication-Internet-ebook/dp/B001D201IK/)
+- [Kahn on Codes, David Kahn, 1984, Mcmillan](https://www.amazon.com/Kahn-Codes-Secrets-New-Cryptology/dp/0025606409/)
+
 ## References
 
 - [Substitution](https://en.wikipedia.org/wiki/Substitution_cipher)
@@ -112,6 +117,5 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
 - [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
-- [Vigenère cipher](https://en.wikipedia.org/wiki/Vigenère_cipher)
 - [SIGABA](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 - [SECOM](https://www.ciphermachinesandcryptology.com/en/secom.htm)

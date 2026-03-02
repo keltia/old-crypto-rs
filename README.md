@@ -31,6 +31,7 @@ TUI.  Key bindings and the whole UI are still a work in progress, my first TUI p
 It currently implements a few of the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
+- Vigenère and its 2 autoclave variants (WIP)
 - Simple transposition (can be used with other ciphers as super-encipherment)
 - Polybius square bi-grammatic cipher (for ADFGVX = polybius + transposition)
 - Playfair

@@ -9,7 +9,8 @@
 //! transposition is not symmetric, so we need to implement it twice.
 //!
 //! SECOM is easier to implement, as the key is only one phrase, and the key derivation is also
-//! easier to run.
+//! easier to run.  Also, you can use numbers directly in the plaintext, they will not be triplicated
+//! like for any cipher using only 25 letters.
 //!
 //! # Example
 //!

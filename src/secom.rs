@@ -1,7 +1,7 @@
 //! SECOM cipher implementation (VIC-derived).
 //!
 //! Based on the description and worked example at:
-//! http://www.ciphermachinesandcryptology.com/en/secom.htm
+//! <http://www.ciphermachinesandcryptology.com/en/secom.htm>
 //!
 //! NOTE: there are separate implementation of the Checkerboard and disrupted
 //! transposition due the nature of both ciphers.  The alphabets are different

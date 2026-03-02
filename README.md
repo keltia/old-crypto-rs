@@ -91,11 +91,10 @@ You can run them with
 
 ## TODO
 
-- more ciphers
+- more ciphers (Vigenère and its 2 autoclave variants incoming)
 - more tests (and better ones!)
 - better display of results
 - refactoring to reduce code duplication: always in progress
-- even more tests
 
 ## Contributing
 

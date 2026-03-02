@@ -1,5 +1,6 @@
 pub mod helpers;
 mod null;
+mod autoclave;
 mod caesar;
 mod playfair;
 mod chaocipher;
@@ -11,11 +12,13 @@ mod nihilist;
 mod secom;
 mod solitaire;
 mod vic;
+mod vigenere;
 mod wheatstone;
 #[cfg(feature = "sigaba")]
 mod sigaba;
 
 pub use null::NullCipher;
+pub use autoclave::{Autocrypt,Autokey};
 pub use caesar::CaesarCipher;
 pub use playfair::PlayfairCipher;
 pub use chaocipher::Chaocipher;
@@ -28,6 +31,7 @@ pub use nihilist::Nihilist;
 pub use solitaire::Solitaire;
 pub use secom::SecomCipher;
 pub use vic::VicCipher;
+pub use vigenere::VigenereCipher;
 pub use wheatstone::Wheatstone;
 #[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;

@@ -26,15 +26,17 @@ impl Block for Autocrypt {
         if src.is_empty() {
             return 0;
         }
-        let mut plain = Vec::with_capacity(src.len());
-        let mut key = Vec::with_capacity(src.len());
+        let mut plain: Vec<u8> = Vec::with_capacity(src.len());
+        let mut key: Vec<u8> = Vec::with_capacity(src.len());
+        0
     }
 
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() {
             return 0;
         }
-        let mut cipher = Vec::with_capacity(src.len());
-        let mut neg_key = Vec::with_capacity(src.len());
+        let mut cipher: Vec<u8> = Vec::with_capacity(src.len());
+        let mut neg_key:Vec<u8>  = Vec::with_capacity(src.len());
+        0
     }
 }

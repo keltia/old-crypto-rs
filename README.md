@@ -28,7 +28,7 @@ TUI.  Key bindings and the whole UI are still a work in progress, my first TUI p
 
 ## Features
 
-It currently implements a few of the Go/Ruby code, namely:
+It currently implements a few more compared to the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
 - Vigenère and its 2 autoclave variants (WIP)
@@ -104,21 +104,31 @@ Please see CONTRIBUTING.md for some simple rules.
 
 - [The Codebreakers, 2nd Edition, David Kahn, 1996, Scribner](https://www.amazon.com/Codebreakers-Comprehensive-History-Communication-Internet-ebook/dp/B001D201IK/)
 - [Kahn on Codes, David Kahn, 1984, Mcmillan](https://www.amazon.com/Kahn-Codes-Secrets-New-Cryptology/dp/0025606409/)
+- [Decrypted Secrets, F. L. Bauer, 1997, Springer](https://www.amazon.com/Decrypted-Secrets-Methods-Maxims-Cryptology/dp/3540604189)
+- [Cryptography, Theory and Practice, Douglas Stinson, 2018, CRC Press](https://www.amazon.com/Cryptography-Theory-Practice-Textbooks-Mathematics-ebook/dp/B07H34Q22C)
 
-## References
+## General References
 
-- [Substitution](https://en.wikipedia.org/wiki/Substitution_cipher)
-- [Caesar cipher](https://en.wikipedia.org/wiki/Caesar_cipher)
-- [Polybius square](https://en.wikipedia.org/wiki/Polybius_square)
-- [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
-- [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
-- [Playfair cipher](https://en.wikipedia.org/wiki/Playfair_cipher)
-- [Chaocipher](https://en.wikipedia.org/wiki/Chaocipher)
+- [A Cryptographic Compendium](http://www.quadibloc.com/crypto/jscrypt.htm) - John J. G. Savard
+- [Cipher Machines and Cryptology](https://www.ciphermachinesandcryptology.com/index.htm)
+- [SIGABA Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
+- [Solitaire](https://www.schneier.com/academic/solitaire/)
+
+## Wikipedia References
+
 - [ADFGVX](https://en.wikipedia.org/wiki/ADFGVX)
+- [Autokey Cipher](https://en.wikipedia.org/wiki/Autokey_cipher)
+- [Caesar cipher](https://en.wikipedia.org/wiki/Caesar_cipher)
+- [Chaocipher](https://en.wikipedia.org/wiki/Chaocipher)
+- [Substitution](https://en.wikipedia.org/wiki/Substitution_cipher)
+- [Playfair cipher](https://en.wikipedia.org/wiki/Playfair_cipher)
+- [Polybius square](https://en.wikipedia.org/wiki/Polybius_square)
+- [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
 - [Nihilist cipher](https://en.wikipedia.org/wiki/Nihilist_cipher)
-- [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
-- [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
-- [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
-- [SIGABA](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
-- [SECOM](https://www.ciphermachinesandcryptology.com/en/secom.htm)
+- [SIGABA cipher machine](https://en.wikipedia.org/wiki/SIGABA)
 - [Solitaire](https://en.wikipedia.org/wiki/Solitaire_(cipher))
+- [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
+- [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
+- [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
+- [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
+

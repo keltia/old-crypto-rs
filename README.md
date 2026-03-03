@@ -110,6 +110,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Substitution](https://en.wikipedia.org/wiki/Substitution_cipher)
 - [Caesar cipher](https://en.wikipedia.org/wiki/Caesar_cipher)
 - [Polybius square](https://en.wikipedia.org/wiki/Polybius_square)
+- [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
 - [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
 - [Playfair cipher](https://en.wikipedia.org/wiki/Playfair_cipher)
 - [Chaocipher](https://en.wikipedia.org/wiki/Chaocipher)

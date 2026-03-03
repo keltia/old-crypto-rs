@@ -154,6 +154,7 @@ impl PlayfairCipher {
     /// ```
     /// 
     pub fn new(key: &str) -> Self {
+        let key = key.to_ascii_uppercase().replace('J', "I");
         let condensed_key = helpers::condense(&format!("{}{}", key, ALPHABET));
         let mut i2c = [INVALID_COUPLE; 256];
         let mut c2i = [0u8; 25];
@@ -215,7 +216,7 @@ impl Block for PlayfairCipher {
     /// ```
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let src = String::from_utf8_lossy(src);
+        let src = String::from_utf8_lossy(src).to_ascii_uppercase().replace('J', "I");
         let src = helpers::fix_double(&src, 'X');
         let mut src_vec = src.as_bytes().to_vec();
         if src_vec.len() % 2 == 1 {

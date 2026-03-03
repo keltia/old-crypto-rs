@@ -34,7 +34,6 @@ use crate::helpers;
 const ALPHABET: &str = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
 const OP_ENCRYPT: u8 = 1;
 const OP_DECRYPT: u8 = 4;
-const CODE_WORD: &str = "01234";
 
 /// Playfair cipher implementation using a 5×5 keyed matrix.
 ///
@@ -161,8 +160,8 @@ impl PlayfairCipher {
         
         let mut ind = 0;
         let key_bytes = condensed_key.as_bytes();
-        for i in 0..CODE_WORD.len() {
-            for j in 0..CODE_WORD.len() {
+        for i in 0..5 {
+            for j in 0..5 {
                 let c = key_bytes[ind];
                 let couple = Couple { r: i as u8, c: j as u8 };
                 i2c[c as usize] = couple;

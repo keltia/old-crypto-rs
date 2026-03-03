@@ -258,5 +258,33 @@ mod tests {
         cipher.decrypt(&mut dec, &ct);
         assert_eq!(&dec, pt);
     }
+
+    #[test]
+    fn test_wikipedia_example_lemon() {
+        // From Wikipedia: Plaintext "ATTACKATDAWN", Key "LEMON", Ciphertext "LXFOPVEFRNHR"
+        let cipher = VigenereCipher::new("LEMON");
+        let pt = b"ATTACKATDAWN";
+        let mut ct = vec![0u8; pt.len()];
+        cipher.encrypt(&mut ct, pt);
+        assert_eq!(&ct, b"LXFOPVEFRNHR");
+
+        let mut dec = vec![0u8; ct.len()];
+        cipher.decrypt(&mut dec, &ct);
+        assert_eq!(&dec, pt);
+    }
+
+    #[test]
+    fn test_wikipedia_example_babbage() {
+        // From Wikipedia: Babbage's challenge from Thwaites used "TWO" and "COMBINED"
+        // Let's test with one of them.
+        let cipher = VigenereCipher::new("COMBINED");
+        let pt = b"DEFENDTHEEASTWALLOFTHECASTLE";
+        let mut ct = vec![0u8; pt.len()];
+        cipher.encrypt(&mut ct, pt);
+        
+        let mut dec = vec![0u8; ct.len()];
+        cipher.decrypt(&mut dec, &ct);
+        assert_eq!(&dec, pt);
+    }
 }
 

@@ -1,3 +1,8 @@
+//! Autocrypt is the autoclave system where the ciphertext is used as key, instead of repeating the
+//! key several times.  This is the equivalent on an IV in modern systems, and this is the ancestor
+//! of the CBC mode for modern ciphers.
+//!
+
 use crate::Block;
 
 #[derive(Debug)]

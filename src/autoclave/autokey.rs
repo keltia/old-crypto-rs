@@ -1,3 +1,7 @@
+//! Autokey is the autoclave system where the plaintext is used as key, instead of repeating the
+//! key several times.  In essence, the key is just used for the initial "block", then cleartext
+//! is appended.
+//! 
 
 use crate::Block;
 
@@ -7,19 +11,19 @@ pub struct Autokey {
     key: Vec<u8>,
 }
 
-impl crate::Autokey {
+impl Autokey {
     pub fn new(key: &str) -> Self {
         let key_vec = key.as_bytes().iter()
             .map(|&b| b - b'A')
             .collect::<Vec<_>>();
-        crate::Autokey {
+        Autokey {
             key: key_vec,
         }
     }
 }
 
 #[allow(dead_code)]
-impl Block for crate::Autokey {
+impl Block for Autokey {
     fn block_size(&self) -> usize {
         1
     }

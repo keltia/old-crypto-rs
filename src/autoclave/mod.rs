@@ -35,11 +35,9 @@
 //!
 //! Autocrypt is akin to CBC mode of operation.
 //!
-use crate::Block;
 
-#[derive(Debug)]
-pub struct Autokey {}
+mod autocrypt;
+mod autokey;
 
-#[derive(Debug)]
-pub struct Autocrypt {}
-
+pub use autocrypt::Autocrypt;
+pub use autokey::Autokey;

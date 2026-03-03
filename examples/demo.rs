@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher};
+use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -16,6 +16,12 @@ fn main() {
     allciphers.push(Cph {
         name: "Caesar".to_string(),
         c: Box::new(CaesarCipher::new(3)),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: "Vigenère".to_string(),
+        c: Box::new(VigenereCipher::new("SUBWAY")),
         size: PLAIN.len(),
     });
 
@@ -97,7 +103,7 @@ fn main() {
         size: PLAIN.len(),
     });
 
-    println!("==> Plain = \n{}", PLAIN);
+    println!("==> Plain = \n{}\n", PLAIN);
 
     for cp in allciphers {
         let mut fixpt: String;

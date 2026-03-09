@@ -20,6 +20,7 @@
 use crate::Block;
 use crate::helpers;
 use std::cell::RefCell;
+use crate::helpers::fix_double;
 
 const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LEN_PL: usize = ALPHABET.len() + 1;
@@ -207,7 +208,8 @@ impl Block for Wheatstone {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         self.reset();
-        for (i, &ch) in src.iter().enumerate() {
+        let src = fix_double(&String::from_utf8_lossy(src), 'Q');
+        for (i, &ch) in src.as_bytes().iter().enumerate() {
             dst[i] = self.encode(ch);
         }
         src.len()
@@ -338,11 +340,11 @@ mod tests {
     #[test]
     fn test_wheatstone_encrypt_long() {
         let c = Wheatstone::new(b'M', KEY1, KEY2).unwrap();
-        let plain = helpers::fix_double(LPLAIN_TXT, 'Q');
-        let src = plain.as_bytes();
-        let mut dst = vec![0u8; src.len()];
+        let plain = fix_double(LPLAIN_TXT, 'Q');
+        let src = LPLAIN_TXT.as_bytes();
+        let mut dst = vec![0u8; plain.len()];
         c.encrypt(&mut dst, src);
-        assert_eq!(dst, LCIPHER_TXT.as_bytes());
+        assert_eq!(String::from_utf8_lossy(&dst), LCIPHER_TXT);
     }
 
     #[test]
@@ -351,16 +353,16 @@ mod tests {
         let src = CIPHER_TXT.as_bytes();
         let mut dst = vec![0u8; src.len()];
         c.decrypt(&mut dst, src);
-        assert_eq!(dst, PLAIN_TXT.as_bytes());
+        assert_eq!(String::from_utf8_lossy(&dst), PLAIN_TXT);
     }
 
     #[test]
     fn test_wheatstone_decrypt_long() {
         let c = Wheatstone::new(b'M', KEY1, KEY2).unwrap();
-        let plain = helpers::fix_double(LPLAIN_TXT, 'Q');
+        let plain = fix_double(LPLAIN_TXT, 'Q');
         let src = LCIPHER_TXT.as_bytes();
         let mut dst = vec![0u8; src.len()];
         c.decrypt(&mut dst, src);
-        assert_eq!(dst, plain.as_bytes());
+        assert_eq!(String::from_utf8_lossy(&dst), plain);
     }
 }

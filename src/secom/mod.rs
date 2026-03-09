@@ -4,12 +4,12 @@
 //! <http://www.ciphermachinesandcryptology.com/en/secom.htm>
 //!
 //! NOTE: there are separate implementation of the Checkerboard and disrupted
-//! transposition due the nature of both ciphers.  The alphabets are different
-//! and we need two digits in VIC whereas SECOM needs 3. Second, the disrupted
-//! transposition is not symmetric, so we need to implement it twice.
+//! transposition due to the nature of both ciphers:
+//! 1. The alphabets are different, and we need two digits in the VIC cipher, whereas SECOM needs 3.
+//! 2. The disrupted transposition is not symmetric, so we need to implement it twice.
 //!
 //! SECOM is easier to implement, as the key is only one phrase, and the key derivation is also
-//! easier to run.  Also, you can use numbers directly in the plaintext, they will not be triplicated
+//! easier to run.  Also, you can use numbers directly in the plaintext as they will not be triplicated
 //! like for any cipher using only 25 letters.
 //!
 //! # Example

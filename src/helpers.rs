@@ -393,6 +393,15 @@ pub fn output_as_block(input: &str) -> String {
 /// For example, "AA" becomes "AQA" if the fill character is 'Q'. This is often used
 /// in classical ciphers to handle double letters.
 ///
+/// >NOTE: this function works regardless of alignment; that is, it does not check if the double
+/// letters are on a 2-character boundary.  Therefore, it is useless for `Playfair`, or any
+/// bi-grammatic ciphers.
+///
+/// e.g.
+/// HELLOWORLD -> HE LX LO WO RL DX
+/// but  also
+/// CETOOTEST -> CE TO XO TE ST
+///
 /// # Arguments
 ///
 /// * `str` - The input string to process.
@@ -415,6 +424,55 @@ pub fn fix_double(str: &str, fill: char) -> String {
             }
             fixed.push(ch);
             prev = ch;
+        }
+    }
+
+    fixed
+}
+
+/// Replaces consecutive identical characters by inserting a fill character between them,
+/// but only when the duplicate pair falls on a 2-character boundary.
+///
+/// This function is specifically designed for bi-grammatic ciphers like Playfair, where
+/// doubles must be fixed only if they would form a single digram (2-character block).
+///
+/// Unlike `fix_double`, this function respects alignment. It processes the string in
+/// 2-character chunks and only inserts the fill character when both characters in a
+/// digram are identical.
+///
+/// e.g.
+/// HELLOWORLD -> HE LX LO WO RL DX (LL becomes LX, DD becomes DX)
+/// CETOOTEST  -> CE TO OT ES TX (OO is on boundary, so no change needed as they're in different digrams)
+///
+/// # Arguments
+///
+/// * `str` - The input string to process.
+/// * `fill` - The character to insert between identical characters in the same digram.
+///
+/// # Returns
+///
+/// A new `String` with the fill character inserted where necessary, respecting 2-character boundaries.
+///
+pub fn fix_double_aligned(str: &str, fill: char) -> String {
+    let chars: Vec<char> = str.chars().collect();
+    let mut fixed = String::with_capacity(str.len());
+    let mut i = 0;
+
+    while i < chars.len() {
+        if i + 1 < chars.len() && chars[i] == chars[i + 1] {
+            // Double on boundary - insert fill character
+            fixed.push(chars[i]);
+            fixed.push(fill);
+            i += 1; // Move forward by 1, so the second character becomes part of next digram
+        } else if i + 1 < chars.len() {
+            // Normal digram - add both characters
+            fixed.push(chars[i]);
+            fixed.push(chars[i + 1]);
+            i += 2;
+        } else {
+            // Last character (odd length)
+            fixed.push(chars[i]);
+            i += 1;
         }
     }
 
@@ -516,14 +574,60 @@ mod tests {
     }
 
     #[test]
-    fn test_fix_double() {
+    fn test_fix_double_q() {
         let test_data = [
             ("ABCDEF", "ABCDEF"),
             ("AABCDE", "AQABCDE"),
             ("AAAAA", "AQAQAQAQA"),
+            ("CETOOT", "CETOQOT"),
+            ("CETOOTESTCHIFFREAVEC", "CETOQOTESTCHIFQFREAVEC")
         ];
         for (in_str, out_str) in test_data {
             assert_eq!(fix_double(in_str, 'Q'), out_str);
+        }
+    }
+
+    #[test]
+    fn test_fix_double_x() {
+        let test_data = [
+            ("ABCDEF", "ABCDEF"),
+            ("AABCDE", "AXABCDE"),
+            ("AAAAA", "AXAXAXAXA"),
+            ("CETOOT", "CETOXOT"),
+            ("CETOOTESTCHIFFREAVEC", "CETOXOTESTCHIFXFREAVEC")
+        ];
+        for (in_str, out_str) in test_data {
+            assert_eq!(fix_double(in_str, 'X'), out_str);
+        }
+    }
+
+    #[test]
+    fn test_fix_double_aligned_q() {
+        let test_data = [
+            ("ABCDEF", "ABCDEF"),
+            ("AABCDE", "AQABCDE"),
+            ("AAAAA", "AQAQAQAQA"),  // AA -> AQ A, AA -> AQ A, AA -> AQ A
+            ("CETOOT", "CETOOT"),  // CE TO OT becomes CE TO QO T
+            ("HELLOWORLD", "HELQLOWORLD"),  // LL on boundary becomes LQ
+            ("CETOOTEST", "CETOOTEST"),  // OO is split across digrams (O|O), so no change
+        ];
+        for (in_str, out_str) in test_data {
+            assert_eq!(fix_double_aligned(in_str, 'Q'), out_str);
+        }
+    }
+
+    #[test]
+    fn test_fix_double_aligned_x() {
+        let test_data = [
+            ("ABCDEF", "ABCDEF"),
+            ("AABCDE", "AXABCDE"),
+            ("AAAAA", "AXAXAXAXA"),
+            ("CETOOT", "CETOOT"),
+            ("HELLOWORLD", "HELXLOWORLD"),
+            ("CETOOTEST", "CETOOTEST"),  // OO is split across digrams
+        ];
+        for (in_str, out_str) in test_data {
+            assert_eq!(fix_double_aligned(in_str, 'X'), out_str);
         }
     }
 }

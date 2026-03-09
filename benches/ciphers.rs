@@ -91,7 +91,7 @@ mod encryption {
     fn playfair(bencher: Bencher) {
         let c = PlayfairCipher::new("ARABESQUE");
         let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len() + 1];
+        let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
             c.encrypt(&mut dst, src);
         });
@@ -235,11 +235,12 @@ mod decryption {
     fn playfair(bencher: Bencher) {
         let c = PlayfairCipher::new("ARABESQUE");
         let src = PLAIN.as_bytes();
-        let mut ct = vec![0u8; src.len() + (src.len() % 2)];
-        c.encrypt(&mut ct, src);
+        let mut ct = vec![0u8; src.len() * 2];
+        let ct_len = c.encrypt(&mut ct, src);
+        let ct = &ct[..ct_len];
         let mut dst = vec![0u8; ct.len()];
         bencher.bench_local(|| {
-            c.decrypt(&mut dst, &ct);
+            c.decrypt(&mut dst, ct);
         });
     }
 

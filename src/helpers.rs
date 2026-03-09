@@ -163,6 +163,13 @@ pub fn expand(src: &[u8]) -> Vec<u8> {
     res
 }
 
+/// The 26-letter alphabet we know and love in the Western part of the world
+pub const REGULAR_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/// Default alphabet containing A-Z plus special characters '/' and '-'.
+/// The '/' character is used as a digit escape marker in encryption.
+pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
+
 /*
   # Form an alphabet formed with a keyword, re-shuffle everything to
   # make it less predictable (i.e. checkerboard effect)
@@ -481,7 +488,6 @@ pub fn fix_double_aligned(str: &str, fill: char) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::straddling::ALPHABET_TXT;
     use super::*;
 
     #[test]
@@ -525,14 +531,14 @@ mod tests {
     #[test]
     fn test_shuffle() {
         let key = "ARABESQUE";
-        let res = shuffle(key, ALPHABET_TXT);
+        let res = shuffle(key, SC_ALPHABET);
         assert_eq!(res, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
     }
 
     #[test]
     fn test_shuffle_odd() {
         let key = "SUBWAY";
-        let res = shuffle(key, ALPHABET_TXT);
+        let res = shuffle(key, SC_ALPHABET);
         assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
     }
 

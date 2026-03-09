@@ -9,8 +9,8 @@
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
-use crate::straddling::{StraddlingCheckerboard, ALPHABET_TXT};
-use crate::helpers;
+use crate::straddling::StraddlingCheckerboard;
+use crate::helpers::{to_numeric, SC_ALPHABET};
 
 /// VIC cipher implementation combining straddling checkerboard and transposition ciphers.
 ///
@@ -77,7 +77,7 @@ impl VicCipher {
 
         // Straddling Checkerboard using 'sckey' (converted to letters) and 'persn'
         let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();
-        let sc = StraddlingCheckerboard::new_with_freq(&sc_key_str, persn, "ATONESIR", ALPHABET_TXT)?;
+        let sc = StraddlingCheckerboard::new_with_freq(&sc_key_str, persn, "ATONESIR", SC_ALPHABET)?;
 
         Ok(VicCipher {
             firsttp,
@@ -118,8 +118,8 @@ struct ExpandedKey {
 /// Returns an `ExpandedKey` structure containing all derived key material.
 ///
 fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
-    let ph1: Vec<u8> = helpers::to_numeric(&phrase[..10]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
-    let ph2: Vec<u8> = helpers::to_numeric(&phrase[10..20]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
+    let ph1: Vec<u8> = to_numeric(&phrase[..10]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
+    let ph2: Vec<u8> = to_numeric(&phrase[10..20]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
 
     let mut first = submod10(imsg, ikey5);
     first = chainadd_extend(&first, 5);
@@ -136,7 +136,7 @@ fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
     // from the 5th iteration of chain addition.
     let third = r.clone();
     let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
-    let sckey = helpers::to_numeric(&r_str);
+    let sckey = to_numeric(&r_str);
 
     ExpandedKey {
         second,
@@ -400,6 +400,7 @@ impl Block for VicCipher {
 mod tests {
     use super::*;
     use rstest::rstest;
+    use crate::helpers::to_numeric;
 
     #[test]
     fn test_new_cipher() {
@@ -410,7 +411,7 @@ mod tests {
     #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
     #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
     fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
-        let res: Vec<u8> = helpers::to_numeric(s).into_iter().map(|x| (x as u8 + 1) % 10).collect();
+        let res: Vec<u8> = to_numeric(s).into_iter().map(|x| (x as u8 + 1) % 10).collect();
         assert_eq!(res, r);
     }
 
@@ -589,7 +590,7 @@ mod tests {
         // These digits are used for second transposition key
         // And their numerical order for SC key.
         let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
-        let sckey = helpers::to_numeric(&r_str);
+        let sckey = to_numeric(&r_str);
         // 0 6 8 2 0 5 1 3 7 0
         // Ranks (0-based, stable sort):
         // Pos 0: digit 0 -> rank 0

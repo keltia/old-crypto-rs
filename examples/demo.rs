@@ -1,4 +1,5 @@
 use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher};
+use old_crypto_rs::helpers::{shuffle, REGULAR_ALPHABET};
 
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -102,7 +103,15 @@ fn main() {
     });
 
     allciphers.push(Cph {
-        name: format!("Chaocipher ({}, {})", KEY_PLAIN, KEY_CIPHER),
+        name: format!("Chaocipher official ({}, {})", KEY_PLAIN, KEY_CIPHER),
+        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
+        size: PLAIN.len(),
+    });
+
+    let key3 = shuffle(KEY3, REGULAR_ALPHABET);
+    let key4 = shuffle(KEY4, REGULAR_ALPHABET);
+    allciphers.push(Cph {
+        name: format!("Chaocipher official ({}, {})", KEY3, KEY4),
         c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
         size: PLAIN.len(),
     });

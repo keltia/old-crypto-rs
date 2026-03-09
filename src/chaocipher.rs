@@ -23,8 +23,8 @@
 //!
 use crate::Block;
 use std::cell::RefCell;
+use crate::helpers::REGULAR_ALPHABET;
 
-const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ZENITH: usize = 0;
 const NADIR: usize = 13;
 
@@ -81,7 +81,7 @@ impl Chaocipher {
     /// ```
     ///
     pub fn new(pkey: &str, ckey: &str) -> Result<Self, String> {
-        if pkey.len() != ALPHABET.len() || ckey.len() != ALPHABET.len() {
+        if pkey.len() != REGULAR_ALPHABET.len() || ckey.len() != REGULAR_ALPHABET.len() {
             return Err("bad alphabet length".to_string());
         }
 
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let c = Chaocipher::new(ALPHABET, ALPHABET).unwrap();
+        let c = Chaocipher::new(REGULAR_ALPHABET, REGULAR_ALPHABET).unwrap();
         assert_eq!(c.block_size(), 1);
     }
 

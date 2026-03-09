@@ -12,7 +12,7 @@
 //! - A frequency string to determine which letters get single-digit codes
 //!
 use crate::Block;
-use crate::helpers;
+use crate::helpers::{shuffle, SC_ALPHABET};
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -32,10 +32,6 @@ impl std::fmt::Debug for EncEntry {
         f.write_str(std::str::from_utf8(&code).unwrap_or(".."))
     }
 }
-
-/// Default alphabet containing A-Z plus special characters '/' and '-'.
-/// The '/' character is used as a digit escape marker in encryption.
-pub const ALPHABET_TXT: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 
 /// All cipher digits from 0 to 9 used in the checkerboard.
 const ALL_CIPHER: &[u8] = b"0123456789";
@@ -106,7 +102,7 @@ impl StraddlingCheckerboard {
     /// ```
     ///
     pub fn new(key: &str, chrs: &str) -> Result<Self, String> {
-        Self::new_with_freq(key, chrs, "ESANTIRU", ALPHABET_TXT)
+        Self::new_with_freq(key, chrs, "ESANTIRU", SC_ALPHABET)
     }
 
     /// Creates a new straddling checkerboard cipher with custom frequency and alphabet.
@@ -143,7 +139,7 @@ impl StraddlingCheckerboard {
         let full = if key.is_empty() {
             alphabet.to_string()
         } else {
-            helpers::shuffle(key, alphabet)
+            shuffle(key, alphabet)
         };
         // Remove digits from full if they were added by the key but not in the alphabet
         let full_clean: String = full.chars().filter(|&c| alphabet.contains(c)).collect();

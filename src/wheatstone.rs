@@ -17,14 +17,14 @@
 //! cipher.encrypt(&mut ciphertext, plaintext);
 //! ```
 
+use std::cell::RefCell;
+
 use crate::Block;
 use crate::helpers;
-use std::cell::RefCell;
-use crate::helpers::fix_double;
+use crate::helpers::{fix_double, REGULAR_ALPHABET};
 
-const ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const LEN_PL: usize = ALPHABET.len() + 1;
-const LEN_CT: usize = ALPHABET.len();
+const LEN_PL: usize = REGULAR_ALPHABET.len() + 1;
+const LEN_CT: usize = REGULAR_ALPHABET.len();
 
 /// Wheatstone cipher machine implementation.
 ///
@@ -85,8 +85,8 @@ impl Wheatstone {
         }
 
         // Transform with key
-        let pkey_shuffled = format!("+{}", helpers::shuffle(pkey, ALPHABET));
-        let ckey_shuffled = helpers::shuffle(ckey, ALPHABET);
+        let pkey_shuffled = format!("+{}", helpers::shuffle(pkey, REGULAR_ALPHABET));
+        let ckey_shuffled = helpers::shuffle(ckey, REGULAR_ALPHABET);
 
         let aplw = pkey_shuffled.as_bytes().to_vec();
         let actw = ckey_shuffled.as_bytes().to_vec();

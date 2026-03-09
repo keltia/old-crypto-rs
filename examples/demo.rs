@@ -126,27 +126,41 @@ fn main() {
         let mut dst: Vec<u8>;
         let mut dst1: Vec<u8>;
 
-        if cp.name == "Wheatstone" {
+        println!("==> {}", cp.name);
+        if cp.name.starts_with("Wheatstone") {
+            // Wheatstone can't process double letters at all, regardless of boundary
+            //
             fixpt = helpers::fix_double(PLAIN, 'Q');
+            println!("Wheatstone will process (Q) in plaintext:\n{fixpt}\n");
             dst = vec![0u8; fixpt.len()];
             dst1 = vec![0u8; fixpt.len()];
-        } else if cp.name == "Playfair" {
-            fixpt = helpers::fix_double(PLAIN, 'X');
-            let mut pt_vec = fixpt.as_bytes().to_vec();
+        } else if cp.name.starts_with("Playfair") {
+            // Playfair handles fix_double_aligned internally, but we need to know
+            // what it will produce for comparison
+            //
+            let temp = PLAIN.to_ascii_uppercase().replace('J', "I");
+            let temp_fixed = helpers::fix_double_aligned(&temp, 'X');
+            let mut pt_vec = temp_fixed.as_bytes().to_vec();
             if pt_vec.len() % 2 == 1 {
                 pt_vec.push(b'X');
             }
-            fixpt = String::from_utf8_lossy(&pt_vec).to_string();
-            dst = vec![0u8; fixpt.len()];
-            dst1 = vec![0u8; fixpt.len()];
+            let expected = String::from_utf8_lossy(&pt_vec).to_string();
+            println!("Playfair will process (X): {}\n", expected);
+
+            // But we pass the original PLAIN to encrypt
+            //
+            fixpt = expected;
+            dst = vec![0u8; cp.size];
+            dst1 = vec![0u8; cp.size];
         } else {
             fixpt = PLAIN.to_string();
             dst = vec![0u8; cp.size];
             dst1 = vec![0u8; cp.size];
         }
 
-        let n = cp.c.encrypt(&mut dst, fixpt.as_bytes());
-        println!("==> {}", cp.name);
+        // For Playfair, always pass PLAIN since it does its own processing
+        let input_text = if cp.name.starts_with("Playfair") { PLAIN } else { &fixpt };
+        let n = cp.c.encrypt(&mut dst, input_text.as_bytes());
         println!("{}", helpers::by_n(&String::from_utf8_lossy(&dst[..n]), 5));
 
         let n1 = cp.c.decrypt(&mut dst1, &dst[..n]);
@@ -155,7 +169,9 @@ fn main() {
         if nplain == fixpt {
             println!("decrypt ok\n");
         } else {
-            println!("decrypt not ok\n{}\n{}\n", fixpt, nplain);
+            println!("decrypt not ok (fixpt len={}, nplain len={})", fixpt.len(), nplain.len());
+            println!("Expected: {}", fixpt);
+            println!("Got:      {}\n", nplain);
         }
     }
 }

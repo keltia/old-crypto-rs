@@ -230,15 +230,16 @@ impl Block for SecomCheckerboard {
 struct SecomDisruptedTransposition {
     /// Width of the transposition grid.
     width: usize,
-    /// Key for the transposition (vector of digits).
-    key: Vec<u8>,
+    /// Column order for reading.
+    order: Vec<usize>,
 }
 
 impl SecomDisruptedTransposition {
     /// Creates a new `SecomDisruptedTransposition`.
     ///
     fn new(width: usize, key: Vec<u8>) -> Self {
-        SecomDisruptedTransposition { width, key }
+        let order = Self::column_order_from_digits(&key);
+        SecomDisruptedTransposition { width, order }
     }
 
     /// Derives a column reading order from a digit key.
@@ -290,27 +291,23 @@ impl SecomDisruptedTransposition {
 
     /// Performs SECOM's disrupted columnar transposition encryption.
     ///
-    fn internal_encrypt(&self, src: &[u8]) -> Vec<u8> {
+    fn internal_encrypt(&self, src: &[u8], dst: &mut [u8]) -> usize {
         let width = self.width;
-        let order = Self::column_order_from_digits(&self.key);
         let rows = (src.len() + width - 1) / width;
-        let mask = Self::disrupted_mask(width, rows, &order);
+        let mask = Self::disrupted_mask(width, rows, &self.order);
 
         let mut grid = vec![0u8; rows * width];
-        let mut active = vec![false; rows * width];
-        for i in 0..src.len() {
-            active[i] = true;
-        }
-
         let mut idx = 0usize;
 
+        // Filling the transposition:
+        //
         // Phase 1: non-triangular
         //
         for r in 0..rows {
             let row_off = r * width;
             for c in 0..width {
                 let pos = row_off + c;
-                if active[pos] && !mask[pos] && idx < src.len() {
+                if pos < src.len() && !mask[pos] {
                     grid[pos] = src[idx];
                     idx += 1;
                 }
@@ -322,19 +319,22 @@ impl SecomDisruptedTransposition {
             let row_off = r * width;
             for c in 0..width {
                 let pos = row_off + c;
-                if active[pos] && mask[pos] && idx < src.len() {
+                if pos < src.len() && mask[pos] {
                     grid[pos] = src[idx];
                     idx += 1;
                 }
             }
         }
 
-        let mut out = Vec::with_capacity(src.len());
-        for &col in &order {
+        // Get the transformed stream
+        //
+        let mut out = 0;
+        for &col in &self.order {
             for r in 0..rows {
                 let pos = r * width + col;
-                if active[pos] {
-                    out.push(grid[pos]);
+                if pos < src.len() && out < dst.len() {
+                    dst[out] = grid[pos];
+                    out += 1;
                 }
             }
         }
@@ -343,50 +343,51 @@ impl SecomDisruptedTransposition {
 
     /// Performs SECOM's disrupted columnar transposition decryption.
     ///
-    fn internal_decrypt(&self, src: &[u8]) -> Vec<u8> {
+    fn internal_decrypt(&self, src: &[u8], dst: &mut [u8]) -> usize {
         let width = self.width;
-        let order = Self::column_order_from_digits(&self.key);
         let rows = (src.len() + width - 1) / width;
-        let mask = Self::disrupted_mask(width, rows, &order);
+        let mask = Self::disrupted_mask(width, rows, &self.order);
 
+        // Fill in the columns
+        //
         let mut grid = vec![0u8; rows * width];
-        let mut active = vec![false; rows * width];
-        for i in 0..src.len() {
-            active[i] = true;
-        }
-
         let mut idx = 0usize;
-        for &col in &order {
+        for &col in &self.order {
             for r in 0..rows {
                 let pos = r * width + col;
-                if active[pos] {
+                if pos < src.len() && idx < src.len() {
                     grid[pos] = src[idx];
                     idx += 1;
                 }
             }
         }
 
-        let mut out = Vec::with_capacity(src.len());
+        let mut out = 0;
 
+        // Read the transposition:
+        //
         // Phase 1: non-triangular
         //
         for r in 0..rows {
             let row_off = r * width;
             for c in 0..width {
                 let pos = row_off + c;
-                if active[pos] && !mask[pos] {
-                    out.push(grid[pos]);
+                if pos < src.len() && !mask[pos] && out < dst.len() {
+                    dst[out] = grid[pos];
+                    out += 1;
                 }
             }
         }
+
         // Phase 2: triangular
         //
         for r in 0..rows {
             let row_off = r * width;
             for c in 0..width {
                 let pos = row_off + c;
-                if active[pos] && mask[pos] {
-                    out.push(grid[pos]);
+                if pos < src.len() && mask[pos] && out < dst.len() {
+                    dst[out] = grid[pos];
+                    out += 1;
                 }
             }
         }
@@ -403,19 +404,13 @@ impl Block for SecomDisruptedTransposition {
     /// Encrypts source data into destination buffer using disrupted transposition.
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let res = self.internal_encrypt(src);
-        let n = res.len().min(dst.len());
-        dst[..n].copy_from_slice(&res[..n]);
-        n
+        self.internal_encrypt(src, dst)
     }
 
     /// Decrypts source data into destination buffer using disrupted transposition.
     ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let res = self.internal_decrypt(src);
-        let n = res.len().min(dst.len());
-        dst[..n].copy_from_slice(&res[..n]);
-        n
+        self.internal_decrypt(src, dst)
     }
 }
 
@@ -429,8 +424,8 @@ impl Block for SecomDisruptedTransposition {
 pub struct SecomCipher {
     /// The internal straddling checkerboard.
     checker: SecomCheckerboard,
-    /// Key for the first (regular) columnar transposition.
-    tp1_key: Vec<u8>,
+    /// First (regular) columnar transposition.
+    tp1: Transposition,
     /// The second (disrupted) columnar transposition.
     tp2: SecomDisruptedTransposition,
 }
@@ -463,10 +458,14 @@ impl SecomCipher {
         let a = &key20[..10];
         let b = &key20[10..20];
 
+        // Derive key digits from the key phrase
+        //
         let a_digits = letters_to_digits_1to0(a);
         let b_digits = letters_to_digits_1to0(b);
         let sum_row = addmod10(&a_digits, &b_digits);
 
+        // Now, do the chain addition
+        //
         let mut rows = Vec::with_capacity(5);
         let mut prev = sum_row.clone();
         for _ in 0..5 {
@@ -475,26 +474,47 @@ impl SecomCipher {
             prev = next;
         }
 
+        // Derive the checkerboard key from the last row
+        //
         let last_row = rows.last().ok_or("failed to generate rows")?.clone();
         let header_digits = rank_digits_1to0(&last_row);
         let checker = SecomCheckerboard::new(vec_to_array_10(&header_digits)?, freq)?;
 
+        // Derive the lengths of both transpositions
+        //
         let widths = transposition_widths_from_last_row(&last_row)?;
         let tp1_width = widths.0;
         let tp2_width = widths.1;
 
+        // The two transposition keys are generated by adding the checkerboard key & the 2nd part of the
+        // keyphrase, and this will be used as a transposition.
+        //
         let key10 = addmod10(&b_digits, &header_digits);
+
+        // Generate the two keys by taking enough digits.
+        //
         let key_stream = read_out_columns(&rows, &key10);
         if key_stream.len() < tp1_width + tp2_width {
             return Err("insufficient key stream length".to_string());
         }
-        let tp1_key = key_stream[..tp1_width].to_vec();
+
+        // First transposition
+        //
+        let tp1_key = &key_stream[..tp1_width];
+        let mut tp1_key_str = String::with_capacity(tp1_key.len());
+        for &d in tp1_key {
+            tp1_key_str.push((b'0' + d) as char);
+        }
+        let tp1 = Transposition::new(&tp1_key_str)?;
+
+        // Second transposition
+        //
         let tp2_key = key_stream[tp1_width..tp1_width + tp2_width].to_vec();
         let tp2 = SecomDisruptedTransposition::new(tp2_width, tp2_key);
 
         Ok(SecomCipher {
             checker,
-            tp1_key,
+            tp1,
             tp2,
         })
     }
@@ -540,24 +560,14 @@ impl Block for SecomCipher {
     /// 
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let pt = Self::preprocess_plaintext(src);
-        let mut buf_sc = vec![0u8; pt.len() * 2];
-        let sc_len = self.checker.encrypt(&mut buf_sc, &pt);
-        let digits = buf_sc[..sc_len].to_vec();
+        let mut digits = vec![0u8; pt.len() * 2];
+        let sc_len = self.checker.encrypt(&mut digits, &pt);
+        let digits = &digits[..sc_len];
 
-        let mut tp1_key_str = String::with_capacity(self.tp1_key.len());
-        for &d in &self.tp1_key {
-            tp1_key_str.push((b'0' + d) as char);
-        }
-        let tp1_cipher = Transposition::new(&tp1_key_str).unwrap();
         let mut tp1_buf = vec![0u8; digits.len()];
-        tp1_cipher.encrypt(&mut tp1_buf, &digits);
+        self.tp1.encrypt(&mut tp1_buf, digits);
 
-        let mut tp2_buf = vec![0u8; digits.len()];
-        self.tp2.encrypt(&mut tp2_buf, &tp1_buf);
-
-        let n = tp2_buf.len().min(dst.len());
-        dst[..n].copy_from_slice(&tp2_buf[..n]);
-        n
+        self.tp2.encrypt(dst, &tp1_buf)
     }
 
     /// Decrypts source data into destination buffer.
@@ -570,17 +580,12 @@ impl Block for SecomCipher {
     /// 5. Postprocessing.
     /// 
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let mut tp1_key_str = String::with_capacity(self.tp1_key.len());
-        for &d in &self.tp1_key {
-            tp1_key_str.push((b'0' + d) as char);
-        }
-        let tp1_cipher = Transposition::new(&tp1_key_str).map_err(|e| e.to_string()).unwrap();
-
         let mut tp1_encoded = vec![0u8; src.len()];
-        self.tp2.decrypt(&mut tp1_encoded, src);
+        let tp1_len = self.tp2.decrypt(&mut tp1_encoded, src);
+        let tp1_encoded = &tp1_encoded[..tp1_len];
 
         let mut digits = vec![0u8; tp1_encoded.len()];
-        tp1_cipher.decrypt(&mut digits, &tp1_encoded);
+        self.tp1.decrypt(&mut digits, tp1_encoded);
 
         let mut buf_pt = vec![0u8; digits.len()];
         let pt_len = self.checker.decrypt(&mut buf_pt, &digits);
@@ -597,7 +602,7 @@ impl Block for SecomCipher {
 /// 
 fn letters_to_digits_1to0(s: &str) -> Vec<u8> {
     let ranks = crate::helpers::to_numeric(s);
-    ranks.into_iter().map(|x| (x as u8 + 1) % 10).collect()
+    ranks.into_iter().map(|x| (x + 1) % 10).collect()
 }
 
 /// Performs digit-wise addition modulo 10 for two slices.

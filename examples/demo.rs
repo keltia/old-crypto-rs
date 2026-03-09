@@ -111,8 +111,8 @@ fn main() {
     let key3 = shuffle(KEY3, REGULAR_ALPHABET);
     let key4 = shuffle(KEY4, REGULAR_ALPHABET);
     allciphers.push(Cph {
-        name: format!("Chaocipher official ({}, {})", KEY3, KEY4),
-        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
+        name: format!("Chaocipher keywords ({}, {})", KEY3, KEY4),
+        c: Box::new(Chaocipher::new(&key3, &key4).unwrap()),
         size: PLAIN.len(),
     });
 

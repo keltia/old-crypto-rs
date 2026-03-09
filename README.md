@@ -112,7 +112,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [A Cryptographic Compendium](http://www.quadibloc.com/crypto/jscrypt.htm) - John J. G. Savard
 - [Cipher Machines and Cryptology](https://www.ciphermachinesandcryptology.com/index.htm)
 - [SIGABA Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
-- [Solitaire](https://www.schneier.com/academic/solitaire/)
+- [Solitaire](https://www.schneier.com/academic/solitaire/) - Bruce Schneier
 
 ## Wikipedia References
 

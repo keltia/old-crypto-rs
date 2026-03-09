@@ -216,7 +216,7 @@ impl Block for PlayfairCipher {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let src = String::from_utf8_lossy(src).to_ascii_uppercase().replace('J', "I");
-        let src = helpers::fix_double(&src, 'X');
+        let src = helpers::fix_double_aligned(&src, 'X');
         let mut src_vec = src.as_bytes().to_vec();
         if src_vec.len() % 2 == 1 {
             src_vec.push(b'X');

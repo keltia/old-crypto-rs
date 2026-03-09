@@ -609,13 +609,25 @@ fn addmod10(a: &[u8], b: &[u8]) -> Vec<u8> {
 /// Generates a new row by adding adjacent digits modulo 10 (Fibonacci-style).
 /// 
 fn chain_add_row(row: &[u8]) -> Vec<u8> {
-    let mut buf = row.to_vec();
     let mut out = Vec::with_capacity(row.len());
-    for _ in 0..row.len() {
-        let n = (buf[0] + buf[1]) % 10;
-        out.push(n);
-        buf.push(n);
-        buf.remove(0);
+    if row.len() < 2 {
+        return out;
+    }
+    let mut a = row[0];
+    let mut b = row[1];
+    out.push((a + b) % 10);
+    for i in 2..row.len() {
+        a = b;
+        b = row[i];
+        out.push((a + b) % 10);
+    }
+    // Now we need to continue adding the newly generated digits
+    let mut i = 0;
+    while out.len() < row.len() {
+        a = b;
+        b = out[i];
+        out.push((a + b) % 10);
+        i += 1;
     }
     out
 }

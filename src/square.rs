@@ -59,7 +59,7 @@ pub struct SquareCipher {
     chrs: String,
     alpha: Vec<u8>,
     enc_table: [EncEntry; 256],
-    dec_table: [u8; 256 * 256],
+    dec_table: Box<[u8; 256 * 256]>,
 }
 
 impl SquareCipher {
@@ -106,7 +106,7 @@ impl SquareCipher {
             chrs: chrs.to_string(),
             alpha,
             enc_table: [EncEntry::default(); 256],
-            dec_table: [0; 256 * 256],
+            dec_table: Box::new([0; 256 * 256]),
         };
         c.expand_key();
         Ok(c)

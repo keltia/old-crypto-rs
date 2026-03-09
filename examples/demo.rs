@@ -12,8 +12,11 @@ const KEY5: &str = "MASTODON";
 const KEY6: &str = "SOCIAL";
 
 struct Cph {
+    /// Name of the cipher
     name: String,
+    /// Cipher
     c: Box<dyn Block>,
+    /// Relative size of the ciphertext
     size: usize,
 }
 

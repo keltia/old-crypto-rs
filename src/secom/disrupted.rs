@@ -225,5 +225,33 @@ mod tests {
         assert_eq!(mask, expected);
     }
 
+    #[test]
+    fn test_disrupted_transposition_encrypt_decrypt() {
+        let key = vec![1, 2, 3];
+        let dt = SecomDisruptedTransposition::new(3, key);
+        let src = b"ABCDEFGHIJKL"; // 12 bytes, 4 rows
+        let mut dst = [0u8; 12];
+        let n = dt.encrypt(&mut dst, src);
+        assert_eq!(n, 12);
 
+        let mut pt = [0u8; 12];
+        let n2 = dt.decrypt(&mut pt, &dst);
+        assert_eq!(n2, 12);
+        assert_eq!(&pt, src);
+    }
+
+    #[test]
+    fn test_disrupted_transposition_irregular_length() {
+        let key = vec![3, 1, 2];
+        let dt = SecomDisruptedTransposition::new(3, key);
+        let src = b"HELLO WORLD"; // 11 bytes
+        let mut dst = [0u8; 11];
+        let n = dt.encrypt(&mut dst, src);
+        assert_eq!(n, 11);
+
+        let mut pt = [0u8; 11];
+        let n2 = dt.decrypt(&mut pt, &dst);
+        assert_eq!(n2, 11);
+        assert_eq!(&pt, src);
+    }
 }

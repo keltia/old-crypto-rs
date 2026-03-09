@@ -191,3 +191,99 @@ impl Block for SecomCheckerboard {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_checkerboard_layout() {
+        let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let freq = "ATONESI";
+        let cb = SecomCheckerboard::new(header, freq).unwrap();
+        
+        // FREQ_BLANK_POS = [2, 5, 8]
+        // header[2]=2, header[5]=5, header[8]=8 should be long digits
+        assert_eq!(cb.longc, [2, 5, 8]);
+
+        // ATONESI should be single digits
+        // cols 0, 1, 3, 4, 6, 7, 9
+        // header[0]=0 -> A
+        // header[1]=1 -> T
+        // header[3]=3 -> O
+        // header[4]=4 -> N
+        // header[6]=6 -> E
+        // header[7]=7 -> S
+        // header[9]=9 -> I
+
+        let mut dst = [0u8; 10];
+        let n = cb.encrypt(&mut dst, b"ATONESI");
+        assert_eq!(n, 7);
+        assert_eq!(&dst[..7], b"0134679");
+
+        let mut pt = [0u8; 10];
+        let n = cb.decrypt(&mut pt, b"0134679");
+        assert_eq!(n, 7);
+        assert_eq!(&pt[..7], b"ATONESI");
+    }
+
+    #[test]
+    fn test_checkerboard_two_digits() {
+        let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let freq = "ATONESI";
+        let cb = SecomCheckerboard::new(header, freq).unwrap();
+
+        // Let's test some characters that should be 2 digits.
+        // Alphabet: ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789
+        // A, T, O, N, E, S, I are freq.
+        // Others: B, C, D, F, G, H, J, K, L, M, P, Q, R, U, V, W, X, Y, Z, *, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+        // Row 1 starts with long digit cb.longc[0] = 2.
+        // It should start at col_for_digit[2] = 2.
+        // header[2]=2, header[3]=3, ...
+        // So 'B' should be "22" (if header[2]=2 is used as 2nd digit)
+        // Actually, code says:
+        // let start_col = if row_digit == 2 { 0 } else { col_for_digit[row_digit as usize] };
+        // row_digit is 2, so start_col = 0.
+        // for i in 0..10 { col = (0 + i) % 10; d1 = header[col]; enc['B'] = [2, d1] ... }
+        // 'B' is 1st in symbols, so it gets col 0, d1 = header[0] = 0.
+        // So 'B' -> "20".
+        
+        let mut dst = [0u8; 10];
+        let n = cb.encrypt(&mut dst, b"B");
+        assert_eq!(n, 2);
+        assert_eq!(&dst[..2], b"20");
+
+        let mut pt = [0u8; 10];
+        let n = cb.decrypt(&mut pt, b"20");
+        assert_eq!(n, 1);
+        assert_eq!(&pt[..1], b"B");
+    }
+
+    #[test]
+    fn test_buffer_too_small() {
+        let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cb = SecomCheckerboard::new(header, "ATONESI").unwrap();
+        let mut dst = [0u8; 3];
+        // "ATONESI" -> 7 digits.
+        let n = cb.encrypt(&mut dst, b"ATONESI");
+        assert_eq!(n, 3);
+        assert_eq!(&dst[..3], b"013");
+    }
+
+    #[test]
+    fn test_invalid_chars() {
+        let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let cb = SecomCheckerboard::new(header, "ATONESI").unwrap();
+        let mut dst = [0u8; 10];
+        // '#' is not in alphabet, should be skipped
+        let n = cb.encrypt(&mut dst, b"A#T");
+        assert_eq!(n, 2);
+        assert_eq!(&dst[..2], b"01");
+        
+        let mut pt = [0u8; 10];
+        // 'a' is not a digit, should be skipped in decrypt
+        let n = cb.decrypt(&mut pt, b"0a1");
+        assert_eq!(n, 2);
+        assert_eq!(&pt[..2], b"AT");
+    }
+}
+

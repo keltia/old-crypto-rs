@@ -122,7 +122,7 @@ fn main() {
     println!("==> Plain = \n{}\n", PLAIN);
 
     for cp in allciphers {
-        let mut fixpt: String;
+        let fixpt: String;
         let mut dst: Vec<u8>;
         let mut dst1: Vec<u8>;
 

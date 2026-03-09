@@ -1,6 +1,7 @@
 use old_crypto_rs::{
     ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
-    SquareCipher, SecomCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers,
+    SquareCipher, SecomCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone,
+    helpers,
 };
 
 use divan::Bencher;
@@ -40,6 +41,16 @@ mod encryption {
     #[divan::bench]
     fn caesar(bencher: Bencher) {
         let c = CaesarCipher::new(3);
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn vigenere(bencher: Bencher) {
+        let c = VigenereCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
@@ -174,6 +185,18 @@ mod decryption {
     #[divan::bench]
     fn caesar(bencher: Bencher) {
         let c = CaesarCipher::new(3);
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn vigenere(bencher: Bencher) {
+        let c = VigenereCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);

@@ -4,6 +4,13 @@ const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
 const PLAIN: &str = "CETOOTESTCHIFFREAVECADFGVXETLESCLESMASTODONETSOCIALX";
 
+const KEY1: &str = "SUBWAY";
+const KEY2: &str = "ARABESQUE";
+const KEY3: &str = "CIPHER";
+const KEY4: &str = "MACHINE";
+const KEY5: &str = "MASTODON";
+const KEY6: &str = "SOCIAL";
+
 struct Cph {
     name: String,
     c: Box<dyn Block>,
@@ -14,79 +21,85 @@ fn main() {
     let mut allciphers: Vec<Cph> = Vec::new();
 
     allciphers.push(Cph {
-        name: "Caesar".to_string(),
+        name: "Caesar (3)".to_string(),
         c: Box::new(CaesarCipher::new(3)),
         size: PLAIN.len(),
     });
 
     allciphers.push(Cph {
-        name: "Vigenère".to_string(),
+        name: format!("Vigenère ({})", KEY1),
         c: Box::new(VigenereCipher::new("SUBWAY")),
         size: PLAIN.len(),
     });
 
     allciphers.push(Cph {
-        name: "Polybius Square".to_string(),
-        c: Box::new(SquareCipher::new("ARABESQUE", "012345").unwrap()),
+        name: format!("Polybius Square ({})", KEY2),
+        c: Box::new(SquareCipher::new(KEY2, "012345").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "Transposition".to_string(),
-        c: Box::new(Transposition::new("SUBWAY").unwrap()),
+        name: format!("Transposition ({})", KEY1),
+        c: Box::new(Transposition::new(KEY1).unwrap()),
         size: PLAIN.len(),
     });
 
     allciphers.push(Cph {
-        name: "Irregular. Transposition.".to_string(),
-        c: Box::new(IrregularTransposition::new("SUBWAY").unwrap()),
+        name: format!("Irregular. Transposition ({})", KEY1),
+        c: Box::new(IrregularTransposition::new(KEY1).unwrap()),
         size: PLAIN.len(),
     });
 
     allciphers.push(Cph {
-        name: "Playfair".to_string(),
-        c: Box::new(PlayfairCipher::new("ARABESQUE")),
+        name: format!("Playfair ({})", KEY2),
+        c: Box::new(PlayfairCipher::new(KEY2)),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "ADFGVX".to_string(),
+        name: format!("ADFGVX ({}, {})", KEY2, KEY1),
         c: Box::new(ADFGVX::new("ARABESQUE", "SUBWAY").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "ADFGVX2".to_string(),
-        c: Box::new(ADFGVX::new("MASTODON", "SOCIAL").unwrap()),
+        name: format!("ADFGVX ({}, {})", KEY5, KEY6),
+        c: Box::new(ADFGVX::new(KEY5, KEY6).unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "Straddling".to_string(),
-        c: Box::new(StraddlingCheckerboard::new("ARABESQUE", "37").unwrap()),
+        name: format!("Straddling ({})", KEY2),
+        c: Box::new(StraddlingCheckerboard::new(KEY2, "37").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "Nihilist".to_string(),
+        name: format!("Nihilist ({}, {})", KEY2, KEY1),
         c: Box::new(Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap()),
         size: PLAIN.len() * 2,
     });
 
+    const PERSN: &str = "89";
+    const INDN: &str = "741776";
+    const PHRS: &str = "IDREAMOFJEANNIEWITHT";
+    const RNDN: &str = "77651";
     allciphers.push(Cph {
-        name: "VIC".to_string(),
-        c: Box::new(VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap()),
+        name: format!("VIC ({}, {}, {}, {})", PERSN, INDN, PHRS, RNDN),
+        c: Box::new(VicCipher::new(PERSN, INDN, PHRS, RNDN).unwrap()),
+        size: PLAIN.len() * 2,
+    });
+
+    const SPHASS: &str = "ANTICONSTITUTIONNELLEMENT";
+    const FREQ: &str = "ESANTIR";
+    allciphers.push(Cph {
+        name: format!("SECOM ({}, {})", SPHASS, FREQ),
+        c: Box::new(SecomCipher::new(SPHASS, FREQ).unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
-        name: "SECOM".to_string(),
-        c: Box::new(SecomCipher::new("ANTICONSTITUTIONNELLEMENT", "ESANTIR").unwrap()),
-        size: PLAIN.len() * 2,
-    });
-
-    allciphers.push(Cph {
-        name: "Chaocipher".to_string(),
+        name: format!("Chaocipher ({}, {})", KEY_PLAIN, KEY_CIPHER),
         c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
         size: PLAIN.len(),
     });
@@ -98,8 +111,8 @@ fn main() {
     });
 
     allciphers.push(Cph {
-        name: "Wheatstone".to_string(),
-        c: Box::new(Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap()),
+        name: format!("Wheatstone ({}, {})", KEY3, KEY4),
+        c: Box::new(Wheatstone::new(b'M', KEY3, KEY4).unwrap()),
         size: PLAIN.len(),
     });
 

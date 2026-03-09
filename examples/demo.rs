@@ -94,11 +94,18 @@ fn main() {
         size: PLAIN.len() * 2,
     });
 
-    const SPHASS: &str = "ANTICONSTITUTIONNELLEMENT";
-    const FREQ: &str = "ESANTIR";
+    const SPHASS: &str = "IDREAMOFJEANNIEWITHT";
+    const FREQ: &str = "ATONESI";
     allciphers.push(Cph {
         name: format!("SECOM ({}, {})", SPHASS, FREQ),
         c: Box::new(SecomCipher::new(SPHASS, FREQ).unwrap()),
+        size: PLAIN.len() * 2,
+    });
+
+    const FREQ1: &str = "ESANTIR";
+    allciphers.push(Cph {
+        name: format!("SECOM ({}, {})", SPHASS, FREQ1),
+        c: Box::new(SecomCipher::new(SPHASS, FREQ1).unwrap()),
         size: PLAIN.len() * 2,
     });
 

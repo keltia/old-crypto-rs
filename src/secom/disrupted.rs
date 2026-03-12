@@ -23,6 +23,7 @@ impl SecomDisruptedTransposition {
     /// Creates a new `SecomDisruptedTransposition`.
     ///
     pub(crate) fn new(width: usize, key: Vec<u8>) -> Self {
+        assert_eq!(width, key.len());
         let order = column_order_from_digits(&key);
         SecomDisruptedTransposition { width, order }
     }

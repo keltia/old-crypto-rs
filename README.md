@@ -125,6 +125,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Polybius square](https://en.wikipedia.org/wiki/Polybius_square)
 - [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
 - [Nihilist cipher](https://en.wikipedia.org/wiki/Nihilist_cipher)
+- [SECOM](http://www.ciphermachinesandcryptology.com/en/secom.htm)
 - [SIGABA cipher machine](https://en.wikipedia.org/wiki/SIGABA)
 - [Solitaire](https://en.wikipedia.org/wiki/Solitaire_(cipher))
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)

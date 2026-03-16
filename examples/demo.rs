@@ -1,6 +1,11 @@
 use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher};
 use old_crypto_rs::helpers::{shuffle, REGULAR_ALPHABET};
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+
 const KEY_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const KEY_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
 const PLAIN: &str = "CETOOTESTCHIFFREAVECADFGVXETLESCLESMASTODONETSOCIALX";
@@ -22,6 +27,9 @@ struct Cph {
 }
 
 fn main() {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     let mut allciphers: Vec<Cph> = Vec::new();
 
     allciphers.push(Cph {

@@ -6,6 +6,9 @@ use crate::Block;
 
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
+/// Our alphabet includes digits and 3 more caracters, because we have 3 digits.
+const BASE_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789/+";
+
 /// Internal encoding entry for a single character in the checkerboard.
 ///
 #[derive(Copy, Clone, Debug, Default)]
@@ -75,7 +78,7 @@ impl SecomCheckerboard {
         // Derive symbols for the extra rows by removing characters in `freq` from the alphabet.
         // The SECOM alphabet consists of A-Z, 0-9, and '*' for space.
         //
-        let base_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789";
+        let base_alphabet = BASE_ALPHABET;
         let mut checker_extra = String::with_capacity(30);
         for c in base_alphabet.chars() {
             if !freq.contains(c) {

@@ -24,6 +24,7 @@
 //! 
 use crate::Block;
 use crate::helpers;
+use crate::helpers::REGULAR_ALPHABET;
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -34,10 +35,6 @@ struct EncEntry {
     len: u8,
     bytes: [u8; 2],
 }
-
-/// Base alphabet used for creating the cipher square.
-/// Contains all uppercase letters A-Z followed by digits 0-9.
-pub const BASE36: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 /// A Square Cipher that implements fractionating substitution.
 ///
@@ -100,7 +97,34 @@ impl SquareCipher {
             return Err("neither key nor chrs can be empty".to_string());
         }
 
-        let alpha = helpers::condense(&format!("{}{}", key, BASE36)).as_bytes().to_vec();
+        // Step 1: Condense key + alphabet (letters only)
+        //
+        let condensed_letters = helpers::condense(&format!("{}{}", key, REGULAR_ALPHABET));
+
+        // Step 2: Insert digits after corresponding letters
+        // 1 after A, 2 after B, 3 after C, 4 after D, 5 after E,
+        // 6 after F, 7 after G, 8 after H, 9 after I, 0 after J
+        //
+        // This follows <https://en.wikipedia.org/wiki/ADFGVX_cipher method>. That way, numbers
+        // positions are less predictable
+        //
+        let mut alpha = Vec::new();
+        for ch in condensed_letters.chars() {
+            alpha.push(ch as u8);
+            match ch {
+                'A' => alpha.push(b'1'),
+                'B' => alpha.push(b'2'),
+                'C' => alpha.push(b'3'),
+                'D' => alpha.push(b'4'),
+                'E' => alpha.push(b'5'),
+                'F' => alpha.push(b'6'),
+                'G' => alpha.push(b'7'),
+                'H' => alpha.push(b'8'),
+                'I' => alpha.push(b'9'),
+                'J' => alpha.push(b'0'),
+                _ => {}
+            }
+        }
 
         let mut c = SquareCipher {
             key: key.to_string(),
@@ -288,8 +312,9 @@ mod tests {
     #[test]
     fn test_square_cipher_encrypt() {
         let test_data = [
-            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDFFGAVAGDGAVGVFX"),
-            ("ARABESQUE", "012345", "ATTACKATDAWN", "003232001122003212003425"),
+            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDXVDAVAGFDAVXFVG"),
+            ("ARABESQUE", "012345", "ATTACKATDAWN", "005050001440005020005243"),
+            ("NACHTBOMMENWERPER", "ADFGVX", "ATTACKAT1200AM", "ADDDDDADAGVGADDDAFDGVFVFADDX")
         ];
 
         for (key, chrs, pt, ct) in test_data {
@@ -304,8 +329,9 @@ mod tests {
     #[test]
     fn test_square_cipher_decrypt() {
         let test_data = [
-            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDFFGAVAGDGAVGVFX"),
-            ("ARABESQUE", "012345", "ATTACKATDAWN", "003232001122003212003425"),
+            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDXVDAVAGFDAVXFVG"),
+            ("ARABESQUE", "012345", "ATTACKATDAWN", "005050001440005020005243"),
+            ("NACHTBOMMENWERPER", "ADFGVX", "ATTACKAT1200AM", "ADDDDDADAGVGADDDAFDGVFVFADDX")
         ];
 
         for (key, chrs, pt, ct) in test_data {

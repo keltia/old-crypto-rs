@@ -149,6 +149,7 @@ impl Block for ADFGVX {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     #[test]
     fn test_new_cipher() {
@@ -167,21 +168,21 @@ mod tests {
         assert_eq!(c.block_size(), 6);
     }
 
-    #[test]
-    fn test_adfgvx_encrypt() {
-        let c = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
-        let pt = "ATTACKATDAWN";
-        let ct = "AFDFADAGAAAAVVVVGFGVGGGX";
+    #[rstest]
+    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGFGDDG")]
+    #[case("NACHTBOMMENWERPER", "PRIVACY", "ATTACKAT1200AM", "DGDDDAGDDGAFADDFDADVDVFAADVX")]
+    fn test_adfgvx_encrypt(#[case] key1: &str, #[case] key2: &str, #[case] pt: &str, #[case] ct: &str) {
+        let c = ADFGVX::new(key1, key2).unwrap();
         let mut dst = vec![0u8; ct.len()];
         c.encrypt(&mut dst, pt.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst), ct);
     }
 
-    #[test]
-    fn test_adfgvx_decrypt() {
-        let c = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
-        let pt = "ATTACKATDAWN";
-        let ct = "AFDFADAGAAAAVVVVGFGVGGGX";
+    #[rstest]
+    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGFGDDG")]
+    #[case("NACHTBOMMENWERPER", "PRIVACY", "ATTACKAT1200AM", "DGDDDAGDDGAFADDFDADVDVFAADVX")]
+    fn test_adfgvx_decrypt(#[case] key1: &str, #[case] key2: &str, #[case] pt: &str, #[case] ct: &str) {
+        let c = ADFGVX::new(key1, key2).unwrap();
         let mut dst = vec![0u8; pt.len()];
         c.decrypt(&mut dst, ct.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst), pt);

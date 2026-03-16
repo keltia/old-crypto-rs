@@ -96,6 +96,45 @@ You can run them with
 - better display of results
 - refactoring to reduce code duplication: always in progress
 
+## Benchmarks
+
+Mac Studio 2023, M1Max, 64 GBn 4 TB NVMe SSD.
+
+```text
+cargo bench --bench=ciphers
+
+Timer precision: 41 ns
+ciphers                        fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ decryption                                │               │               │               │         │
+│  ├─ adfgvx                   102.5 ns      │ 105.8 ns      │ 103.1 ns      │ 103.6 ns      │ 100     │ 6400
+│  ├─ caesar                   25.87 ns      │ 26.85 ns      │ 26.2 ns       │ 26.18 ns      │ 100     │ 25600
+│  ├─ chaocipher               2.957 µs      │ 10.79 µs      │ 2.999 µs      │ 3.153 µs      │ 100     │ 100
+│  ├─ irregular_transposition  327.8 ns      │ 494.4 ns      │ 333 ns        │ 337.6 ns      │ 100     │ 1600
+│  ├─ nihilist                 189.8 ns      │ 325.1 ns      │ 194.9 ns      │ 196.9 ns      │ 100     │ 1600
+│  ├─ playfair                 68.03 ns      │ 69.34 ns      │ 68.69 ns      │ 68.62 ns      │ 100     │ 6400
+│  ├─ secom                    588.1 ns      │ 1.332 µs      │ 598.6 ns      │ 616.9 ns      │ 100     │ 800
+│  ├─ square                   42.96 ns      │ 43.94 ns      │ 43.29 ns      │ 43.34 ns      │ 100     │ 12800
+│  ├─ straddling               86.25 ns      │ 89.51 ns      │ 86.92 ns      │ 87.22 ns      │ 100     │ 6400
+│  ├─ transposition            36.13 ns      │ 37.11 ns      │ 36.78 ns      │ 36.65 ns      │ 100     │ 12800
+│  ├─ vic                      645.4 ns      │ 671.5 ns      │ 650.6 ns      │ 651 ns        │ 100     │ 800
+│  ├─ vigenere                 202.8 ns      │ 572.6 ns      │ 208 ns        │ 213.8 ns      │ 100     │ 800
+│  ╰─ wheatstone               293.9 ns      │ 356.4 ns      │ 299.1 ns      │ 301.3 ns      │ 100     │ 1600
+╰─ encryption                                │               │               │               │         │
+   ├─ adfgvx                   95.37 ns      │ 97.98 ns      │ 96.67 ns      │ 96.43 ns      │ 100     │ 6400
+   ├─ caesar                   25.87 ns      │ 26.69 ns      │ 26.04 ns      │ 26.14 ns      │ 100     │ 25600
+   ├─ chaocipher               2.957 µs      │ 5.541 µs      │ 3.04 µs       │ 3.063 µs      │ 100     │ 100
+   ├─ irregular_transposition  222.3 ns      │ 299.1 ns      │ 228.1 ns      │ 227.6 ns      │ 100     │ 3200
+   ├─ nihilist                 127.2 ns      │ 129.8 ns      │ 128.5 ns      │ 128.4 ns      │ 100     │ 3200
+   ├─ playfair                 489.4 ns      │ 1.114 µs      │ 499.6 ns      │ 509.9 ns      │ 100     │ 400
+   ├─ secom                    525.6 ns      │ 541.4 ns      │ 530.9 ns      │ 533.6 ns      │ 100     │ 800
+   ├─ square                   45.25 ns      │ 46.22 ns      │ 45.89 ns      │ 45.79 ns      │ 100     │ 12800
+   ├─ straddling               60.54 ns      │ 62.17 ns      │ 60.87 ns      │ 61.11 ns      │ 100     │ 12800
+   ├─ transposition            33.52 ns      │ 34.5 ns       │ 34.17 ns      │ 34.02 ns      │ 100     │ 12800
+   ├─ vic                      614.1 ns      │ 1.135 µs      │ 666.4 ns      │ 687.8 ns      │ 100     │ 400
+   ├─ vigenere                 198.8 ns      │ 206.7 ns      │ 201.5 ns      │ 201.9 ns      │ 100     │ 3200
+   ╰─ wheatstone               452.8 ns      │ 468.4 ns      │ 457.9 ns      │ 458 ns        │ 100     │ 1600
+```
+
 ## Contributing
 
 Please see CONTRIBUTING.md for some simple rules.

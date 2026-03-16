@@ -32,6 +32,7 @@ use std::cell::RefCell;
 /// - A Polybius square cipher using the letters A, D, F, G, V, X
 /// - A columnar transposition cipher for the second encryption stage
 ///
+#[derive(Debug)]
 pub struct ADFGVX {
     sqr: SquareCipher,
     transp: Transposition,

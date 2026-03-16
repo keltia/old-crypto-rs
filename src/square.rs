@@ -54,6 +54,7 @@ pub const BASE36: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 /// * `enc_table` - Fast encryption table from plaintext byte to bigram bytes
 /// * `dec_table` - Fast decryption table from bigram bytes to plaintext byte
 /// 
+#[derive(Debug)]
 pub struct SquareCipher {
     key: String,
     chrs: String,

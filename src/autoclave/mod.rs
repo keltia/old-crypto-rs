@@ -46,4 +46,4 @@ mod autocrypt;
 mod autokey;
 
 pub use autocrypt::Autocrypt;
-pub use autokey::Autokey;
+pub use autokey::AutokeyCipher;

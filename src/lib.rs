@@ -18,7 +18,7 @@ mod wheatstone;
 mod sigaba;
 
 pub use null::NullCipher;
-pub use autoclave::{Autocrypt,Autokey};
+pub use autoclave::{Autocrypt, AutokeyCipher};
 pub use caesar::CaesarCipher;
 pub use playfair::PlayfairCipher;
 pub use chaocipher::Chaocipher;

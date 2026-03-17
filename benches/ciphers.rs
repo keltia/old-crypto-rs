@@ -16,6 +16,7 @@ fn main() {
 
 #[divan::bench_group]
 mod encryption {
+    use old_crypto_rs::AutokeyCipher;
     use super::*;
 
     #[divan::bench]
@@ -51,6 +52,16 @@ mod encryption {
     #[divan::bench]
     fn vigenere(bencher: Bencher) {
         let c = VigenereCipher::new("SUBWAY");
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn autokey(bencher: Bencher) {
+        let c = AutokeyCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
@@ -152,6 +163,7 @@ mod encryption {
 
 #[divan::bench_group]
 mod decryption {
+    use old_crypto_rs::AutokeyCipher;
     use super::*;
 
     #[divan::bench]
@@ -197,6 +209,18 @@ mod decryption {
     #[divan::bench]
     fn vigenere(bencher: Bencher) {
         let c = VigenereCipher::new("SUBWAY");
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn autokey(bencher: Bencher) {
+        let c = AutokeyCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);

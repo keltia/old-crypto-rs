@@ -3,11 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::{
-    ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher,
-    SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher,
-    VigenereCipher, Wheatstone,
-};
+use old_crypto_rs::{ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -205,6 +201,7 @@ impl App {
             }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
+        self.result = helpers::output_as_block(self.result.as_str());
     }
 }
 

@@ -31,7 +31,7 @@ TUI.  Key bindings and the whole UI are still a work in progress, my first TUI p
 It currently implements a few more compared to the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
-- Vigenère and its 2 autoclave variants (WIP)
+- Vigenère and its 2 autoclave variants
 - Simple transposition (can be used with other ciphers as super-encipherment)
 - Polybius square bi-grammatic cipher (for ADFGVX = polybius + transposition)
 - Playfair
@@ -91,48 +91,54 @@ You can run them with
 
 ## TODO
 
-- more ciphers (Vigenère and its 2 autoclave variants incoming)
+- more ciphers ~~(Vigenère and its 2 autoclave variants incoming)~~
 - more tests (and better ones!)
 - better display of results
 - refactoring to reduce code duplication: always in progress
 
 ## Benchmarks
 
-Mac Studio 2023, M1Max, 64 GBn 4 TB NVMe SSD.
+PC, AMD 7700X, 32 GB RAM, 500 GB M2 SSD, Win 11 25H2
 
 ```text
 cargo bench --bench=ciphers
 
-Timer precision: 41 ns
+Timer precision: 100 ns
 ciphers                        fastest       │ slowest       │ median        │ mean          │ samples │ iters
 ├─ decryption                                │               │               │               │         │
-│  ├─ adfgvx                   102.5 ns      │ 105.8 ns      │ 103.1 ns      │ 103.6 ns      │ 100     │ 6400
-│  ├─ caesar                   25.87 ns      │ 26.85 ns      │ 26.2 ns       │ 26.18 ns      │ 100     │ 25600
-│  ├─ chaocipher               2.957 µs      │ 10.79 µs      │ 2.999 µs      │ 3.153 µs      │ 100     │ 100
-│  ├─ irregular_transposition  327.8 ns      │ 494.4 ns      │ 333 ns        │ 337.6 ns      │ 100     │ 1600
-│  ├─ nihilist                 189.8 ns      │ 325.1 ns      │ 194.9 ns      │ 196.9 ns      │ 100     │ 1600
-│  ├─ playfair                 68.03 ns      │ 69.34 ns      │ 68.69 ns      │ 68.62 ns      │ 100     │ 6400
-│  ├─ secom                    588.1 ns      │ 1.332 µs      │ 598.6 ns      │ 616.9 ns      │ 100     │ 800
-│  ├─ square                   42.96 ns      │ 43.94 ns      │ 43.29 ns      │ 43.34 ns      │ 100     │ 12800
-│  ├─ straddling               86.25 ns      │ 89.51 ns      │ 86.92 ns      │ 87.22 ns      │ 100     │ 6400
-│  ├─ transposition            36.13 ns      │ 37.11 ns      │ 36.78 ns      │ 36.65 ns      │ 100     │ 12800
-│  ├─ vic                      645.4 ns      │ 671.5 ns      │ 650.6 ns      │ 651 ns        │ 100     │ 800
-│  ├─ vigenere                 202.8 ns      │ 572.6 ns      │ 208 ns        │ 213.8 ns      │ 100     │ 800
-│  ╰─ wheatstone               293.9 ns      │ 356.4 ns      │ 299.1 ns      │ 301.3 ns      │ 100     │ 1600
+│  ├─ adfgvx                   69.34 ns      │ 127.9 ns      │ 97.07 ns      │ 91.48 ns      │ 100     │ 12800
+│  ├─ autocrypt                65.04 ns      │ 82.23 ns      │ 65.04 ns      │ 65.54 ns      │ 100     │ 25600
+│  ├─ autokey                  207.6 ns      │ 610.7 ns      │ 315.4 ns      │ 275 ns        │ 100     │ 6400
+│  ├─ caesar                   20.7 ns       │ 28.91 ns      │ 20.9 ns       │ 21.01 ns      │ 100     │ 51200
+│  ├─ chaocipher               1.849 µs      │ 2.387 µs      │ 1.862 µs      │ 1.874 µs      │ 100     │ 800
+│  ├─ irregular_transposition  243.5 ns      │ 309.1 ns      │ 245.1 ns      │ 246.1 ns      │ 100     │ 6400
+│  ├─ nihilist                 132.6 ns      │ 274 ns        │ 133.4 ns      │ 135.5 ns      │ 100     │ 12800
+│  ├─ playfair                 53.71 ns      │ 113 ns        │ 54.49 ns      │ 67.23 ns      │ 100     │ 12800
+│  ├─ secom                    421.6 ns      │ 559.1 ns      │ 424.8 ns      │ 428.5 ns      │ 100     │ 3200
+│  ├─ solitaire                4.749 µs      │ 10.19 µs      │ 5.124 µs      │ 5.203 µs      │ 100     │ 200
+│  ├─ square                   32.42 ns      │ 118.5 ns      │ 39.75 ns      │ 40.64 ns      │ 100     │ 51200
+│  ├─ straddling               66.99 ns      │ 413.8 ns      │ 72.07 ns      │ 78.05 ns      │ 100     │ 25600
+│  ├─ transposition            23.05 ns      │ 94.73 ns      │ 23.44 ns      │ 25.05 ns      │ 100     │ 51200
+│  ├─ vic                      537.3 ns      │ 987.3 ns      │ 543.5 ns      │ 547.8 ns      │ 100     │ 3200
+│  ├─ vigenere                 162.3 ns      │ 163.8 ns      │ 163.8 ns      │ 163.1 ns      │ 100     │ 6400
+│  ╰─ wheatstone               191.9 ns      │ 195.1 ns      │ 193.5 ns      │ 193.2 ns      │ 100     │ 6400
 ╰─ encryption                                │               │               │               │         │
-   ├─ adfgvx                   95.37 ns      │ 97.98 ns      │ 96.67 ns      │ 96.43 ns      │ 100     │ 6400
-   ├─ caesar                   25.87 ns      │ 26.69 ns      │ 26.04 ns      │ 26.14 ns      │ 100     │ 25600
-   ├─ chaocipher               2.957 µs      │ 5.541 µs      │ 3.04 µs       │ 3.063 µs      │ 100     │ 100
-   ├─ irregular_transposition  222.3 ns      │ 299.1 ns      │ 228.1 ns      │ 227.6 ns      │ 100     │ 3200
-   ├─ nihilist                 127.2 ns      │ 129.8 ns      │ 128.5 ns      │ 128.4 ns      │ 100     │ 3200
-   ├─ playfair                 489.4 ns      │ 1.114 µs      │ 499.6 ns      │ 509.9 ns      │ 100     │ 400
-   ├─ secom                    525.6 ns      │ 541.4 ns      │ 530.9 ns      │ 533.6 ns      │ 100     │ 800
-   ├─ square                   45.25 ns      │ 46.22 ns      │ 45.89 ns      │ 45.79 ns      │ 100     │ 12800
-   ├─ straddling               60.54 ns      │ 62.17 ns      │ 60.87 ns      │ 61.11 ns      │ 100     │ 12800
-   ├─ transposition            33.52 ns      │ 34.5 ns       │ 34.17 ns      │ 34.02 ns      │ 100     │ 12800
-   ├─ vic                      614.1 ns      │ 1.135 µs      │ 666.4 ns      │ 687.8 ns      │ 100     │ 400
-   ├─ vigenere                 198.8 ns      │ 206.7 ns      │ 201.5 ns      │ 201.9 ns      │ 100     │ 3200
-   ╰─ wheatstone               452.8 ns      │ 468.4 ns      │ 457.9 ns      │ 458 ns        │ 100     │ 1600
+   ├─ adfgvx                   60.35 ns      │ 413 ns        │ 60.35 ns      │ 67.18 ns      │ 100     │ 25600
+   ├─ autocrypt                60.74 ns      │ 115 ns        │ 61.13 ns      │ 62.27 ns      │ 100     │ 25600
+   ├─ autokey                  131.8 ns      │ 173.2 ns      │ 132.6 ns      │ 133.6 ns      │ 100     │ 12800
+   ├─ caesar                   20.7 ns       │ 212.5 ns      │ 20.9 ns       │ 24.89 ns      │ 100     │ 51200
+   ├─ chaocipher               1.762 µs      │ 3.874 µs      │ 1.874 µs      │ 1.927 µs      │ 100     │ 800
+   ├─ irregular_transposition  154.4 ns      │ 206 ns        │ 156 ns        │ 156.8 ns      │ 100     │ 6400
+   ├─ nihilist                 88.87 ns      │ 121.6 ns      │ 89.65 ns      │ 90.37 ns      │ 100     │ 12800
+   ├─ playfair                 396.6 ns      │ 765.4 ns      │ 402.9 ns      │ 409.1 ns      │ 100     │ 3200
+   ├─ secom                    384.1 ns      │ 465.4 ns      │ 390.4 ns      │ 391.4 ns      │ 100     │ 3200
+   ├─ solitaire                4.749 µs      │ 6.649 µs      │ 4.949 µs      │ 5.039 µs      │ 100     │ 200
+   ├─ square                   32.03 ns      │ 54.49 ns      │ 32.42 ns      │ 32.92 ns      │ 100     │ 51200
+   ├─ straddling               45.9 ns       │ 66.99 ns      │ 46.29 ns      │ 46.75 ns      │ 100     │ 25600
+   ├─ transposition            17.58 ns      │ 29.2 ns       │ 25.1 ns       │ 21.7 ns       │ 100     │ 102400
+   ├─ vic                      487.3 ns      │ 799.8 ns      │ 546.6 ns      │ 543.8 ns      │ 100     │ 3200
+   ├─ vigenere                 141.9 ns      │ 1.595 µs      │ 143.5 ns      │ 207.2 ns      │ 100     │ 6400
+   ╰─ wheatstone               287.3 ns      │ 457.6 ns      │ 288.8 ns      │ 290.7 ns      │ 100     │ 6400
 ```
 
 ## Contributing

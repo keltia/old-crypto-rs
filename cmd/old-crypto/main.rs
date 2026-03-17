@@ -1,17 +1,18 @@
 use std::io::{self, stdout};
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+};
+use old_crypto_rs::{
+    ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher,
+    SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher,
+    VigenereCipher, Wheatstone,
 };
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
-use old_crypto_rs::{
-    Block as CipherBlock, ADFGVX, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher,
-    Solitaire, SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone,
-};
+use std::io::{self, stdout};
 
 enum InputMode {
     Normal,
@@ -58,6 +59,7 @@ impl App {
             result: String::new(),
             ciphers: vec![
                 "Caesar",
+                "Vigenere",
                 "Playfair",
                 "Chaocipher",
                 "ADFGVX",
@@ -91,6 +93,12 @@ impl App {
                 } else {
                     self.result = "Invalid key (must be integer)".to_string();
                 }
+            }
+            "Vigenere" => {
+                let cipher = VigenereCipher::new(&self.key1);
+                let mut d = vec![0u8; src.len()];
+                cipher.encrypt(&mut d, src);
+                self.result = String::from_utf8_lossy(&d).to_string();
             }
             "Playfair" => {
                 let cipher = PlayfairCipher::new(&self.key1);
@@ -340,6 +348,7 @@ fn ui(f: &mut Frame, app: &mut App) {
     // Determine which key fields to show and their labels
     let key_configs = match cipher_name {
         "Caesar" => vec![("Shift (integer)", &app.key1)],
+        "Vigenere" => vec![("Key", &app.key1)],
         "Playfair" => vec![("Key", &app.key1)],
         "Chaocipher" => vec![("Plain Alphabet", &app.key1), ("Cipher Alphabet", &app.key2)],
         "ADFGVX" => vec![("Square Key", &app.key1), ("Transposition Key", &app.key2)],

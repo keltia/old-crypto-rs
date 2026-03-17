@@ -1,7 +1,7 @@
 use old_crypto_rs::{
     ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
-    SquareCipher, SecomCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone,
-    helpers,
+    SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher,
+    Wheatstone, AutocryptCipher, helpers, Solitaire,
 };
 
 use divan::Bencher;
@@ -16,8 +16,8 @@ fn main() {
 
 #[divan::bench_group]
 mod encryption {
-    use old_crypto_rs::AutokeyCipher;
     use super::*;
+    use old_crypto_rs::AutokeyCipher;
 
     #[divan::bench]
     fn vic(bencher: Bencher) {
@@ -62,6 +62,16 @@ mod encryption {
     #[divan::bench]
     fn autokey(bencher: Bencher) {
         let c = AutokeyCipher::new("SUBWAY");
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn autocrypt(bencher: Bencher) {
+        let c = AutocryptCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
@@ -150,6 +160,16 @@ mod encryption {
     }
 
     #[divan::bench]
+    fn solitaire(bencher: Bencher) {
+        let c = Solitaire::new_with_passphrase("ARABESQUE");
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len() * 2];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
     fn wheatstone(bencher: Bencher) {
         let c = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
         let fixpt = helpers::fix_double(PLAIN, 'Q');
@@ -163,8 +183,8 @@ mod encryption {
 
 #[divan::bench_group]
 mod decryption {
-    use old_crypto_rs::AutokeyCipher;
     use super::*;
+    use old_crypto_rs::AutokeyCipher;
 
     #[divan::bench]
     fn vic(bencher: Bencher) {
@@ -221,6 +241,18 @@ mod decryption {
     #[divan::bench]
     fn autokey(bencher: Bencher) {
         let c = AutokeyCipher::new("SUBWAY");
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn autocrypt(bencher: Bencher) {
+        let c = AutocryptCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);
@@ -318,6 +350,18 @@ mod decryption {
     #[divan::bench]
     fn nihilist(bencher: Bencher) {
         let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len() * 2];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; ct.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn solitaire(bencher: Bencher) {
+        let c = Solitaire::new_with_passphrase("ARABESQUE");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);

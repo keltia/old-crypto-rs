@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher};
+use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher};
 use old_crypto_rs::helpers::{shuffle, REGULAR_ALPHABET};
 
 #[cfg(feature = "dhat-heap")]
@@ -40,7 +40,19 @@ fn main() {
 
     allciphers.push(Cph {
         name: format!("Vigenère ({})", KEY1),
-        c: Box::new(VigenereCipher::new("SUBWAY")),
+        c: Box::new(VigenereCipher::new(KEY1)),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: format!("Autokey Vigenère ({})", KEY1),
+        c: Box::new(AutokeyCipher::new(KEY1)),
+        size: PLAIN.len(),
+    });
+
+    allciphers.push(Cph {
+        name: format!("Autocrypt Vigenère ({})", KEY1),
+        c: Box::new(AutocryptCipher::new(KEY1)),
         size: PLAIN.len(),
     });
 

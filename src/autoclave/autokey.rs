@@ -28,7 +28,7 @@
 //!
 //! # See Also
 //! - [Autokey Cipher](https://en.wikipedia.org/wiki/Autokey_cipher)
-//! - [`Autocrypt`](crate::autoclave::autocrypt::Autocrypt) - The ciphertext-based autoclave variant
+//! - [`Autocrypt`](crate::autoclave::autocrypt::AutocryptCipher) - The ciphertext-based autoclave variant
 //!
 
 use crate::Block;

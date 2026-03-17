@@ -6,23 +6,23 @@
 use crate::Block;
 
 #[derive(Debug)]
-pub struct Autocrypt {
+pub struct AutocryptCipher {
     /// The numeric key values (0-25) derived from the key string.
     key: Vec<u8>,
 }
 
-impl Autocrypt {
+impl AutocryptCipher {
     pub fn new(key: &str) -> Self {
         let key_vec = key.as_bytes().iter()
             .map(|&b| b - b'A')
             .collect::<Vec<_>>();
-        Autocrypt {
+        AutocryptCipher {
             key: key_vec,
         }
     }
 }
 
-impl Block for Autocrypt {
+impl Block for AutocryptCipher {
     fn block_size(&self) -> usize {
         1
     }

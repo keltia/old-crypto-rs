@@ -3,7 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::{ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers};
+use old_crypto_rs::{ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -56,6 +56,8 @@ impl App {
             ciphers: vec![
                 "Caesar",
                 "Vigenere",
+                "Autocrypt",
+                "Autokey",
                 "Playfair",
                 "Chaocipher",
                 "ADFGVX",
@@ -92,6 +94,18 @@ impl App {
             }
             "Vigenere" => {
                 let cipher = VigenereCipher::new(&self.key1);
+                let mut d = vec![0u8; src.len()];
+                cipher.encrypt(&mut d, src);
+                self.result = String::from_utf8_lossy(&d).to_string();
+            }
+            "Autocrypt Vigenere" => {
+                let cipher = AutocryptCipher::new(&self.key1);
+                let mut d = vec![0u8; src.len()];
+                cipher.encrypt(&mut d, src);
+                self.result = String::from_utf8_lossy(&d).to_string();
+            }
+            "Autokey Vigenere" => {
+                let cipher = AutokeyCipher::new(&self.key1);
                 let mut d = vec![0u8; src.len()];
                 cipher.encrypt(&mut d, src);
                 self.result = String::from_utf8_lossy(&d).to_string();
@@ -338,6 +352,8 @@ fn ui(f: &mut Frame, app: &mut App) {
     let key_configs = match cipher_name {
         "Caesar" => vec![("Shift (integer)", &app.key1)],
         "Vigenere" => vec![("Key", &app.key1)],
+        "Autocrypt" => vec![("Key", &app.key1)],
+        "Autokey" => vec![("Key", &app.key1)],
         "Playfair" => vec![("Key", &app.key1)],
         "Chaocipher" => vec![
             ("Plain Alphabet", &app.key1),

@@ -1,5 +1,5 @@
-use std::io::{self, stdout};
 use crossterm::{
+    ExecutableCommand,
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -31,14 +31,14 @@ enum FocusedField {
 struct App {
     input_mode: InputMode,
     focused_field: FocusedField,
-    
+
     cleartext: String,
     key1: String,
     key2: String,
     key3: String,
     key4: String,
     result: String,
-    
+
     ciphers: Vec<&'static str>,
     cipher_list_state: ListState,
     selected_cipher_index: usize,
@@ -106,18 +106,16 @@ impl App {
                 let n = cipher.encrypt(&mut d, src);
                 self.result = String::from_utf8_lossy(&d[..n]).to_string();
             }
-            "Chaocipher" => {
-                match Chaocipher::new(&self.key1, &self.key2) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len()];
-                        cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d).to_string();
-                    }
-                    Err(e) => {
-                        self.result = format!("Error: {}", e);
-                    }
+            "Chaocipher" => match Chaocipher::new(&self.key1, &self.key2) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len()];
+                    cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d).to_string();
                 }
-            }
+                Err(e) => {
+                    self.result = format!("Error: {}", e);
+                }
+            },
             "ADFGVX" => {
                 match ADFGVX::new(&self.key1, &self.key2) {
                     Ok(cipher) => {
@@ -142,66 +140,54 @@ impl App {
                 cipher.encrypt(&mut d, src);
                 self.result = String::from_utf8_lossy(&d).to_string();
             }
-            "Square" => {
-                match SquareCipher::new(&self.key1, &self.key2) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() * 2];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+            "Square" => match SquareCipher::new(&self.key1, &self.key2) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() * 2];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
-            "Transposition" => {
-                match Transposition::new(&self.key1) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() + cipher.block_size()];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+                Err(e) => self.result = format!("Error: {}", e),
+            },
+            "Transposition" => match Transposition::new(&self.key1) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() + cipher.block_size()];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
-            "Straddling" => {
-                match StraddlingCheckerboard::new(&self.key1, &self.key2) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() * 3];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+                Err(e) => self.result = format!("Error: {}", e),
+            },
+            "Straddling" => match StraddlingCheckerboard::new(&self.key1, &self.key2) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() * 3];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
-            "Nihilist" => {
-                match Nihilist::new(&self.key1, &self.key2, &self.key3) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() * 3];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+                Err(e) => self.result = format!("Error: {}", e),
+            },
+            "Nihilist" => match Nihilist::new(&self.key1, &self.key2, &self.key3) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() * 3];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
-            "VIC" => {
-                match VicCipher::new(&self.key1, &self.key2, &self.key3, &self.key4) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() * 4];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+                Err(e) => self.result = format!("Error: {}", e),
+            },
+            "VIC" => match VicCipher::new(&self.key1, &self.key2, &self.key3, &self.key4) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() * 4];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
-            "SECOM" => {
-                match SecomCipher::new(&self.key1, &self.key2) {
-                    Ok(cipher) => {
-                        let mut d = vec![0u8; src.len() * 2];
-                        let n = cipher.encrypt(&mut d, src);
-                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
-                    }
-                    Err(e) => self.result = format!("Error: {}", e),
+                Err(e) => self.result = format!("Error: {}", e),
+            },
+            "SECOM" => match SecomCipher::new(&self.key1, &self.key2) {
+                Ok(cipher) => {
+                    let mut d = vec![0u8; src.len() * 2];
+                    let n = cipher.encrypt(&mut d, src);
+                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
                 }
-            }
+                Err(e) => self.result = format!("Error: {}", e),
+            },
             "Wheatstone" => {
                 let start = self.key1.as_bytes().first().cloned().unwrap_or(b'M');
                 match Wheatstone::new(start, &self.key2, &self.key3) {
@@ -214,8 +200,8 @@ impl App {
                 }
             }
             "Sigaba" => {
-                self.result = "Sigaba requires complex keying, not fully supported in TUI yet"
-                    .to_string();
+                self.result =
+                    "Sigaba requires complex keying, not fully supported in TUI yet".to_string();
             }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
@@ -240,7 +226,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> 
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()>
 where
     io::Error: From<B::Error>,
 {
@@ -313,24 +299,30 @@ where
                         KeyCode::Esc => {
                             app.input_mode = InputMode::Normal;
                         }
-                        KeyCode::Char(c) => {
-                            match app.focused_field {
-                                FocusedField::Cleartext => app.cleartext.push(c),
-                                FocusedField::Key1 => app.key1.push(c),
-                                FocusedField::Key2 => app.key2.push(c),
-                                FocusedField::Key3 => app.key3.push(c),
-                                FocusedField::Key4 => app.key4.push(c),
+                        KeyCode::Char(c) => match app.focused_field {
+                            FocusedField::Cleartext => app.cleartext.push(c),
+                            FocusedField::Key1 => app.key1.push(c),
+                            FocusedField::Key2 => app.key2.push(c),
+                            FocusedField::Key3 => app.key3.push(c),
+                            FocusedField::Key4 => app.key4.push(c),
+                        },
+                        KeyCode::Backspace => match app.focused_field {
+                            FocusedField::Cleartext => {
+                                app.cleartext.pop();
                             }
-                        }
-                        KeyCode::Backspace => {
-                            match app.focused_field {
-                                FocusedField::Cleartext => { app.cleartext.pop(); }
-                                FocusedField::Key1 => { app.key1.pop(); }
-                                FocusedField::Key2 => { app.key2.pop(); }
-                                FocusedField::Key3 => { app.key3.pop(); }
-                                FocusedField::Key4 => { app.key4.pop(); }
+                            FocusedField::Key1 => {
+                                app.key1.pop();
                             }
-                        }
+                            FocusedField::Key2 => {
+                                app.key2.pop();
+                            }
+                            FocusedField::Key3 => {
+                                app.key3.pop();
+                            }
+                            FocusedField::Key4 => {
+                                app.key4.pop();
+                            }
+                        },
                         KeyCode::Enter => {
                             app.run_cipher();
                         }
@@ -344,13 +336,16 @@ where
 
 fn ui(f: &mut Frame, app: &mut App) {
     let cipher_name = app.ciphers[app.selected_cipher_index];
-    
+
     // Determine which key fields to show and their labels
     let key_configs = match cipher_name {
         "Caesar" => vec![("Shift (integer)", &app.key1)],
         "Vigenere" => vec![("Key", &app.key1)],
         "Playfair" => vec![("Key", &app.key1)],
-        "Chaocipher" => vec![("Plain Alphabet", &app.key1), ("Cipher Alphabet", &app.key2)],
+        "Chaocipher" => vec![
+            ("Plain Alphabet", &app.key1),
+            ("Cipher Alphabet", &app.key2),
+        ],
         "ADFGVX" => vec![("Square Key", &app.key1), ("Transposition Key", &app.key2)],
         "Solitaire" => vec![("Passphrase", &app.key1)],
         "Null" => vec![],
@@ -368,10 +363,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Phrase", &app.key3),
             ("Key Message", &app.key4),
         ],
-        "SECOM" => vec![
-            ("Key", &app.key1),
-            ("ATONESI", &app.key2)
-        ],
+        "SECOM" => vec![("Key", &app.key1), ("ATONESI", &app.key2)],
         "Wheatstone" => vec![
             ("Start Character", &app.key1),
             ("Plain Key", &app.key2),
@@ -440,8 +432,11 @@ fn ui(f: &mut Frame, app: &mut App) {
     let help_message = Paragraph::new(Line::from(msg).style(style));
     f.render_widget(help_message, chunks[chunks.len() - 1]);
 
-    let cipher_display = Paragraph::new(cipher_name)
-        .block(Block::default().borders(Borders::ALL).title("Cipher (Press 'c' to change)"));
+    let cipher_display = Paragraph::new(cipher_name).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title("Cipher (Press 'c' to change)"),
+    );
     f.render_widget(cipher_display, chunks[0]);
 
     let cleartext_input = Paragraph::new(app.cleartext.as_str())
@@ -482,8 +477,16 @@ fn ui(f: &mut Frame, app: &mut App) {
         f.render_widget(Clear, area);
         let items: Vec<ListItem> = app.ciphers.iter().map(|i| ListItem::new(*i)).collect();
         let list = List::new(items)
-            .block(Block::default().title("Select Cipher").borders(Borders::ALL))
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD).fg(Color::Yellow))
+            .block(
+                Block::default()
+                    .title("Select Cipher")
+                    .borders(Borders::ALL),
+            )
+            .highlight_style(
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .fg(Color::Yellow),
+            )
             .highlight_symbol(">> ");
         f.render_stateful_widget(list, area, &mut app.cipher_list_state);
     }

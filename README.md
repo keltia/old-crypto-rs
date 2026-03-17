@@ -108,41 +108,41 @@ PC, AMD 7700X, 32 GB RAM, 500 GB M2 SSD, Win 11 25H2
 cargo bench --bench=ciphers
 
 Timer precision: 100 ns
-ciphers                        fastest       │ slowest       │ median        │ mean          │ samples │ iters
-├─ decryption                                │               │               │               │         │
-│  ├─ adfgvx                   69.34 ns      │ 127.9 ns      │ 97.07 ns      │ 91.48 ns      │ 100     │ 12800
-│  ├─ autocrypt                65.04 ns      │ 82.23 ns      │ 65.04 ns      │ 65.54 ns      │ 100     │ 25600
-│  ├─ autokey                  207.6 ns      │ 610.7 ns      │ 315.4 ns      │ 275 ns        │ 100     │ 6400
-│  ├─ caesar                   20.7 ns       │ 28.91 ns      │ 20.9 ns       │ 21.01 ns      │ 100     │ 51200
-│  ├─ chaocipher               1.849 µs      │ 2.387 µs      │ 1.862 µs      │ 1.874 µs      │ 100     │ 800
-│  ├─ irregular_transposition  243.5 ns      │ 309.1 ns      │ 245.1 ns      │ 246.1 ns      │ 100     │ 6400
-│  ├─ nihilist                 132.6 ns      │ 274 ns        │ 133.4 ns      │ 135.5 ns      │ 100     │ 12800
-│  ├─ playfair                 53.71 ns      │ 113 ns        │ 54.49 ns      │ 67.23 ns      │ 100     │ 12800
-│  ├─ secom                    421.6 ns      │ 559.1 ns      │ 424.8 ns      │ 428.5 ns      │ 100     │ 3200
-│  ├─ solitaire                4.749 µs      │ 10.19 µs      │ 5.124 µs      │ 5.203 µs      │ 100     │ 200
-│  ├─ square                   32.42 ns      │ 118.5 ns      │ 39.75 ns      │ 40.64 ns      │ 100     │ 51200
-│  ├─ straddling               66.99 ns      │ 413.8 ns      │ 72.07 ns      │ 78.05 ns      │ 100     │ 25600
-│  ├─ transposition            23.05 ns      │ 94.73 ns      │ 23.44 ns      │ 25.05 ns      │ 100     │ 51200
-│  ├─ vic                      537.3 ns      │ 987.3 ns      │ 543.5 ns      │ 547.8 ns      │ 100     │ 3200
-│  ├─ vigenere                 162.3 ns      │ 163.8 ns      │ 163.8 ns      │ 163.1 ns      │ 100     │ 6400
-│  ╰─ wheatstone               191.9 ns      │ 195.1 ns      │ 193.5 ns      │ 193.2 ns      │ 100     │ 6400
-╰─ encryption                                │               │               │               │         │
-   ├─ adfgvx                   60.35 ns      │ 413 ns        │ 60.35 ns      │ 67.18 ns      │ 100     │ 25600
-   ├─ autocrypt                60.74 ns      │ 115 ns        │ 61.13 ns      │ 62.27 ns      │ 100     │ 25600
-   ├─ autokey                  131.8 ns      │ 173.2 ns      │ 132.6 ns      │ 133.6 ns      │ 100     │ 12800
-   ├─ caesar                   20.7 ns       │ 212.5 ns      │ 20.9 ns       │ 24.89 ns      │ 100     │ 51200
-   ├─ chaocipher               1.762 µs      │ 3.874 µs      │ 1.874 µs      │ 1.927 µs      │ 100     │ 800
-   ├─ irregular_transposition  154.4 ns      │ 206 ns        │ 156 ns        │ 156.8 ns      │ 100     │ 6400
-   ├─ nihilist                 88.87 ns      │ 121.6 ns      │ 89.65 ns      │ 90.37 ns      │ 100     │ 12800
-   ├─ playfair                 396.6 ns      │ 765.4 ns      │ 402.9 ns      │ 409.1 ns      │ 100     │ 3200
-   ├─ secom                    384.1 ns      │ 465.4 ns      │ 390.4 ns      │ 391.4 ns      │ 100     │ 3200
-   ├─ solitaire                4.749 µs      │ 6.649 µs      │ 4.949 µs      │ 5.039 µs      │ 100     │ 200
-   ├─ square                   32.03 ns      │ 54.49 ns      │ 32.42 ns      │ 32.92 ns      │ 100     │ 51200
-   ├─ straddling               45.9 ns       │ 66.99 ns      │ 46.29 ns      │ 46.75 ns      │ 100     │ 25600
-   ├─ transposition            17.58 ns      │ 29.2 ns       │ 25.1 ns       │ 21.7 ns       │ 100     │ 102400
-   ├─ vic                      487.3 ns      │ 799.8 ns      │ 546.6 ns      │ 543.8 ns      │ 100     │ 3200
-   ├─ vigenere                 141.9 ns      │ 1.595 µs      │ 143.5 ns      │ 207.2 ns      │ 100     │ 6400
-   ╰─ wheatstone               287.3 ns      │ 457.6 ns      │ 288.8 ns      │ 290.7 ns      │ 100     │ 6400
+ciphers                            fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ decryption                                    │               │               │               │         │
+│  ├─ b01_caesar                   20.51 ns      │ 28.71 ns      │ 20.7 ns       │ 20.9 ns       │ 100     │ 51200
+│  ├─ b02_vigenere                 160.7 ns      │ 1.443 µs      │ 162.3 ns      │ 196.7 ns      │ 100     │ 6400
+│  ├─ b03_autokey                  209.1 ns      │ 274.8 ns      │ 210.7 ns      │ 211.5 ns      │ 100     │ 6400
+│  ├─ b04_autocrypt                61.13 ns      │ 93.56 ns      │ 61.91 ns      │ 62.74 ns      │ 100     │ 25600
+│  ├─ b05_square                   32.03 ns      │ 52.15 ns      │ 32.23 ns      │ 32.95 ns      │ 100     │ 51200
+│  ├─ b06_playfair                 53.32 ns      │ 468.1 ns      │ 92.38 ns      │ 96.61 ns      │ 100     │ 25600
+│  ├─ b07_transposition            23.05 ns      │ 33.01 ns      │ 23.83 ns      │ 23.94 ns      │ 100     │ 51200
+│  ├─ b08_irregular_transposition  245.1 ns      │ 304.4 ns      │ 246.6 ns      │ 247.6 ns      │ 100     │ 6400
+│  ├─ b09_straddling               62.31 ns      │ 101.3 ns      │ 66.21 ns      │ 66.36 ns      │ 100     │ 25600
+│  ├─ b10_adfgvx                   69.34 ns      │ 107.2 ns      │ 69.73 ns      │ 70.3 ns       │ 100     │ 25600
+│  ├─ b11_nihilist                 130.2 ns      │ 697.4 ns      │ 136.5 ns      │ 165.4 ns      │ 100     │ 12800
+│  ├─ b12_vic                      493.5 ns      │ 756 ns        │ 743.5 ns      │ 634.9 ns      │ 100     │ 1600
+│  ├─ b13_secom                    402.9 ns      │ 2.74 µs       │ 406 ns        │ 439.3 ns      │ 100     │ 3200
+│  ├─ b14_chaocipher               1.737 µs      │ 4.612 µs      │ 2.149 µs      │ 2.186 µs      │ 100     │ 800
+│  ├─ b15_solitaire                4.649 µs      │ 7.849 µs      │ 4.699 µs      │ 4.844 µs      │ 100     │ 200
+│  ╰─ b16_wheatstone               191.9 ns      │ 257.6 ns      │ 193.5 ns      │ 193.7 ns      │ 100     │ 6400
+╰─ encryption                                    │               │               │               │         │
+   ├─ b01_caesar                   21.09 ns      │ 27.34 ns      │ 21.29 ns      │ 21.28 ns      │ 100     │ 51200
+   ├─ b02_vigenere                 141.2 ns      │ 168.5 ns      │ 142.7 ns      │ 143 ns        │ 100     │ 12800
+   ├─ b03_autokey                  134.9 ns      │ 219.3 ns      │ 135.7 ns      │ 136.9 ns      │ 100     │ 12800
+   ├─ b04_autocrypt                60.74 ns      │ 77.93 ns      │ 61.91 ns      │ 62.27 ns      │ 100     │ 25600
+   ├─ b05_square                   32.42 ns      │ 59.18 ns      │ 33.01 ns      │ 33.27 ns      │ 100     │ 51200
+   ├─ b06_playfair                 402.9 ns      │ 624.8 ns      │ 490.4 ns      │ 464.8 ns      │ 100     │ 3200
+   ├─ b07_transposition            17.38 ns      │ 72.66 ns      │ 17.43 ns      │ 21.72 ns      │ 100     │ 102400
+   ├─ b08_irregular_transposition  154.4 ns      │ 229.4 ns      │ 155.2 ns      │ 157.2 ns      │ 100     │ 12800
+   ├─ b09_straddling               39.26 ns      │ 40.04 ns      │ 39.65 ns      │ 39.64 ns      │ 100     │ 25600
+   ├─ b10_adfgvx                   59.57 ns      │ 76.37 ns      │ 60.35 ns      │ 60.7 ns       │ 100     │ 25600
+   ├─ b11_nihilist                 82.62 ns      │ 160.7 ns      │ 124 ns        │ 111.7 ns      │ 100     │ 12800
+   ├─ b12_vic                      465.4 ns      │ 1.662 µs      │ 484.1 ns      │ 533.4 ns      │ 100     │ 3200
+   ├─ b13_secom                    365.4 ns      │ 2.852 µs      │ 377.9 ns      │ 402 ns        │ 100     │ 3200
+   ├─ b14_chaocipher               1.712 µs      │ 10.49 µs      │ 1.793 µs      │ 2.236 µs      │ 100     │ 800
+   ├─ b15_solitaire                4.649 µs      │ 6.849 µs      │ 4.749 µs      │ 4.854 µs      │ 100     │ 200
+   ╰─ b16_wheatstone               284.1 ns      │ 532.6 ns      │ 285.7 ns      │ 296.5 ns      │ 100     │ 6400
 ```
 
 ## Contributing

@@ -19,27 +19,7 @@ mod encryption {
     use super::*;
 
     #[divan::bench]
-    fn vic(bencher: Bencher) {
-        let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
-        let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len() * 3];
-        bencher.bench_local(|| {
-            c.encrypt(&mut dst, src);
-        });
-    }
-
-    #[divan::bench]
-    fn secom(bencher: Bencher) {
-        let c = SecomCipher::new("IDREAMOFJEANNIEWITHT", "ATONESI").unwrap();
-        let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len() * 3];
-        bencher.bench_local(|| {
-            c.encrypt(&mut dst, src);
-        });
-    }
-
-    #[divan::bench]
-    fn caesar(bencher: Bencher) {
+    fn b01_caesar(bencher: Bencher) {
         let c = CaesarCipher::new(3);
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
@@ -49,7 +29,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn vigenere(bencher: Bencher) {
+    fn b02_vigenere(bencher: Bencher) {
         let c = VigenereCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
@@ -59,7 +39,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn autokey(bencher: Bencher) {
+    fn b03_autokey(bencher: Bencher) {
         let c = AutokeyCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
@@ -69,7 +49,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn autocrypt(bencher: Bencher) {
+    fn b04_autocrypt(bencher: Bencher) {
         let c = AutocryptCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
@@ -79,7 +59,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn square(bencher: Bencher) {
+    fn b05_square(bencher: Bencher) {
         let c = SquareCipher::new("ARABESQUE", "012345").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
@@ -89,37 +69,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn transposition(bencher: Bencher) {
-        let c = Transposition::new("SUBWAY").unwrap();
-        let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len()];
-        bencher.bench_local(|| {
-            c.encrypt(&mut dst, src);
-        });
-    }
-
-    #[divan::bench]
-    fn irregular_transposition(bencher: Bencher) {
-        let c = IrregularTransposition::new("SUBWAY").unwrap();
-        let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len()];
-        bencher.bench_local(|| {
-            c.encrypt(&mut dst, src);
-        });
-    }
-
-    #[divan::bench]
-    fn chaocipher(bencher: Bencher) {
-        let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
-        let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len()];
-        bencher.bench_local(|| {
-            c.encrypt(&mut dst, src);
-        });
-    }
-
-    #[divan::bench]
-    fn playfair(bencher: Bencher) {
+    fn b06_playfair(bencher: Bencher) {
         let c = PlayfairCipher::new("ARABESQUE");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
@@ -129,17 +79,27 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn adfgvx(bencher: Bencher) {
-        let c = ADFGVX::new("ARABESQUE", "SUBWAY").unwrap();
+    fn b07_transposition(bencher: Bencher) {
+        let c = Transposition::new("SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
-        let mut dst = vec![0u8; src.len() * 2];
+        let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.encrypt(&mut dst, src);
         });
     }
 
     #[divan::bench]
-    fn straddling(bencher: Bencher) {
+    fn b08_irregular_transposition(bencher: Bencher) {
+        let c = IrregularTransposition::new("SUBWAY").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b09_straddling(bencher: Bencher) {
         let c = StraddlingCheckerboard::new("ARABESQUE", "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
@@ -149,7 +109,17 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn nihilist(bencher: Bencher) {
+    fn b10_adfgvx(bencher: Bencher) {
+        let c = ADFGVX::new("ARABESQUE", "SUBWAY").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len() * 2];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b11_nihilist(bencher: Bencher) {
         let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
@@ -159,7 +129,37 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn solitaire(bencher: Bencher) {
+    fn b12_vic(bencher: Bencher) {
+        let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len() * 3];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b13_secom(bencher: Bencher) {
+        let c = SecomCipher::new("IDREAMOFJEANNIEWITHT", "ATONESI").unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len() * 3];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b14_chaocipher(bencher: Bencher) {
+        let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b15_solitaire(bencher: Bencher) {
         let c = Solitaire::new_with_passphrase("ARABESQUE");
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
@@ -169,7 +169,7 @@ mod encryption {
     }
 
     #[divan::bench]
-    fn wheatstone(bencher: Bencher) {
+    fn b16_wheatstone(bencher: Bencher) {
         let c = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
         let fixpt = helpers::fix_double(PLAIN, 'Q');
         let src = fixpt.as_bytes();
@@ -185,7 +185,7 @@ mod decryption {
     use super::*;
 
     #[divan::bench]
-    fn vic(bencher: Bencher) {
+    fn b12_vic(bencher: Bencher) {
         let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 3];
@@ -199,7 +199,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn secom(bencher: Bencher) {
+    fn b13_secom(bencher: Bencher) {
         let c = SecomCipher::new("IDREAMOFJEANNIEWITHT", "ATONESI").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -213,7 +213,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn caesar(bencher: Bencher) {
+    fn b01_caesar(bencher: Bencher) {
         let c = CaesarCipher::new(3);
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -225,7 +225,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn vigenere(bencher: Bencher) {
+    fn b02_vigenere(bencher: Bencher) {
         let c = VigenereCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -237,7 +237,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn autokey(bencher: Bencher) {
+    fn b03_autokey(bencher: Bencher) {
         let c = AutokeyCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -249,7 +249,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn autocrypt(bencher: Bencher) {
+    fn b04_autocrypt(bencher: Bencher) {
         let c = AutocryptCipher::new("SUBWAY");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -261,7 +261,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn square(bencher: Bencher) {
+    fn b05_square(bencher: Bencher) {
         let c = SquareCipher::new("ARABESQUE", "012345").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -273,7 +273,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn transposition(bencher: Bencher) {
+    fn b07_transposition(bencher: Bencher) {
         let c = Transposition::new("SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -285,7 +285,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn irregular_transposition(bencher: Bencher) {
+    fn b08_irregular_transposition(bencher: Bencher) {
         let c = IrregularTransposition::new("SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -297,7 +297,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn chaocipher(bencher: Bencher) {
+    fn b14_chaocipher(bencher: Bencher) {
         let c = Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
@@ -309,7 +309,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn playfair(bencher: Bencher) {
+    fn b06_playfair(bencher: Bencher) {
         let c = PlayfairCipher::new("ARABESQUE");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -322,7 +322,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn adfgvx(bencher: Bencher) {
+    fn b10_adfgvx(bencher: Bencher) {
         let c = ADFGVX::new("ARABESQUE", "SUBWAY").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -334,7 +334,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn straddling(bencher: Bencher) {
+    fn b09_straddling(bencher: Bencher) {
         let c = StraddlingCheckerboard::new("ARABESQUE", "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -346,7 +346,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn nihilist(bencher: Bencher) {
+    fn b11_nihilist(bencher: Bencher) {
         let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -358,7 +358,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn solitaire(bencher: Bencher) {
+    fn b15_solitaire(bencher: Bencher) {
         let c = Solitaire::new_with_passphrase("ARABESQUE");
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
@@ -370,7 +370,7 @@ mod decryption {
     }
 
     #[divan::bench]
-    fn wheatstone(bencher: Bencher) {
+    fn b16_wheatstone(bencher: Bencher) {
         let c = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
         let fixpt = helpers::fix_double(PLAIN, 'Q');
         let src = fixpt.as_bytes();

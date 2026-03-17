@@ -1,7 +1,7 @@
 use old_crypto_rs::{
     ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
     SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher,
-    Wheatstone, AutocryptCipher, helpers, Solitaire,
+    Wheatstone, AutokeyCipher, AutocryptCipher, helpers, Solitaire,
 };
 
 use divan::Bencher;
@@ -17,7 +17,6 @@ fn main() {
 #[divan::bench_group]
 mod encryption {
     use super::*;
-    use old_crypto_rs::AutokeyCipher;
 
     #[divan::bench]
     fn vic(bencher: Bencher) {
@@ -184,7 +183,6 @@ mod encryption {
 #[divan::bench_group]
 mod decryption {
     use super::*;
-    use old_crypto_rs::AutokeyCipher;
 
     #[divan::bench]
     fn vic(bencher: Bencher) {

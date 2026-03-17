@@ -79,6 +79,10 @@ To run the TUI:
 
     cargo run --bin old-crypto
 
+## Features
+
+The SIGABA cipher machine is still a work in progress, so it has been put under the `sigaba` feature flag.
+
 ## Benchmarks & Tests
 
 I tried to provide benchmarks for all ciphers (including key scheduling/expansion) and in some cases several

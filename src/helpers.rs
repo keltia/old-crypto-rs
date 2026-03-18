@@ -313,6 +313,7 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
 /// cf.
 /// ```text
 /// cargo bench --bench shuffle`
+/// 
 /// Timer precision: 100 ns
 /// shuffle                  fastest       │ slowest       │ median        │ mean          │ samples │ iters
 /// ├─ bench_shuffle         135.7 ns      │ 168.5 ns      │ 136.5 ns      │ 136.9 ns      │ 100     │ 12800
@@ -328,9 +329,8 @@ pub fn transp_shuffle(key: &str, alphabet: &str) -> String {
 
     let fixpt = alphabet.as_bytes();
     let mut dst = vec![0u8; SC_ALPHABET.len()];
-    let n = tr.encrypt(&mut dst, fixpt);
-    let res = String::from_utf8(dst).unwrap();
-    res
+    let _ = tr.encrypt(&mut dst, fixpt);
+    String::from_utf8(dst).unwrap()
 }
 
 /// Converts a string key into a numeric representation based on alphabetical order.

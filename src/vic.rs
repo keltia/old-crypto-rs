@@ -5,7 +5,7 @@
 //!
 //! Full description & test vectors: <http://www.quadibloc.com/crypto/pp1324.htm>
 //! Additional information in [Kahn on Codes, 1984](https://www.goodreads.com/book/show/457215.Kahn_on_Codes)
-//!  ISBN: 978-0-02-560640-1
+//! ISBN: 978-0-02-560640-1
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
@@ -304,7 +304,7 @@ impl Block for VicCipher {
         // 1. Straddling Checkerboard
         // 2. First Transposition (regular)
         // 3. Second Transposition (irregular)
-
+        //
         let split = if src.len() < 2 {
             src.to_vec()
         } else {
@@ -353,7 +353,7 @@ impl Block for VicCipher {
         // 2. First Transposition (regular)
         // 3. Straddling Checkerboard
         // 4. Unsplit plaintext by removing marker and swapping halves back.
-
+        //
         let mut buf_tp2 = vec![0u8; src.len()];
         let tp2_len = self.secondtp.decrypt(&mut buf_tp2, src);
 
@@ -467,6 +467,7 @@ mod tests {
         // Last digit of ind "741776" is 6.
         // imsg is "77651".
         // ct_trimmed should have imsg inserted at index 6.
+        //
         assert!(ct_trimmed.len() >= 11);
 
         let mut decrypted = vec![0u8; 100];
@@ -494,6 +495,7 @@ mod tests {
         // G = 1 3 9 1 9 (first 5 of imsg)
         // H = 7 4 1 7 7 (ikey5)
         // J = 4 9 8 4 2 (G - H mod 10)
+        //
         let imsg = str2int("1391944");
         let ikey5 = str2int("74177");
         let j = submod10(&imsg[..5], &ikey5);
@@ -503,6 +505,7 @@ mod tests {
         // 4 9 8 4 2
         // 3 7 2 6 5 (4+9=13, 9+8=17, 8+4=12, 4+2=6, 2+3=5)
         // K = 4 9 8 4 2 3 7 2 6 5
+        //
         let k = expand5to10(&j);
         assert_eq!(k, vec![4, 9, 8, 4, 2, 3, 7, 2, 6, 5]);
 
@@ -516,7 +519,7 @@ mod tests {
         // A:1 D:2 E:3 E:4 F:5 I:6 J:7 M:8 O:9 R:0
         // IDREAMOFJE:
         // I:6 D:2 R:0 E:3 A:1 M:8 O:9 F:5 J:7 E:4 -> 6 2 0 3 1 8 9 5 7 4?
-        // Wait, my ranking in code is 0-based index of sorted characters.
+        //
         // A: 0
         // D: 1
         // E: 2
@@ -539,12 +542,15 @@ mod tests {
         // J: 6 -> 7
         // E: 3 -> 4
         // So ph1 should be [6, 2, 0, 3, 1, 8, 9, 5, 7, 4].
+        //
         let ph1 = vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4];
+
         // L = K + PH1 mod 10
         // 4 9 8 4 2 3 7 2 6 5
         // 6 2 0 3 1 8 9 5 7 4
         // -------------------
         // 0 1 8 7 3 1 6 7 3 9
+        //
         let mut l = k.clone();
         addmod10_inplace(&mut l, &ph1);
         assert_eq!(l, vec![0, 1, 8, 7, 3, 1, 6, 7, 3, 9]);
@@ -555,11 +561,14 @@ mod tests {
         // L: 0 1 8 7 3 1 6 7 3 9
         // PH2: 1 2 3 4 5 6 7 8 9 0 (index 1..10)
         //      1 6 7 4 2 0 5 8 3 9 (value)
+        //
         // Note: Wikipedia says "replace each digit in L with the digit below it in the PH2 line"
         // Digit 0 -> index 10 in PH2 (if 1-based)
         // Digit 9 -> index 9 in PH2
+        //
         let ph2 = vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9];
         let m = first_encode(&l, &ph2);
+
         // Wikipedia result for M: 9 1 8 5 7 1 0 5 7 3
         // L[0]=0 -> PH2[9]=9.
         // L[1]=1 -> PH2[0]=1.
@@ -571,13 +580,16 @@ mod tests {
         // L[7]=7 -> PH2[6]=5.
         // L[8]=3 -> PH2[2]=7.
         // L[9]=9 -> PH2[8]=3.
+        //
         assert_eq!(m, vec![9, 1, 8, 5, 7, 1, 0, 5, 7, 3]);
 
         // Step 5: Chain addition 5 times
+        //
         let mut r = m.clone();
         for _ in 0..5 {
             chainadd_inplace(&mut r);
         }
+
         // Result should be used for second transposition and SC
         // Wikipedia: 
         // 1st: 0 9 3 2 8 1 5 2 0 2
@@ -585,12 +597,15 @@ mod tests {
         // 3rd: 1 7 5 9 5 3 9 4 4 1
         // 4th: 8 2 4 4 8 2 3 8 5 2
         // 5th: 0 6 8 2 0 5 1 3 7 0
+        //
         assert_eq!(r, vec![0, 6, 8, 2, 0, 5, 1, 3, 7, 0]);
 
-        // These digits are used for second transposition key
+        // These digits are used for the second transposition key
         // And their numerical order for SC key.
+        //
         let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
         let sckey = to_numeric(&r_str);
+
         // 0 6 8 2 0 5 1 3 7 0
         // Ranks (0-based, stable sort):
         // Pos 0: digit 0 -> rank 0
@@ -604,6 +619,7 @@ mod tests {
         // Pos 8: digit 7 -> rank 8
         // Pos 9: digit 0 -> rank 2
         // Ranks: 0 7 9 4 1 6 3 5 8 2
+        //
         assert_eq!(sckey, vec![0, 7, 9, 4, 1, 6, 3, 5, 8, 2]);
     }
 

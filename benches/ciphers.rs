@@ -15,7 +15,7 @@ fn main() {
 }
 
 #[divan::bench_group]
-mod encryption {
+mod b0_encryption {
     use super::*;
 
     #[divan::bench]
@@ -181,7 +181,7 @@ mod encryption {
 }
 
 #[divan::bench_group]
-mod decryption {
+mod b1_decryption {
     use super::*;
 
     #[divan::bench]

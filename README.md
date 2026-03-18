@@ -8,14 +8,17 @@
 [![SemVer](https://img.shields.io/badge/semver-2.0.0-blue)](https://semver.org/spec/v2.0.0.html)
 [![License](https://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/keltia/old-crypto-rs/main/LICENSE)
 
-`old-crypto-rs` is a [Rust](https://rust-lang.org/) port of my [cipher](https://github.com/keltia/cipher) Go package,
+`old-crypto-rs` is a [Rust](https://rust-lang.org/) evolution of my [cipher](https://github.com/keltia/cipher) Go package,
 which was a port of my [old-crypto](https://github.com/keltia/old-crypto) Ruby code.
+
+>NOTE: Neither package is currently maintained, only this one in Rust.  I do not plan to retrofit the added algorithms
+>from here into either.
 
 Part of the conversion has been done through the AI plugin inside RustRover called Junie.
 
 It features a simple CLI-based tool called `old-crypto` which serve both as a collection of use-cases for the library,
 and an easy way to use it.  It now uses [ratatui](https://crates.io/crates/ratatui) to provide an interactive
-TUI.  Key bindings and the whole UI are still a work in progress, my first TUI program, in fact.
+TUI.  Key bindings and the whole UI are still a work in progress, this is my first TUI program, in fact.
 
 **Work in progress, still incomplete**
 
@@ -109,40 +112,40 @@ cargo bench --bench=ciphers
 
 Timer precision: 100 ns
 ciphers                            fastest       │ slowest       │ median        │ mean          │ samples │ iters
-├─ decryption                                    │               │               │               │         │
-│  ├─ b01_caesar                   20.51 ns      │ 28.71 ns      │ 20.7 ns       │ 20.9 ns       │ 100     │ 51200
-│  ├─ b02_vigenere                 160.7 ns      │ 1.443 µs      │ 162.3 ns      │ 196.7 ns      │ 100     │ 6400
-│  ├─ b03_autokey                  209.1 ns      │ 274.8 ns      │ 210.7 ns      │ 211.5 ns      │ 100     │ 6400
-│  ├─ b04_autocrypt                61.13 ns      │ 93.56 ns      │ 61.91 ns      │ 62.74 ns      │ 100     │ 25600
-│  ├─ b05_square                   32.03 ns      │ 52.15 ns      │ 32.23 ns      │ 32.95 ns      │ 100     │ 51200
-│  ├─ b06_playfair                 53.32 ns      │ 468.1 ns      │ 92.38 ns      │ 96.61 ns      │ 100     │ 25600
-│  ├─ b07_transposition            23.05 ns      │ 33.01 ns      │ 23.83 ns      │ 23.94 ns      │ 100     │ 51200
-│  ├─ b08_irregular_transposition  245.1 ns      │ 304.4 ns      │ 246.6 ns      │ 247.6 ns      │ 100     │ 6400
-│  ├─ b09_straddling               62.31 ns      │ 101.3 ns      │ 66.21 ns      │ 66.36 ns      │ 100     │ 25600
-│  ├─ b10_adfgvx                   69.34 ns      │ 107.2 ns      │ 69.73 ns      │ 70.3 ns       │ 100     │ 25600
-│  ├─ b11_nihilist                 130.2 ns      │ 697.4 ns      │ 136.5 ns      │ 165.4 ns      │ 100     │ 12800
-│  ├─ b12_vic                      493.5 ns      │ 756 ns        │ 743.5 ns      │ 634.9 ns      │ 100     │ 1600
-│  ├─ b13_secom                    402.9 ns      │ 2.74 µs       │ 406 ns        │ 439.3 ns      │ 100     │ 3200
-│  ├─ b14_chaocipher               1.737 µs      │ 4.612 µs      │ 2.149 µs      │ 2.186 µs      │ 100     │ 800
-│  ├─ b15_solitaire                4.649 µs      │ 7.849 µs      │ 4.699 µs      │ 4.844 µs      │ 100     │ 200
-│  ╰─ b16_wheatstone               191.9 ns      │ 257.6 ns      │ 193.5 ns      │ 193.7 ns      │ 100     │ 6400
-╰─ encryption                                    │               │               │               │         │
-   ├─ b01_caesar                   21.09 ns      │ 27.34 ns      │ 21.29 ns      │ 21.28 ns      │ 100     │ 51200
-   ├─ b02_vigenere                 141.2 ns      │ 168.5 ns      │ 142.7 ns      │ 143 ns        │ 100     │ 12800
-   ├─ b03_autokey                  134.9 ns      │ 219.3 ns      │ 135.7 ns      │ 136.9 ns      │ 100     │ 12800
-   ├─ b04_autocrypt                60.74 ns      │ 77.93 ns      │ 61.91 ns      │ 62.27 ns      │ 100     │ 25600
-   ├─ b05_square                   32.42 ns      │ 59.18 ns      │ 33.01 ns      │ 33.27 ns      │ 100     │ 51200
-   ├─ b06_playfair                 402.9 ns      │ 624.8 ns      │ 490.4 ns      │ 464.8 ns      │ 100     │ 3200
-   ├─ b07_transposition            17.38 ns      │ 72.66 ns      │ 17.43 ns      │ 21.72 ns      │ 100     │ 102400
-   ├─ b08_irregular_transposition  154.4 ns      │ 229.4 ns      │ 155.2 ns      │ 157.2 ns      │ 100     │ 12800
-   ├─ b09_straddling               39.26 ns      │ 40.04 ns      │ 39.65 ns      │ 39.64 ns      │ 100     │ 25600
-   ├─ b10_adfgvx                   59.57 ns      │ 76.37 ns      │ 60.35 ns      │ 60.7 ns       │ 100     │ 25600
-   ├─ b11_nihilist                 82.62 ns      │ 160.7 ns      │ 124 ns        │ 111.7 ns      │ 100     │ 12800
-   ├─ b12_vic                      465.4 ns      │ 1.662 µs      │ 484.1 ns      │ 533.4 ns      │ 100     │ 3200
-   ├─ b13_secom                    365.4 ns      │ 2.852 µs      │ 377.9 ns      │ 402 ns        │ 100     │ 3200
-   ├─ b14_chaocipher               1.712 µs      │ 10.49 µs      │ 1.793 µs      │ 2.236 µs      │ 100     │ 800
-   ├─ b15_solitaire                4.649 µs      │ 6.849 µs      │ 4.749 µs      │ 4.854 µs      │ 100     │ 200
-   ╰─ b16_wheatstone               284.1 ns      │ 532.6 ns      │ 285.7 ns      │ 296.5 ns      │ 100     │ 6400
+├─ b0_encryption                                 │               │               │               │         │
+│  ├─ b01_caesar                   20.89 ns      │ 27.14 ns      │ 20.89 ns      │ 21.07 ns      │ 100     │ 51200
+│  ├─ b02_vigenere                 199.8 ns      │ 13.19 µs      │ 299.8 ns      │ 432.8 ns      │ 100     │ 100
+│  ├─ b03_autokey                  134.9 ns      │ 173.2 ns      │ 136.5 ns      │ 137.3 ns      │ 100     │ 12800
+│  ├─ b04_autocrypt                56.44 ns      │ 441.2 ns      │ 56.83 ns      │ 61.26 ns      │ 100     │ 25600
+│  ├─ b05_square                   32.02 ns      │ 57.22 ns      │ 32.22 ns      │ 33.29 ns      │ 100     │ 51200
+│  ├─ b06_playfair                 393.5 ns      │ 1.977 µs      │ 496.6 ns      │ 584.3 ns      │ 100     │ 3200
+│  ├─ b07_transposition            17.96 ns      │ 36.12 ns      │ 17.96 ns      │ 18.29 ns      │ 100     │ 51200
+│  ├─ b08_irregular_transposition  155.2 ns      │ 220.1 ns      │ 156.8 ns      │ 158.9 ns      │ 100     │ 12800
+│  ├─ b09_straddling               38.86 ns      │ 60.73 ns      │ 39.25 ns      │ 39.42 ns      │ 100     │ 25600
+│  ├─ b10_adfgvx                   59.95 ns      │ 95.5 ns       │ 60.73 ns      │ 61.52 ns      │ 100     │ 25600
+│  ├─ b11_nihilist                 81.83 ns      │ 509.9 ns      │ 82.61 ns      │ 97.6 ns       │ 100     │ 12800
+│  ├─ b12_vic                      459.1 ns      │ 643.5 ns      │ 518.5 ns      │ 505.3 ns      │ 100     │ 3200
+│  ├─ b13_secom                    362.3 ns      │ 1.912 µs      │ 374.8 ns      │ 394.4 ns      │ 100     │ 800
+│  ├─ b14_chaocipher               1.724 µs      │ 2.262 µs      │ 1.762 µs      │ 1.757 µs      │ 100     │ 800
+│  ├─ b15_solitaire                4.599 µs      │ 7.299 µs      │ 4.899 µs      │ 4.94 µs       │ 100     │ 200
+│  ╰─ b16_wheatstone               290.4 ns      │ 501.3 ns      │ 290.4 ns      │ 296.3 ns      │ 100     │ 6400
+╰─ b1_decryption                                 │               │               │               │         │
+   ├─ b01_caesar                   20.69 ns      │ 20.89 ns      │ 20.69 ns      │ 20.72 ns      │ 100     │ 51200
+   ├─ b02_vigenere                 160.7 ns      │ 345.1 ns      │ 162.3 ns      │ 164.8 ns      │ 100     │ 6400
+   ├─ b03_autokey                  210.7 ns      │ 276.3 ns      │ 213.8 ns      │ 213.8 ns      │ 100     │ 6400
+   ├─ b04_autocrypt                75.19 ns      │ 281 ns        │ 87.49 ns      │ 92.66 ns      │ 100     │ 25600
+   ├─ b05_square                   32.02 ns      │ 43.55 ns      │ 32.22 ns      │ 32.64 ns      │ 100     │ 51200
+   ├─ b06_playfair                 53.31 ns      │ 80.26 ns      │ 53.7 ns       │ 54.68 ns      │ 100     │ 25600
+   ├─ b07_transposition            26.36 ns      │ 39.44 ns      │ 26.55 ns      │ 26.95 ns      │ 100     │ 51200
+   ├─ b08_irregular_transposition  240.4 ns      │ 324.8 ns      │ 241.9 ns      │ 243.7 ns      │ 100     │ 6400
+   ├─ b09_straddling               63.08 ns      │ 109.1 ns      │ 63.86 ns      │ 66.02 ns      │ 100     │ 25600
+   ├─ b10_adfgvx                   75.19 ns      │ 225.9 ns      │ 76.75 ns      │ 82.48 ns      │ 100     │ 25600
+   ├─ b11_nihilist                 131 ns        │ 281 ns        │ 132.6 ns      │ 136 ns        │ 100     │ 6400
+   ├─ b12_vic                      509.1 ns      │ 809.1 ns      │ 515.4 ns      │ 519.7 ns      │ 100     │ 3200
+   ├─ b13_secom                    399.8 ns      │ 777.9 ns      │ 409.1 ns      │ 413.9 ns      │ 100     │ 3200
+   ├─ b14_chaocipher               1.724 µs      │ 2.249 µs      │ 1.737 µs      │ 1.737 µs      │ 100     │ 800
+   ├─ b15_solitaire                4.749 µs      │ 9.749 µs      │ 4.849 µs      │ 4.975 µs      │ 100     │ 200
+   ╰─ b16_wheatstone               202.9 ns      │ 515.4 ns      │ 231 ns        │ 276.7 ns      │ 100     │ 3200
 ```
 
 ## Contributing

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use crate::{Block, Transposition};
 
 /// Removes all duplicate characters from a string, preserving the first occurrence of each.
 ///
@@ -213,10 +214,6 @@ pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 
 /// Shuffles an alphabet using a keyword to create a mixed alphabet for cipher use.
 ///
-/// This function combines a keyword with an alphabet, removes duplicates, then performs
-/// a transposition using the keyword itself as the key. This creates a less predictable
-/// arrangement (checkerboard effect) suitable for use in classical ciphers.
-///
 /// # Algorithm
 ///
 /// 1. Condense the concatenation of `key` and `alphabet` to remove duplicates
@@ -240,7 +237,7 @@ pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 /// use old_crypto_rs::helpers::shuffle;
 ///
 /// let key = "ARABESQUE";  // Condenses to "ARBESQU" (length = 7)
-/// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 29 chars, height = 5
+/// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 28 chars, height = 4
 /// let result = shuffle(key, alphabet);
 /// assert_eq!(result, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
 /// ```
@@ -250,7 +247,7 @@ pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 /// use old_crypto_rs::helpers::shuffle;
 ///
 /// let key = "SUBWAY";  // Condenses to "SUBWAY" (length = 6)
-/// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 29 chars, height = 5
+/// let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";  // 28 chars, height = 5
 /// let result = shuffle(key, alphabet);
 /// assert_eq!(result, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
 /// ```
@@ -301,6 +298,38 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
             }
         }
     }
+    res
+}
+
+/// Shuffles an alphabet using a keyword to create a mixed alphabet for cipher use.
+///
+/// BTW: the previous comment about `shuffle` was coming from the Go version...
+/// and is wrong.
+///
+/// The main issue with  plain `shuffle()` is that the first letter in the final
+/// alphabet is always the same as the key.  This version does not have the problem,
+/// but is slower.
+///
+/// cf.
+/// ```text
+/// cargo bench --bench shuffle`
+/// Timer precision: 100 ns
+/// shuffle                  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+/// ├─ bench_shuffle         135.7 ns      │ 168.5 ns      │ 136.5 ns      │ 136.9 ns      │ 100     │ 12800
+/// ╰─ bench_transp_shuffle  352.9 ns      │ 718.5 ns      │ 393.5 ns      │ 407.7 ns      │ 100     │ 3200
+/// ```
+///
+/// So, to void the issue, implement shuffle as a transposition of the alphabet using
+/// the key.
+///
+pub fn transp_shuffle(key: &str, alphabet: &str) -> String {
+    let key = condense(key);
+    let tr = Transposition::new(&key).unwrap();
+
+    let fixpt = alphabet.as_bytes();
+    let mut dst = vec![0u8; SC_ALPHABET.len()];
+    let n = tr.encrypt(&mut dst, fixpt);
+    let res = String::from_utf8(dst).unwrap();
     res
 }
 
@@ -540,6 +569,20 @@ mod tests {
         let key = "SUBWAY";
         let res = shuffle(key, SC_ALPHABET);
         assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
+    }
+
+    #[test]
+    fn test_transp_shuffle() {
+        let key = "ARABESQUE";
+        let res = transp_shuffle(key, SC_ALPHABET);
+        assert_eq!(res, "AHOVCJQXDKRYFMT/BIPWELSZGNU-");
+    }
+
+    #[test]
+    fn test_transp_shuffle_odd() {
+        let key = "SUBWAY";
+        let res = transp_shuffle(key, SC_ALPHABET);
+        assert_eq!(res, "EKQWCIOU/AGMSYBHNTZDJPV-FLRX");
     }
 
     #[test]

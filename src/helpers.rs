@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use crate::{Block, Transposition};
+use std::collections::HashSet;
 
 /// Removes all duplicate characters from a string, preserving the first occurrence of each.
 ///
@@ -71,7 +71,7 @@ pub fn condense(str: &str) -> String {
 ///
 /// This implementation uses a bitset for ASCII characters to achieve O(n) time complexity
 /// and minimal overhead.
-/// 
+///
 pub fn condense_str(s: &str) -> String {
     let mut seen_ascii = [false; 256];
     let mut res = String::with_capacity(s.len());
@@ -85,8 +85,8 @@ pub fn condense_str(s: &str) -> String {
     res
 }
 
-
 /// insert one character inside the array
+/// 
 pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
     let mut dst = Vec::with_capacity(src.len() + 1);
     dst.extend_from_slice(&src[..ind]);
@@ -97,8 +97,8 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 
 /// Expands a byte slice by inserting 'X' between consecutive duplicate characters.
 ///
-/// This function processes the input in pairs (digrams), inserting the byte `b'X'` 
-/// between any two consecutive identical characters. This is commonly used in 
+/// This function processes the input in pairs (digrams), inserting the byte `b'X'`
+/// between any two consecutive identical characters. This is commonly used in
 /// classical ciphers like Playfair to ensure all digrams consist of different characters.
 ///
 /// # Algorithm
@@ -144,14 +144,14 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 ///
 /// # Performance
 ///
-/// Time complexity: O(n) where n is the length of the input, though insertions may cause 
+/// Time complexity: O(n) where n is the length of the input, though insertions may cause
 /// reallocation in worst case scenarios with many consecutive duplicates.
 /// Space complexity: O(n + k) where k is the number of 'X' characters inserted.
 ///
 /// # See Also
 ///
 /// * [`insert`] - The helper function used to insert characters
-/// 
+///
 pub fn expand(src: &[u8]) -> Vec<u8> {
     let mut res = src.to_vec();
     let mut i = 0;
@@ -256,7 +256,7 @@ pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
 ///
 /// Time complexity: O(n * m) where n is the key length and m is the height
 /// Space complexity: O(n + m) for the working vector and result string
-/// 
+///
 pub fn shuffle(key: &str, alphabet: &str) -> String {
     let mut word = Vec::with_capacity(key.len() + alphabet.len());
     let mut seen = [false; 256];
@@ -303,17 +303,17 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
 
 /// Shuffles an alphabet using a keyword to create a mixed alphabet for cipher use.
 ///
-/// BTW: the previous comment about `shuffle` was coming from the Go version...
+/// BTW: the transposition comment about `shuffle` was coming from the Go version...
 /// and is wrong.
 ///
 /// The main issue with  plain `shuffle()` is that the first letter in the final
-/// alphabet is always the same as the key.  This version does not have the problem,
+/// alphabet is always the same as the key.  This version does not have this problem
 /// but is slower.
 ///
 /// cf.
 /// ```text
 /// cargo bench --bench shuffle`
-/// 
+///
 /// Timer precision: 100 ns
 /// shuffle                  fastest       │ slowest       │ median        │ mean          │ samples │ iters
 /// ├─ bench_shuffle         135.7 ns      │ 168.5 ns      │ 136.5 ns      │ 136.9 ns      │ 100     │ 12800
@@ -446,7 +446,7 @@ pub fn output_as_block(input: &str) -> String {
 /// # Returns
 ///
 /// A new `String` with the fill character inserted where necessary.
-/// 
+///
 pub fn fix_double(str: &str, fill: char) -> String {
     let mut fixed = String::with_capacity(str.len());
     let mut chars = str.chars();
@@ -518,36 +518,29 @@ pub fn fix_double_aligned(str: &str, fill: char) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
 
-    #[test]
-    fn test_condense() {
-        let test_data = [
-            ("ABCDE", "ABCDE"),
-            ("AAAAA", "A"),
-            ("ARABESQUE", "ARBESQU"),
-            ("ARABESQUEABCDEFGHIKLMNOPQRSTUVWXYZ", "ARBESQUCDFGHIKLMNOPTVWXYZ"),
-            ("PLAYFAIRABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIRBCDEGHKMNOQSTUVWXZ"),
-            ("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ"),
-        ];
-        for (a, b) in test_data {
-            assert_eq!(condense(a), b);
-        }
+    #[rstest]
+    #[case("ABCDE", "ABCDE")]
+    #[case("AAAAA", "A")]
+    #[case("ARABESQUE", "ARBESQU")]
+    #[case("ARABESQUEABCDEFGHIKLMNOPQRSTUVWXYZ", "ARBESQUCDFGHIKLMNOPTVWXYZ")]
+    #[case("PLAYFAIRABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIRBCDEGHKMNOQSTUVWXZ")]
+    #[case("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ")]
+    fn test_condense(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(condense(in_str), expected);
     }
 
-    #[test]
-    fn test_expand_insert() {
-        let test_data = [
-            ("AAA", "AXAXA"),
-            ("AAAA", "AXAXAXA"),
-            ("AAABRAACADAABRA", "AXAXABRAACADAXABRA"),
-            ("ARABESQUE", "ARABESQUE"),
-            ("LANNONCE", "LANXNONCE"),
-            ("PJRJJJJJJS", "PJRJJXJXJXJXJS"),
-            ("ABCDEFGHJJKLM", "ABCDEFGHJXJKLM"),
-        ];
-        for (a, b) in test_data {
-            assert_eq!(expand(a.as_bytes()), b.as_bytes());
-        }
+    #[rstest]
+    #[case("AAA", "AXAXA")]
+    #[case("AAAA", "AXAXAXA")]
+    #[case("AAABRAACADAABRA", "AXAXABRAACADAXABRA")]
+    #[case("ARABESQUE", "ARABESQUE")]
+    #[case("LANNONCE", "LANXNONCE")]
+    #[case("PJRJJJJJJS", "PJRJJXJXJXJXJS")]
+    #[case("ABCDEFGHJJKLM", "ABCDEFGHJXJKLM")]
+    fn test_expand_insert(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(expand(in_str.as_bytes()), expected.as_bytes());
     }
 
     #[test]
@@ -557,126 +550,77 @@ mod tests {
         assert_eq!(insert(&a, 42, 2), b);
     }
 
-    #[test]
-    fn test_shuffle() {
-        let key = "ARABESQUE";
+    #[rstest]
+    #[case("ARABESQUE", "ACKVRDLWBFMXEGNYSHOZQIP/UJT-")]
+    #[case("SUBWAY", "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV")]
+    fn test_shuffle(#[case] key: &str, #[case] expected: &str) {
         let res = shuffle(key, SC_ALPHABET);
-        assert_eq!(res, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
+        assert_eq!(res, expected);
     }
 
-    #[test]
-    fn test_shuffle_odd() {
-        let key = "SUBWAY";
-        let res = shuffle(key, SC_ALPHABET);
-        assert_eq!(res, "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV");
-    }
-
-    #[test]
-    fn test_transp_shuffle() {
-        let key = "ARABESQUE";
+    #[rstest]
+    #[case("ARABESQUE", "AHOVCJQXDKRYFMT/BIPWELSZGNU-")]
+    #[case("SUBWAY", "EKQWCIOU/AGMSYBHNTZDJPV-FLRX")]
+    fn test_transp_shuffle(#[case] key: &str, #[case] expected: &str) {
         let res = transp_shuffle(key, SC_ALPHABET);
-        assert_eq!(res, "AHOVCJQXDKRYFMT/BIPWELSZGNU-");
+        assert_eq!(res, expected);
     }
 
-    #[test]
-    fn test_transp_shuffle_odd() {
-        let key = "SUBWAY";
-        let res = transp_shuffle(key, SC_ALPHABET);
-        assert_eq!(res, "EKQWCIOU/AGMSYBHNTZDJPV-FLRX");
+    #[rstest]
+    #[case("ARABESQUE", vec![0, 6, 1, 2, 3, 7, 5, 8, 4])]
+    #[case("PJRJJJJJJS", vec![7, 0, 8, 1, 2, 3, 4, 5, 6, 9])]
+    #[case("AAABRAACADAABRA", vec![0, 1, 2, 9, 13, 3, 4, 11, 5, 12, 6, 7, 10, 14, 8])]
+    fn test_to_numeric(#[case] key: &str, #[case] expected: Vec<u8>) {
+        assert_eq!(to_numeric(key), expected);
     }
 
-    #[test]
-    fn test_to_numeric() {
-        let test_data = [
-            ("ARABESQUE", vec![0, 6, 1, 2, 3, 7, 5, 8, 4]),
-            ("PJRJJJJJJS", vec![7, 0, 8, 1, 2, 3, 4, 5, 6, 9]),
-            ("AAABRAACADAABRA", vec![0, 1, 2, 9, 13, 3, 4, 11, 5, 12, 6, 7, 10, 14, 8]),
-        ];
-        for (str, key) in test_data {
-            assert_eq!(to_numeric(str), key);
-        }
+    #[rstest]
+    #[case(5, "ARABESQUE", "ARABE SQUE")]
+    #[case(4, "PJRJJJJJJS", "PJRJ JJJJ JS")]
+    #[case(5, "AAABRAACADAABRA", "AAABR AACAD AABRA")]
+    fn test_by_n(#[case] n: usize, #[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(by_n(in_str, n), expected);
     }
 
-    #[test]
-    fn test_by_n() {
-        let test_data = [
-            (5, "ARABESQUE", "ARABE SQUE"),
-            (4, "PJRJJJJJJS", "PJRJ JJJJ JS"),
-            (5, "AAABRAACADAABRA", "AAABR AACAD AABRA"),
-        ];
-        for (n, in_str, out_str) in test_data {
-            assert_eq!(by_n(in_str, n), out_str);
-        }
+    #[rstest]
+    #[case("ARABESQUE", "ARABE SQUE")]
+    #[case("PJRJJJJJJS", "PJRJJ JJJJS")]
+    #[case("AAABRAACADAABRA", "AAABR AACAD AABRA")]
+    #[case("ABCDE", "ABCDE")]
+    #[case("ABCDEF", "ABCDE F")]
+    fn test_output_as_block(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(output_as_block(in_str), expected);
     }
 
-    #[test]
-    fn test_output_as_block() {
-        let test_data = [
-            ("ARABESQUE", "ARABE SQUE"),
-            ("AAABRAACADAABRA", "AAABR AACAD AABRA"),
-            ("ABCDE", "ABCDE"),
-            ("ABCDEF", "ABCDE F"),
-        ];
-        for (in_str, out_str) in test_data {
-            assert_eq!(output_as_block(in_str), out_str);
-        }
+    #[rstest]
+    #[case('Q', "ABCDEF", "ABCDEF")]
+    #[case('Q', "AABCDE", "AQABCDE")]
+    #[case('Q', "AAAAA", "AQAQAQAQA")]
+    #[case('Q', "CETOOT", "CETOQOT")]
+    #[case('Q', "CETOOTESTCHIFFREAVEC", "CETOQOTESTCHIFQFREAVEC")]
+    #[case('X', "ABCDEF", "ABCDEF")]
+    #[case('X', "AABCDE", "AXABCDE")]
+    #[case('X', "AAAAA", "AXAXAXAXA")]
+    #[case('X', "CETOOT", "CETOXOT")]
+    #[case('X', "CETOOTESTCHIFFREAVEC", "CETOXOTESTCHIFXFREAVEC")]
+    fn test_fix_double(#[case] fill: char, #[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(fix_double(in_str, fill), expected);
     }
 
-    #[test]
-    fn test_fix_double_q() {
-        let test_data = [
-            ("ABCDEF", "ABCDEF"),
-            ("AABCDE", "AQABCDE"),
-            ("AAAAA", "AQAQAQAQA"),
-            ("CETOOT", "CETOQOT"),
-            ("CETOOTESTCHIFFREAVEC", "CETOQOTESTCHIFQFREAVEC")
-        ];
-        for (in_str, out_str) in test_data {
-            assert_eq!(fix_double(in_str, 'Q'), out_str);
-        }
-    }
-
-    #[test]
-    fn test_fix_double_x() {
-        let test_data = [
-            ("ABCDEF", "ABCDEF"),
-            ("AABCDE", "AXABCDE"),
-            ("AAAAA", "AXAXAXAXA"),
-            ("CETOOT", "CETOXOT"),
-            ("CETOOTESTCHIFFREAVEC", "CETOXOTESTCHIFXFREAVEC")
-        ];
-        for (in_str, out_str) in test_data {
-            assert_eq!(fix_double(in_str, 'X'), out_str);
-        }
-    }
-
-    #[test]
-    fn test_fix_double_aligned_q() {
-        let test_data = [
-            ("ABCDEF", "ABCDEF"),
-            ("AABCDE", "AQABCDE"),
-            ("AAAAA", "AQAQAQAQA"),  // AA -> AQ A, AA -> AQ A, AA -> AQ A
-            ("CETOOT", "CETOOT"),  // CE TO OT becomes CE TO QO T
-            ("HELLOWORLD", "HELQLOWORLD"),  // LL on boundary becomes LQ
-            ("CETOOTEST", "CETOOTEST"),  // OO is split across digrams (O|O), so no change
-        ];
-        for (in_str, out_str) in test_data {
-            assert_eq!(fix_double_aligned(in_str, 'Q'), out_str);
-        }
-    }
-
-    #[test]
-    fn test_fix_double_aligned_x() {
-        let test_data = [
-            ("ABCDEF", "ABCDEF"),
-            ("AABCDE", "AXABCDE"),
-            ("AAAAA", "AXAXAXAXA"),
-            ("CETOOT", "CETOOT"),
-            ("HELLOWORLD", "HELXLOWORLD"),
-            ("CETOOTEST", "CETOOTEST"),  // OO is split across digrams
-        ];
-        for (in_str, out_str) in test_data {
-            assert_eq!(fix_double_aligned(in_str, 'X'), out_str);
-        }
+    #[rstest]
+    #[case('Q', "ABCDEF", "ABCDEF")]
+    #[case('Q', "AABCDE", "AQABCDE")]
+    #[case('Q', "AAAAA", "AQAQAQAQA")] // AA -> AQ A, AA -> AQ A, AA -> AQ A
+    #[case('Q', "CETOOT", "CETOOT")]   // CE TO OT becomes CE TO QO T
+    #[case('Q', "HELLOWORLD", "HELQLOWORLD")] // LL on boundary becomes LQ
+    #[case('Q', "CETOOTEST", "CETOOTEST")] // OO is split across digrams (O|O), so no change
+    #[case('X', "ABCDEF", "ABCDEF")]
+    #[case('X', "AABCDE", "AXABCDE")]
+    #[case('X', "AAAAA", "AXAXAXAXA")]
+    #[case('X', "CETOOT", "CETOOT")]
+    #[case('X', "HELLOWORLD", "HELXLOWORLD")]
+    #[case('X', "CETOOTEST", "CETOOTEST")] // OO is split across digrams
+    fn test_fix_double_aligned(#[case] fill: char, #[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(fix_double_aligned(in_str, fill), expected);
     }
 }

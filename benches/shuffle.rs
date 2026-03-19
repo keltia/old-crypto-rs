@@ -20,6 +20,6 @@ fn bench_shuffle(bencher: Bencher) {
 #[bench]
 fn bench_transp_shuffle(bencher: Bencher) {
     bencher.bench_local(|| {
-        black_box(transp_shuffle(KEY, SC_ALPHABET));
+        let _ = black_box(transp_shuffle(KEY, SC_ALPHABET));
     });
 }

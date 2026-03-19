@@ -1,5 +1,7 @@
 use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher};
-use old_crypto_rs::helpers::{shuffle, REGULAR_ALPHABET};
+use old_crypto_rs::helpers::{shuffle, transp_shuffle, REGULAR_ALPHABET};
+
+use eyre::Result;
 
 #[cfg(feature = "dhat-heap")]
 #[global_allocator]
@@ -26,7 +28,7 @@ struct Cph {
     size: usize,
 }
 
-fn main() {
+fn main() -> Result<()>{
     #[cfg(feature = "dhat-heap")]
     let _profiler = dhat::Profiler::new_heap();
 
@@ -143,6 +145,14 @@ fn main() {
         size: PLAIN.len(),
     });
 
+    let key3 = transp_shuffle(KEY3, REGULAR_ALPHABET)?;
+    let key4 = transp_shuffle(KEY4, REGULAR_ALPHABET)?;
+    allciphers.push(Cph {
+        name: format!("Chaocipher keywords ({}, {}) transp shuffle" , KEY3, KEY4),
+        c: Box::new(Chaocipher::new(&key3, &key4).unwrap()),
+        size: PLAIN.len(),
+    });
+
     allciphers.push(Cph {
         name: "Solitaire".to_string(),
         c: Box::new(Solitaire::new_unkeyed()),
@@ -210,6 +220,7 @@ fn main() {
             println!("Got:      {}\n", nplain);
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]

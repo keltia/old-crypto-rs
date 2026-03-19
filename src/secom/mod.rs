@@ -75,7 +75,7 @@ impl SecomCipher {
     pub fn new(key_phrase: &str, freq: &str) -> Result<Self> {
         let key = normalize_key_phrase(key_phrase);
         if key.len() < 20 {
-            return Err(Error::KeyTooShort(20)).into());
+            return Err(Error::KeyTooShort(20).into());
         }
         let key20 = &key[..20];
         let a = &key20[..10];

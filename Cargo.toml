@@ -42,7 +42,7 @@ dhat-ad-hoc = []
 [dependencies]
 crossterm = "0.29"
 dhat = "0.3"
-eyre = "0.6"
+eyre = "0.6.12"
 rand = "0.10"
 ratatui = "0.30"
 thiserror = "2.0"

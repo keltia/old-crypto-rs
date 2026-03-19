@@ -1,6 +1,8 @@
 use crate::{Block, Transposition};
 use std::collections::HashSet;
 
+use eyre::Result;
+
 /// Removes all duplicate characters from a string, preserving the first occurrence of each.
 ///
 /// This function iterates through the input string and builds a new string containing only
@@ -323,14 +325,14 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
 /// So, to void the issue, implement shuffle as a transposition of the alphabet using
 /// the key.
 ///
-pub fn transp_shuffle(key: &str, alphabet: &str) -> String {
+pub fn transp_shuffle(key: &str, alphabet: &str) -> Result<String> {
     let key = condense(key);
-    let tr = Transposition::new(&key).unwrap();
+    let tr = Transposition::new(&key)?;
 
     let fixpt = alphabet.as_bytes();
-    let mut dst = vec![0u8; SC_ALPHABET.len()];
+    let mut dst = vec![0u8; alphabet.len()];
     let _ = tr.encrypt(&mut dst, fixpt);
-    String::from_utf8(dst).unwrap()
+    Ok(String::from_utf8(dst)?)
 }
 
 /// Converts a string key into a numeric representation based on alphabetical order.
@@ -563,6 +565,8 @@ mod tests {
     #[case("SUBWAY", "EKQWCIOU/AGMSYBHNTZDJPV-FLRX")]
     fn test_transp_shuffle(#[case] key: &str, #[case] expected: &str) {
         let res = transp_shuffle(key, SC_ALPHABET);
+        assert!(res.is_ok());
+        let res = res.unwrap();
         assert_eq!(res, expected);
     }
 

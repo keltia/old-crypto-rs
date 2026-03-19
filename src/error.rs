@@ -15,8 +15,6 @@ pub enum Error {
     EmptyInput,
     #[error("Keys must be not be empty")]
     EmptyKeys,
-    #[error("invalid input")]
-    InvalidInput,
     #[error("Key must be at least {0} characters long")]
     KeyTooShort(usize),
     #[error("Alphabet must be {0} characters long")]
@@ -25,5 +23,7 @@ pub enum Error {
     LengthMismatch(usize, usize),
     #[error("Input {0} must be at least {1} characters long")]
     TooShort(usize, usize),
+    #[error("Failed to generate rows")]
+    RowGenerationFailed,
 }
 

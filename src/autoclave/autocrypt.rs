@@ -28,6 +28,34 @@ impl Block for AutocryptCipher {
         1
     }
 
+    /// Encrypts plaintext using the Autocrypt cipher with ciphertext feedback.
+    ///
+    /// This method implements the autocrypt encryption scheme where:
+    /// - The first `key.len()` characters are encrypted using the original key
+    /// - Subsequent characters use previously generated ciphertext as the key (CBC-like mode)
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - The destination buffer where ciphertext will be written
+    /// * `src` - The source plaintext to encrypt (assumes uppercase A-Z characters)
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to `dst`, which is `min(src.len(), dst.len())`
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use old_crypto_rs::AutocryptCipher;
+    /// use old_crypto_rs::Block;
+    ///
+    /// let cipher = AutocryptCipher::new("KEY");
+    /// let plaintext = b"HELLO";
+    /// let mut ciphertext = vec![0u8; plaintext.len()];
+    /// cipher.encrypt(&mut ciphertext, plaintext);
+    /// assert_eq!(&ciphertext, b"RIJCW");
+    /// ```
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() {
             return 0;
@@ -61,6 +89,34 @@ impl Block for AutocryptCipher {
         src.len().min(dst.len())
     }
 
+    /// Decrypts ciphertext using the Autocrypt cipher with ciphertext feedback.
+    ///
+    /// This method implements the autocrypt decryption scheme where:
+    /// - The first `key.len()` characters are decrypted using the original key
+    /// - Subsequent characters use previously processed ciphertext as the key (CBC-like mode)
+    ///
+    /// # Arguments
+    ///
+    /// * `dst` - The destination buffer where plaintext will be written
+    /// * `src` - The source ciphertext to decrypt (assumes uppercase A-Z characters)
+    ///
+    /// # Returns
+    ///
+    /// The number of bytes written to `dst`, which is `min(src.len(), dst.len())`
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use old_crypto_rs::AutocryptCipher;
+    /// use old_crypto_rs::Block;
+    ///
+    /// let cipher = AutocryptCipher::new("KEY");
+    /// let ciphertext = b"RIJCW";
+    /// let mut plaintext = vec![0u8; ciphertext.len()];
+    /// cipher.decrypt(&mut plaintext, ciphertext);
+    /// assert_eq!(&plaintext, b"HELLO");
+    /// ```
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() {
             return 0;

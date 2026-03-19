@@ -73,9 +73,9 @@ impl Block for AutokeyCipher {
     /// The length of the destination buffer
     ///
     /// # Examples
-    /// ```
-    /// use autoclave::autokey::AutokeyCipher;
-    /// use autoclave::Block;
+    /// ```rust
+    /// # use old_crypto_rs::Block;
+    /// # use old_crypto_rs::AutokeyCipher;
     ///
     /// let cipher = AutokeyCipher::new("KEY");
     /// let pt = b"HELLO";
@@ -145,9 +145,9 @@ impl Block for AutokeyCipher {
     /// The number of bytes written to the destination buffer
     ///
     /// # Examples
-    /// ```
-    /// use autoclave::autokey::AutokeyCipher;
-    /// use autoclave::Block;
+    /// ```rust
+    /// # use old_crypto_rs::Block;
+    /// # use old_crypto_rs::AutokeyCipher;
     ///
     /// let cipher = AutokeyCipher::new("KEY");
     /// let ct = b"RIJSS";

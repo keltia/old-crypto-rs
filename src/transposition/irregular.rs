@@ -21,6 +21,8 @@
 
 use crate::{helpers, Block};
 
+use eyre::{eyre, Result};
+
 #[derive(Debug)]
 pub struct IrregularTransposition {
     #[allow(dead_code)]
@@ -57,9 +59,9 @@ impl IrregularTransposition {
     ///
     /// let cipher = IrregularTransposition::new("SUBWAY").unwrap();
     /// ```
-    pub fn new(key: &str) -> Result<Self, String> {
+    pub fn new(key: &str) -> Result<Self> {
         if key.is_empty() {
-            return Err("key can not be empty".to_string());
+            return Err(eyre!("key can not be empty").into());
         }
         let tkey = helpers::to_numeric(key);
         let pos0 = tkey.iter().position(|&x| x == 0).unwrap();

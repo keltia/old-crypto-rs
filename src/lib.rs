@@ -2,6 +2,7 @@ pub mod helpers;
 mod null;
 mod autoclave;
 mod caesar;
+mod error;
 mod playfair;
 mod chaocipher;
 mod square;

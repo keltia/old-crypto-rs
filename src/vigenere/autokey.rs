@@ -1,6 +1,6 @@
-//! Autokey cipher - an autoclave variant of the Vigenère cipher.
+//! Autokey cipher - an vigenere variant of the Vigenère cipher.
 //!
-//! The Autokey cipher is one of two autoclave systems invented by Vigenère himself. Unlike the
+//! The Autokey cipher is one of two vigenere systems invented by Vigenère himself. Unlike the
 //! standard Vigenère cipher where the key repeats across the entire plaintext, the Autokey cipher
 //! uses the plaintext itself to extend the key after the initial primer.
 //!
@@ -24,15 +24,15 @@
 //! # Historical Note
 //!
 //! Vigenère originally used a single-letter key (primer) for this system, which he called the
-//! "autoclave" cipher. The key serves as an initialization vector (IV in modern terminology).
+//! "vigenere" cipher. The key serves as an initialization vector (IV in modern terminology).
 //!
 //! # See Also
 //! - [Autokey Cipher](https://en.wikipedia.org/wiki/Autokey_cipher)
-//! - [`Autocrypt`](crate::autoclave::autocrypt::AutocryptCipher) - The ciphertext-based autoclave variant
+//! - [`Autocrypt`](crate::vigenere::autocrypt::AutocryptCipher) - The ciphertext-based vigenere variant
 //!
 
 use crate::Block;
-use crate::vigenere::encode_one;
+use crate::vigenere::plain::encode_one;
 
 #[derive(Debug)]
 pub struct AutokeyCipher {

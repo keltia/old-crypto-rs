@@ -1,6 +1,6 @@
 pub mod helpers;
 mod null;
-mod autoclave;
+mod vigenere;
 mod caesar;
 mod error;
 mod playfair;
@@ -13,26 +13,23 @@ mod nihilist;
 mod secom;
 mod solitaire;
 mod vic;
-mod vigenere;
 mod wheatstone;
 #[cfg(feature = "sigaba")]
 mod sigaba;
 
 pub use null::NullCipher;
-pub use autoclave::{AutocryptCipher, AutokeyCipher};
+pub use vigenere::{AutocryptCipher, AutokeyCipher, VigenereCipher};
 pub use caesar::CaesarCipher;
 pub use playfair::PlayfairCipher;
 pub use chaocipher::Chaocipher;
 pub use square::SquareCipher;
-pub use transposition::Transposition;
-pub use transposition::IrregularTransposition;
+pub use transposition::{Transposition, IrregularTransposition};
 pub use adfgvx::ADFGVX;
 pub use straddling::StraddlingCheckerboard;
 pub use nihilist::Nihilist;
 pub use solitaire::Solitaire;
 pub use secom::SecomCipher;
 pub use vic::VicCipher;
-pub use vigenere::VigenereCipher;
 pub use wheatstone::Wheatstone;
 #[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;

@@ -1,4 +1,4 @@
-//! Autocrypt is the autoclave system where the ciphertext is used as key, instead of repeating the
+//! Autocrypt is the vigenere system where the ciphertext is used as key, instead of repeating the
 //! key several times.  This is the equivalent on an IV in modern systems, and this is the ancestor
 //! of the CBC mode for modern ciphers.
 //!
@@ -278,7 +278,7 @@ mod tests {
     fn test_autocrypt_vs_autokey_different() {
         // Autocrypt (ciphertext feedback) should produce different output than Autokey (plaintext feedback)
         //
-        use crate::autoclave::autokey::AutokeyCipher;
+        use crate::vigenere::autokey::AutokeyCipher;
 
         let autocrypt = AutocryptCipher::new("KEY");
         let autokey = AutokeyCipher::new("KEY");

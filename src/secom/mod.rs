@@ -15,13 +15,14 @@
 //! # Example
 //!
 //! ```rust
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! use old_crypto_rs::SecomCipher;
 //! use old_crypto_rs::Block;
 //!
 //! let key_phrase = "MAKE NEW FRIENDS BUT KEEP THE OLD";
 //! let freq = "ESTONIA";
 //!
-//! let cipher = SecomCipher::new(key_phrase, freq).unwrap();
+//! let cipher = SecomCipher::new(key_phrase, freq)?;
 //! let pt = b"HELLO WORLD";
 //!
 //! let mut ct = vec![0u8; 128];
@@ -29,7 +30,28 @@
 //! let mut dec = vec![0u8; 128];
 //! let dec_len = cipher.decrypt(&mut dec, &ct[..ct_len]);
 //! assert_eq!(&dec[..dec_len], pt);
+//!
+//! # Ok(())
+//! # }
 //! ```
+//!
+//! # Frequency
+//!
+//! The second parameter to `SecomCipher::new()` is a set of letters to be used as the most
+//! frequent ones.  It influences the creation of the checkerboard.  You can see the difference in
+//! cipher length when running the `demo` example:
+//!
+//! ```text
+//!==> SECOM (IDREAMOFJEANNIEWITHT, ATONESI)
+//! 22265 58532 79021 61206 54087 58289 27682 72352 18256 22566 72551 11552 86498 27099 253
+//! decrypt ok
+//!
+//! ==> SECOM (IDREAMOFJEANNIEWITHT, ESANTIR)
+//! 56763 72250 55524 26777 27282 92929 52712 88782 65016 42708 80532 76207 25573 72925 50700 67
+//! decrypt ok
+//! ```
+//! The first example use the English frequent letters, whereas the second one is using the French set.
+//! (plain text is in English)
 //!
 
 mod checkerboard;
@@ -44,9 +66,9 @@ pub(crate) use subr::{
 };
 
 use crate::{Block, Transposition};
+use crate::error::Error;
 
 use eyre::Result;
-use crate::error::Error;
 
 /// SECOM cipher implementation.
 ///

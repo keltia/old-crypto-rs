@@ -213,7 +213,7 @@ mod tests {
         let key = vec![1, 2, 3];
         let result = encode_one(plain, key);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "empty input");
+        assert_eq!(result.unwrap_err().to_string(), "Empty input");
     }
 
     #[test]
@@ -222,7 +222,7 @@ mod tests {
         let key = vec![];
         let result = encode_one(plain, key);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "empty input");
+        assert_eq!(result.unwrap_err().to_string(), "Empty input");
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
         let key = vec![1, 2];
         let result = encode_one(plain, key);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err().to_string(), "plain and key must have the same length");
+        assert_eq!(result.unwrap_err().to_string(), "Every input must have the same length: 3 vs 2");
     }
 
     #[test]

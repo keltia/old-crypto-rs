@@ -18,7 +18,7 @@
 
 use crate::{helpers, Block};
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 /// A columnar transposition cipher.

@@ -3,7 +3,7 @@
 
 use crate::helpers::to_numeric;
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 /// Normalizes the key phrase by keeping only ASCII alphabetic characters and

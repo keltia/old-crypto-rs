@@ -26,7 +26,7 @@ use std::cell::RefCell;
 use crate::Block;
 use crate::helpers::REGULAR_ALPHABET;
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 const ZENITH: usize = 0;

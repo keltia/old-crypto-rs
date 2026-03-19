@@ -45,7 +45,7 @@ pub(crate) use subr::{
 
 use crate::{Block, Transposition};
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 /// SECOM cipher implementation.
@@ -99,7 +99,7 @@ impl SecomCipher {
 
         // Derive the checkerboard key from the last row
         //
-        let last_row = rows.last().ok_or(eyre!("failed to generate rows"))?.clone();
+        let last_row = rows.last().ok_or(Error::RowGenerationFailed)?.clone();
         let header_digits = rank_digits_1to0(&last_row);
         let checker = SecomCheckerboard::new(vec_to_array_10(&header_digits)?, freq)?;
 

@@ -26,7 +26,7 @@ use crate::Block;
 use crate::helpers;
 use crate::helpers::REGULAR_ALPHABET;
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 /// Compact encoding entry for a single plaintext byte.

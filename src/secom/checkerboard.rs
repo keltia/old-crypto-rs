@@ -4,7 +4,7 @@
 //!
 use crate::Block;
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions

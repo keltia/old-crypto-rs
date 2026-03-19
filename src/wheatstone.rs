@@ -23,7 +23,7 @@ use crate::Block;
 use crate::helpers;
 use crate::helpers::{fix_double, REGULAR_ALPHABET};
 
-use eyre::{eyre, Result};
+use eyre::Result;
 use crate::error::Error;
 
 const LEN_PL: usize = REGULAR_ALPHABET.len() + 1;

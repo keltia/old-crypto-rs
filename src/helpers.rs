@@ -1,3 +1,5 @@
+//! A set of helpers functions.
+//!
 use crate::{Block, Transposition};
 use std::collections::HashSet;
 

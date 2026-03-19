@@ -46,6 +46,7 @@ pub(crate) use subr::{
 use crate::{Block, Transposition};
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 /// SECOM cipher implementation.
 ///
@@ -74,7 +75,7 @@ impl SecomCipher {
     pub fn new(key_phrase: &str, freq: &str) -> Result<Self> {
         let key = normalize_key_phrase(key_phrase);
         if key.len() < 20 {
-            return Err(eyre!("key phrase must have at least 20 letters").into());
+            return Err(Error::KeyTooShort(20)).into());
         }
         let key20 = &key[..20];
         let a = &key20[..10];
@@ -117,7 +118,7 @@ impl SecomCipher {
         //
         let key_stream = read_out_columns(&rows, &key10);
         if key_stream.len() < tp1_width + tp2_width {
-            return Err(eyre!("insufficient key stream length").into());
+            return Err(Error::BadKeyStream.into());
         }
 
         // First transposition

@@ -24,6 +24,7 @@ use crate::helpers;
 use crate::helpers::{fix_double, REGULAR_ALPHABET};
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 const LEN_PL: usize = REGULAR_ALPHABET.len() + 1;
 const LEN_CT: usize = REGULAR_ALPHABET.len();
@@ -83,7 +84,7 @@ impl Wheatstone {
     /// 
     pub fn new(start: u8, pkey: &str, ckey: &str) -> Result<Self> {
         if pkey.is_empty() || ckey.is_empty() {
-            return Err(eyre!("keys can not be empty").into());
+            return Err(Error::EmptyKeys.into());
         }
 
         // Transform with key

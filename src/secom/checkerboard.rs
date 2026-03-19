@@ -5,6 +5,7 @@
 use crate::Block;
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
@@ -97,7 +98,7 @@ impl SecomCheckerboard {
                 let col = (start_col + i) % 10;
                 let ch = match symbols.next() {
                     Some(v) => v,
-                    None => return Err(eyre!("checkerboard symbols exhausted").into()),
+                    None => return Err(Error::CheckerboardExhausted.into()),
                 };
                 let d1 = header[col];
                 enc[*ch as usize] = EncEntry { len: 2, bytes: [b'0' + row_digit, b'0' + d1] };

@@ -4,6 +4,7 @@
 use crate::helpers::to_numeric;
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 /// Normalizes the key phrase by keeping only ASCII alphabetic characters and
 /// converting them to uppercase.
@@ -100,7 +101,7 @@ pub(crate) fn transposition_widths_from_last_row(row: &[u8]) -> Result<(usize, u
         }
     }
     if w1 == 0 || w2 == 0 {
-        return Err(eyre!("failed to derive transposition widths").into());
+        return Err(Error::BadDerivationKey.into());
     }
     Ok((w1, w2))
 }
@@ -130,7 +131,7 @@ pub(crate) fn read_out_columns(rows: &[Vec<u8>], key10: &[u8]) -> Vec<u8> {
 ///
 pub(crate) fn vec_to_array_10(v: &[u8]) -> Result<[u8; 10]> {
     if v.len() != 10 {
-        return Err(eyre!("expected 10 digits").into());
+        return Err(Error::DigitsExpected(10).into());
     }
     let mut out = [0u8; 10];
     out.copy_from_slice(v);

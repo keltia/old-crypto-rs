@@ -27,6 +27,7 @@ use crate::helpers;
 use crate::helpers::REGULAR_ALPHABET;
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -96,7 +97,7 @@ impl SquareCipher {
     /// 
     pub fn new(key: &str, chrs: &str) -> Result<Self> {
         if key.is_empty() || chrs.is_empty() {
-            return Err(eyre!("neither key nor chrs can be empty").into());
+            return Err(Error::EmptyKeys.into());
         }
 
         // Step 1: Condense key + alphabet (letters only)

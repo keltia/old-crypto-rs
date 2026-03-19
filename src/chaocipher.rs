@@ -27,6 +27,7 @@ use crate::Block;
 use crate::helpers::REGULAR_ALPHABET;
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 const ZENITH: usize = 0;
 const NADIR: usize = 13;
@@ -85,7 +86,7 @@ impl Chaocipher {
     ///
     pub fn new(pkey: &str, ckey: &str) -> Result<Self> {
         if pkey.len() != REGULAR_ALPHABET.len() || ckey.len() != REGULAR_ALPHABET.len() {
-            return Err(eyre!("bad alphabet length").into());
+            return Err(Error::AlphabetTooShort(REGULAR_ALPHABET.len()).into());
         }
 
         Ok(Chaocipher {

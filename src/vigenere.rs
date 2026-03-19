@@ -24,6 +24,7 @@
 use crate::Block;
 
 use eyre::Result;
+use crate::error::Error;
 
 /// A Vigenere cipher implementation.
 ///
@@ -75,11 +76,11 @@ impl VigenereCipher {
 /// 
 pub(crate) fn encode_one(plain: Vec<u8>, key: Vec<u8>) -> Result<Vec<u8>> {
     if plain.is_empty() || key.is_empty() {
-        return Err(eyre::eyre!("empty input"));
+        return Err(Error::EmptyInput.into());
     }
 
     if plain.len() != key.len() {
-        return Err(eyre::eyre!("plain and key must have the same length"));
+        return Err(Error::LengthMismatch(plain.len(), key.len()).into());
     }
     
     let ct = plain.iter().zip(key.iter()).map(|(p, k)| (p + k) % 26).collect::<Vec<_>>();

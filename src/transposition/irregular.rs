@@ -22,6 +22,7 @@
 use crate::{helpers, Block};
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct IrregularTransposition {
@@ -61,7 +62,7 @@ impl IrregularTransposition {
     /// ```
     pub fn new(key: &str) -> Result<Self> {
         if key.is_empty() {
-            return Err(eyre!("key can not be empty").into());
+            return Err(Error::EmptyKeys.into());
         }
         let tkey = helpers::to_numeric(key);
         let pos0 = tkey.iter().position(|&x| x == 0).unwrap();

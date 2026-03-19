@@ -15,6 +15,7 @@ use crate::Block;
 use crate::helpers::{shuffle, SC_ALPHABET};
 
 use eyre::{eyre, Result};
+use crate::error::Error;
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -131,10 +132,10 @@ impl StraddlingCheckerboard {
     ///
     pub fn new_with_freq(key: &str, chrs: &str, freq_str: &str, alphabet: &str) -> Result<Self> {
         if key.is_empty() {
-            return Err(eyre!("key can not be empty").into());
+            return Err(Error::EmptyKeys.into());
         }
         if chrs.len() < 2 {
-            return Err(eyre!("longc must have at least 2 characters").into());
+            return Err(Error::TooShort(chrs.len(), 2).into());
         }
 
         let longc = vec![chrs.as_bytes()[0], chrs.as_bytes()[1]];

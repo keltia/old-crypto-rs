@@ -14,6 +14,8 @@
 use crate::Block;
 use crate::helpers::{shuffle, SC_ALPHABET};
 
+use eyre::{eyre, Result};
+
 /// Compact encoding entry for a single plaintext byte.
 ///
 /// `len` is 0 for unmapped bytes, or 1/2 for the number of output digits.
@@ -101,7 +103,7 @@ impl StraddlingCheckerboard {
     /// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
     /// ```
     ///
-    pub fn new(key: &str, chrs: &str) -> Result<Self, String> {
+    pub fn new(key: &str, chrs: &str) -> Result<Self> {
         Self::new_with_freq(key, chrs, "ESANTIRU", SC_ALPHABET)
     }
 
@@ -127,12 +129,12 @@ impl StraddlingCheckerboard {
     /// - `key` is empty
     /// - `chrs` contains fewer than 2 characters
     ///
-    pub fn new_with_freq(key: &str, chrs: &str, freq_str: &str, alphabet: &str) -> Result<Self, String> {
+    pub fn new_with_freq(key: &str, chrs: &str, freq_str: &str, alphabet: &str) -> Result<Self> {
         if key.is_empty() {
-            return Err("key can not be empty".to_string());
+            return Err(eyre!("key can not be empty").into());
         }
         if chrs.len() < 2 {
-            return Err("longc must have at least 2 characters".to_string());
+            return Err(eyre!("longc must have at least 2 characters").into());
         }
 
         let longc = vec![chrs.as_bytes()[0], chrs.as_bytes()[1]];

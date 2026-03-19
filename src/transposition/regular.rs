@@ -18,6 +18,8 @@
 
 use crate::{helpers, Block};
 
+use eyre::{eyre, Result};
+
 /// A columnar transposition cipher.
 /// 
 #[derive(Debug)]
@@ -29,9 +31,9 @@ pub struct Transposition {
 
 impl Transposition {
     /// Creates a new regular columnar transposition cipher.
-    pub fn new(key: &str) -> Result<Self, String> {
+    pub fn new(key: &str) -> Result<Self> {
         if key.is_empty() {
-            return Err("key can not be empty".to_string());
+            return Err(eyre!("key can not be empty").into());
         }
         Ok(Transposition {
             key: key.to_string(),

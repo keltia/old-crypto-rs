@@ -3,6 +3,8 @@
 
 use crate::helpers::to_numeric;
 
+use eyre::{eyre, Result};
+
 /// Normalizes the key phrase by keeping only ASCII alphabetic characters and
 /// converting them to uppercase.
 ///
@@ -72,7 +74,7 @@ pub(crate) fn rank_digits_1to0(digits: &[u8]) -> Vec<u8> {
 
 /// Derives two transposition widths from the last row of the key expansion.
 ///
-pub(crate) fn transposition_widths_from_last_row(row: &[u8]) -> Result<(usize, usize), String> {
+pub(crate) fn transposition_widths_from_last_row(row: &[u8]) -> Result<(usize, usize)> {
     let mut used = [false; 10];
     let mut w1 = 0usize;
     let mut w2 = 0usize;
@@ -98,7 +100,7 @@ pub(crate) fn transposition_widths_from_last_row(row: &[u8]) -> Result<(usize, u
         }
     }
     if w1 == 0 || w2 == 0 {
-        return Err("failed to derive transposition widths".to_string());
+        return Err(eyre!("failed to derive transposition widths").into());
     }
     Ok((w1, w2))
 }
@@ -126,9 +128,9 @@ pub(crate) fn read_out_columns(rows: &[Vec<u8>], key10: &[u8]) -> Vec<u8> {
 
 /// Converts a slice to a fixed-size array of 10 bytes.
 ///
-pub(crate) fn vec_to_array_10(v: &[u8]) -> Result<[u8; 10], String> {
+pub(crate) fn vec_to_array_10(v: &[u8]) -> Result<[u8; 10]> {
     if v.len() != 10 {
-        return Err("expected 10 digits".to_string());
+        return Err(eyre!("expected 10 digits").into());
     }
     let mut out = [0u8; 10];
     out.copy_from_slice(v);

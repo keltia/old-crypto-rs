@@ -4,6 +4,8 @@
 //!
 use crate::Block;
 
+use eyre::{eyre, Result};
+
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
 /// Our alphabet includes digits and 3 more caracters, because we have 3 digits.
@@ -44,7 +46,7 @@ impl SecomCheckerboard {
     /// * `header` - A 10-digit permutation used to define the layout.
     /// * `freq` - A string of 7 frequent characters that will get single-digit codes.
     ///
-    pub(crate) fn new(header: [u8; 10], freq: &str) -> Result<Self, String> {
+    pub(crate) fn new(header: [u8; 10], freq: &str) -> Result<Self> {
         let mut longc = [0u8; 3];
         for (i, &pos) in FREQ_BLANK_POS.iter().enumerate() {
             longc[i] = header[pos];
@@ -93,10 +95,13 @@ impl SecomCheckerboard {
             let start_col = if row_digit == 2 { 0 } else { col_for_digit[row_digit as usize] };
             for i in 0..10 {
                 let col = (start_col + i) % 10;
-                let ch = *symbols.next().ok_or("checkerboard symbols exhausted")?;
+                let ch = match symbols.next() {
+                    Some(v) => v,
+                    None => return Err(eyre!("checkerboard symbols exhausted").into()),
+                };
                 let d1 = header[col];
-                enc[ch as usize] = EncEntry { len: 2, bytes: [b'0' + row_digit, b'0' + d1] };
-                dec2[row_digit as usize][d1 as usize] = ch;
+                enc[*ch as usize] = EncEntry { len: 2, bytes: [b'0' + row_digit, b'0' + d1] };
+                dec2[row_digit as usize][d1 as usize] = *ch;
             }
         }
 

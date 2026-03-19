@@ -23,6 +23,8 @@ use crate::Block;
 use crate::helpers;
 use crate::helpers::{fix_double, REGULAR_ALPHABET};
 
+use eyre::{eyre, Result};
+
 const LEN_PL: usize = REGULAR_ALPHABET.len() + 1;
 const LEN_CT: usize = REGULAR_ALPHABET.len();
 
@@ -79,9 +81,9 @@ impl Wheatstone {
     /// let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
     /// ```
     /// 
-    pub fn new(start: u8, pkey: &str, ckey: &str) -> Result<Self, String> {
+    pub fn new(start: u8, pkey: &str, ckey: &str) -> Result<Self> {
         if pkey.is_empty() || ckey.is_empty() {
-            return Err("keys can not be empty".to_string());
+            return Err(eyre!("keys can not be empty").into());
         }
 
         // Transform with key

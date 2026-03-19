@@ -21,9 +21,12 @@
 //! cipher.encrypt(&mut ciphertext, plaintext);
 //! ```
 //!
-use crate::Block;
 use std::cell::RefCell;
+
+use crate::Block;
 use crate::helpers::REGULAR_ALPHABET;
+
+use eyre::{eyre, Result};
 
 const ZENITH: usize = 0;
 const NADIR: usize = 13;
@@ -80,9 +83,9 @@ impl Chaocipher {
     /// ).unwrap();
     /// ```
     ///
-    pub fn new(pkey: &str, ckey: &str) -> Result<Self, String> {
+    pub fn new(pkey: &str, ckey: &str) -> Result<Self> {
         if pkey.len() != REGULAR_ALPHABET.len() || ckey.len() != REGULAR_ALPHABET.len() {
-            return Err("bad alphabet length".to_string());
+            return Err(eyre!("bad alphabet length").into());
         }
 
         Ok(Chaocipher {

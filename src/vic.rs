@@ -12,6 +12,8 @@ use crate::transposition::{Transposition, IrregularTransposition};
 use crate::straddling::StraddlingCheckerboard;
 use crate::helpers::{to_numeric, SC_ALPHABET};
 
+use eyre::Result;
+
 /// VIC cipher implementation combining straddling checkerboard and transposition ciphers.
 ///
 /// The VIC cipher uses a complex key derivation system and three main components:
@@ -63,7 +65,7 @@ impl VicCipher {
     /// ).unwrap();
     /// ```
     ///
-    pub fn new(persn: &str, ind: &str, phrase: &str, imsg: &str) -> Result<Self, String> {
+    pub fn new(persn: &str, ind: &str, phrase: &str, imsg: &str) -> Result<Self> {
         let imsg_int = str2int(imsg);
         let ikey5 = str2int(&ind[..5]);
 

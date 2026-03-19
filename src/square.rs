@@ -26,6 +26,8 @@ use crate::Block;
 use crate::helpers;
 use crate::helpers::REGULAR_ALPHABET;
 
+use eyre::{eyre, Result};
+
 /// Compact encoding entry for a single plaintext byte.
 ///
 /// `len` is 0 for unmapped bytes, or 2 for the bigram length.
@@ -92,9 +94,9 @@ impl SquareCipher {
     ///
     /// Returns an error if either `key` or `chrs` is an empty string.
     /// 
-    pub fn new(key: &str, chrs: &str) -> Result<Self, String> {
+    pub fn new(key: &str, chrs: &str) -> Result<Self> {
         if key.is_empty() || chrs.is_empty() {
-            return Err("neither key nor chrs can be empty".to_string());
+            return Err(eyre!("neither key nor chrs can be empty").into());
         }
 
         // Step 1: Condense key + alphabet (letters only)

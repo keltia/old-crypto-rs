@@ -24,7 +24,10 @@
 use crate::Block;
 use crate::square::SquareCipher;
 use crate::transposition::Transposition;
+
 use std::cell::RefCell;
+
+use eyre::Result;
 
 /// ADFGVX cipher combining Polybius square substitution with columnar transposition.
 ///
@@ -66,7 +69,7 @@ impl ADFGVX {
     /// - The keys contain invalid characters
     /// - The Polybius square or transposition cipher cannot be initialized
     ///
-    pub fn new(key1: &str, key2: &str) -> Result<Self, String> {
+    pub fn new(key1: &str, key2: &str) -> Result<Self> {
         let sqr = SquareCipher::new(key1, "ADFGVX")?;
         let transp = Transposition::new(key2)?;
 

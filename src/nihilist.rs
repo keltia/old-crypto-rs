@@ -20,6 +20,8 @@ use crate::Block;
 use crate::straddling::StraddlingCheckerboard;
 use crate::transposition::Transposition;
 
+use eyre::Result;
+
 /// Nihilist cipher combining straddling checkerboard and transposition.
 ///
 /// This cipher performs a two-stage encryption:
@@ -62,7 +64,7 @@ impl Nihilist {
     /// - `key1` is empty or invalid for the straddling checkerboard
     /// - `key2` is empty or invalid for the transposition cipher
     /// - `chrs` is not exactly two characters or contains invalid positions
-    pub fn new(key1: &str, key2: &str, chrs: &str) -> Result<Self, String> {
+    pub fn new(key1: &str, key2: &str, chrs: &str) -> Result<Self> {
         let sc = StraddlingCheckerboard::new(key1, chrs)?;
         let transp = Transposition::new(key2)?;
 

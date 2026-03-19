@@ -45,6 +45,8 @@ pub(crate) use subr::{
 
 use crate::{Block, Transposition};
 
+use eyre::{eyre, Result};
+
 /// SECOM cipher implementation.
 ///
 /// SECOM is a VIC-derived cipher that uses a single key phrase and a frequency
@@ -69,10 +71,10 @@ impl SecomCipher {
     /// * `key_phrase` - A string of at least 20 letters used for key derivation.
     /// * `freq` - A 7-letter frequency string for the checkerboard (e.g., "ESTONIA").
     ///
-    pub fn new(key_phrase: &str, freq: &str) -> Result<Self, String> {
+    pub fn new(key_phrase: &str, freq: &str) -> Result<Self> {
         let key = normalize_key_phrase(key_phrase);
         if key.len() < 20 {
-            return Err("key phrase must have at least 20 letters".to_string());
+            return Err(eyre!("key phrase must have at least 20 letters").into());
         }
         let key20 = &key[..20];
         let a = &key20[..10];
@@ -96,7 +98,7 @@ impl SecomCipher {
 
         // Derive the checkerboard key from the last row
         //
-        let last_row = rows.last().ok_or("failed to generate rows")?.clone();
+        let last_row = rows.last().ok_or(eyre!("failed to generate rows"))?.clone();
         let header_digits = rank_digits_1to0(&last_row);
         let checker = SecomCheckerboard::new(vec_to_array_10(&header_digits)?, freq)?;
 
@@ -115,7 +117,7 @@ impl SecomCipher {
         //
         let key_stream = read_out_columns(&rows, &key10);
         if key_stream.len() < tp1_width + tp2_width {
-            return Err("insufficient key stream length".to_string());
+            return Err(eyre!("insufficient key stream length").into());
         }
 
         // First transposition

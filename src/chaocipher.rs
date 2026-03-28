@@ -39,23 +39,54 @@ const NADIR: usize = 13;
 /// The state is kept in a `RefCell` to allow interior mutability during const operations.
 ///
 pub struct Chaocipher {
-    /// The plaintext alphabet key (right alphabet)
-    pkey: String,
-    /// The cipher alphabet key (left alphabet)
-    ckey: String,
+    /// The plaintext alphabet key (right alphabet) - stored as bytes
+    pkey: [u8; 26],
+    /// The cipher alphabet key (left alphabet) - stored as bytes
+    ckey: [u8; 26],
     /// Internal mutable state containing the working alphabets
     state: RefCell<ChaocipherState>,
 }
 
 /// Internal state of the Chaocipher algorithm.
 ///
-/// Contains the two working alphabets that are permuted after each character operation.
+/// Contains the two working alphabets that are permuted after each character operation,
+/// plus lookup tables for O(1) character position finding.
 ///
 struct ChaocipherState {
     /// The plaintext working alphabet (right alphabet)
-    pw: Vec<u8>,
+    pw: [u8; 26],
     /// The cipher working alphabet (left alphabet)
-    cw: Vec<u8>,
+    cw: [u8; 26],
+    /// Lookup table: maps character byte to its position in pw
+    pw_lookup: [u8; 256],
+    /// Lookup table: maps character byte to its position in cw
+    cw_lookup: [u8; 256],
+}
+
+impl ChaocipherState {
+    /// Creates a new state from the given alphabet keys.
+    fn new(pkey: &[u8; 26], ckey: &[u8; 26]) -> Self {
+        let mut state = ChaocipherState {
+            pw: *pkey,
+            cw: *ckey,
+            pw_lookup: [0; 256],
+            cw_lookup: [0; 256],
+        };
+        state.rebuild_lookups();
+        state
+    }
+
+    /// Rebuilds the lookup tables after alphabet permutation.
+    ///
+    /// This method creates reverse mappings from character bytes to their positions
+    /// in the working alphabets, enabling O(1) character lookups.
+    #[inline]
+    fn rebuild_lookups(&mut self) {
+        for i in 0..26 {
+            self.pw_lookup[self.pw[i] as usize] = i as u8;
+            self.cw_lookup[self.cw[i] as usize] = i as u8;
+        }
+    }
 }
 
 impl Chaocipher {
@@ -89,13 +120,18 @@ impl Chaocipher {
             return Err(Error::AlphabetTooShort(REGULAR_ALPHABET.len()).into());
         }
 
+        let pkey_bytes = pkey.as_bytes();
+        let ckey_bytes = ckey.as_bytes();
+
+        let mut pkey_array = [0u8; 26];
+        let mut ckey_array = [0u8; 26];
+        pkey_array.copy_from_slice(pkey_bytes);
+        ckey_array.copy_from_slice(ckey_bytes);
+
         Ok(Chaocipher {
-            pkey: pkey.to_string(),
-            ckey: ckey.to_string(),
-            state: RefCell::new(ChaocipherState {
-                pw: pkey.as_bytes().to_vec(),
-                cw: ckey.as_bytes().to_vec(),
-            }),
+            pkey: pkey_array,
+            ckey: ckey_array,
+            state: RefCell::new(ChaocipherState::new(&pkey_array, &ckey_array)),
         })
     }
 
@@ -139,6 +175,9 @@ impl Chaocipher {
         let l = state.pw[ZENITH + 2];
         state.pw[ZENITH + 2..NADIR + 1].rotate_left(1);
         state.pw[NADIR] = l;
+
+        // Rebuild lookup tables after permutation
+        state.rebuild_lookups();
     }
 
     /// Encodes or decodes a single character.
@@ -159,9 +198,9 @@ impl Chaocipher {
     fn encode_both(&self, is_encrypt: bool, ch: u8) -> u8 {
         let mut state = self.state.borrow_mut();
         let idx = if is_encrypt {
-            state.pw.iter().position(|&x| x == ch).unwrap_or(0)
+            state.pw_lookup[ch as usize] as usize
         } else {
-            state.cw.iter().position(|&x| x == ch).unwrap_or(0)
+            state.cw_lookup[ch as usize] as usize
         };
 
         let pt = if is_encrypt {
@@ -181,8 +220,9 @@ impl Chaocipher {
     ///
     fn reset(&self) {
         let mut state = self.state.borrow_mut();
-        state.pw = self.pkey.as_bytes().to_vec();
-        state.cw = self.ckey.as_bytes().to_vec();
+        state.pw = self.pkey;
+        state.cw = self.ckey;
+        state.rebuild_lookups();
     }
 }
 

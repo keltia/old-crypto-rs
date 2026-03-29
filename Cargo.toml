@@ -12,7 +12,7 @@ documentation = "https://docs.rs/cipher-rs"
 categories = ["command-line-utilities", "cryptography"]
 
 [[bench]]
-name = "shuffle"
+name = "helpers"
 harness = false
 
 [[bench]]

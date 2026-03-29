@@ -72,7 +72,7 @@ or
     cargo bench
 
 The library is fetched, compiled and installed. You can find a "demo" program in the `examples` directory, to showcase
-all ciphers; it also check that you can decrypt back to the original plaintext.
+all ciphers; it also checks that you can decrypt back to the original plaintext.
 
     cargo run --example demo
 
@@ -95,13 +95,6 @@ You can run them with
 
     cargo nextest run
     cargo bench
-
-## TODO
-
-- more ciphers ~~(Vigenère and its 2 autoclave variants incoming)~~
-- more tests (and better ones!)
-- better display of results
-- refactoring to reduce code duplication: always in progress
 
 ## Benchmarks
 
@@ -147,6 +140,31 @@ ciphers                            fastest       │ slowest       │ median   
    ├─ b15_solitaire                4.749 µs      │ 9.749 µs      │ 4.849 µs      │ 4.975 µs      │ 100     │ 200
    ╰─ b16_wheatstone               202.9 ns      │ 515.4 ns      │ 231 ns        │ 276.7 ns      │ 100     │ 3200
 ```
+
+There is a separate benchmark for internal (aka helpers) functions:
+
+```text
+Timer precision: 100 ns
+helpers                     fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ condense                               │               │               │               │         │
+│  ├─ bench_condense        712.3 ns      │ 1.262 µs      │ 724.8 ns      │ 748.6 ns      │ 100     │ 1600
+│  ╰─ bench_condense_str    53.71 ns      │ 70.51 ns      │ 54.1 ns       │ 54.32 ns      │ 100     │ 25600
+├─ fix_double                             │               │               │               │         │
+│  ├─ bench_double_aligned  206 ns        │ 329.4 ns      │ 207.6 ns      │ 226.4 ns      │ 100     │ 6400
+│  ├─ bench_expand          85.74 ns      │ 182.6 ns      │ 88.09 ns      │ 117.1 ns      │ 100     │ 12800
+│  ╰─ bench_fix_double      111.5 ns      │ 132.6 ns      │ 112.3 ns      │ 112.9 ns      │ 100     │ 12800
+╰─ shuffle                                │               │               │               │         │
+   ├─ bench_shuffle         138.8 ns      │ 228.7 ns      │ 141.9 ns      │ 142.7 ns      │ 100     │ 12800
+   ╰─ bench_transp_shuffle  154.4 ns      │ 291.9 ns      │ 157.6 ns      │ 176.3 ns      │ 100     │ 6400
+```
+
+## TODO
+
+- more ciphers ~~(Vigenère and its 2 autoclave variants incoming)~~
+- more tests (and better ones!)
+- better display of results
+- refactoring to reduce code duplication: always in progress
+- explore alternate implementations 
 
 ## Contributing
 

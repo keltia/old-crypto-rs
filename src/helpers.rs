@@ -317,6 +317,15 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
 ///
 /// inlining FTW :)
 ///
+/// # Benchmark
+/// PC, AMD 7700X 3.60GHz, 16GB RAM, Win 11 25H2
+/// ```text
+/// Timer precision: 100 ns
+/// shuffle                  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+/// ├─ bench_shuffle         377.9 ns      │ 696.6 ns      │ 393.5 ns      │ 395 ns        │ 100     │ 3200
+/// ╰─ bench_transp_shuffle  243.5 ns      │ 273.2 ns      │ 246.6 ns      │ 252 ns        │ 100     │ 6400
+/// ```
+///
 pub fn transp_shuffle(key: &str, alphabet: &str) -> Result<String> {
     // Short-circuit if key is empty
     //

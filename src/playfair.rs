@@ -34,7 +34,6 @@ use crate::Block;
 use crate::helpers::{self, Alphabet, FillWith, Latin25, FillX};
 
 const OP_ENCRYPT: u8 = 1;
-const OP_DECRYPT: u8 = 4;
 
 /// Playfair cipher implementation, generic over an [`Alphabet`] and a [`FillWith`] policy.
 ///
@@ -275,9 +274,9 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
         if src.len() % 2 == 1 {
             panic!("odd number of elements");
         }
-
+        let op_decrypt = self.dim as u8 - 1;
         for i in (0..src.len()).step_by(2) {
-            let bg = self.transform(Couple { r: src[i], c: src[i+1] }, OP_DECRYPT);
+            let bg = self.transform(Couple { r: src[i], c: src[i+1] }, op_decrypt);
             dst[i] = bg.r;
             dst[i+1] = bg.c;
         }

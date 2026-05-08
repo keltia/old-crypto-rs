@@ -4,6 +4,312 @@ use std::collections::HashSet;
 
 use eyre::Result;
 
+/// Marker type representing the standard 26-letter Latin alphabet (A-Z).
+///
+/// This type is used as a type parameter to specify that an operation should work
+/// with only uppercase letters A through Z, without digits or special characters.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin26};
+///
+/// // Normalize 'A' to index 0
+/// assert_eq!(Latin26::normalize(b'A'), Some(0));
+/// assert_eq!(Latin26::normalize(b'Z'), Some(25));
+/// assert_eq!(Latin26::normalize(b'0'), None); // Digits not supported
+///
+/// // Denormalize index back to character
+/// assert_eq!(Latin26::denormalize(0), b'A');
+/// assert_eq!(Latin26::denormalize(25), b'Z');
+/// ```
+pub struct Latin26;
+
+/// Marker type representing an extended 36-character alphabet (A-Z and 0-9).
+///
+/// This type is used as a type parameter to specify that an operation should work
+/// with uppercase letters A through Z (indices 0-25) and digits 0 through 9 (indices 26-35).
+/// This is commonly used in ciphers that need to handle alphanumeric input.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin36};
+///
+/// // Normalize letters
+/// assert_eq!(Latin36::normalize(b'A'), Some(0));
+/// assert_eq!(Latin36::normalize(b'Z'), Some(25));
+///
+/// // Normalize digits
+/// assert_eq!(Latin36::normalize(b'0'), Some(26));
+/// assert_eq!(Latin36::normalize(b'9'), Some(35));
+///
+/// // Denormalize back to characters
+/// assert_eq!(Latin36::denormalize(0), b'A');
+/// assert_eq!(Latin36::denormalize(25), b'Z');
+/// assert_eq!(Latin36::denormalize(26), b'0');
+/// assert_eq!(Latin36::denormalize(35), b'9');
+/// ```
+///
+pub struct Latin36;
+
+/// Trait defining operations for working with different alphabet encodings in classical ciphers.
+///
+/// This trait provides a consistent interface for converting between characters and their
+/// numeric representations (0-based indices) for different alphabets. It's designed as a
+/// zero-cost abstraction using marker types, allowing compile-time selection of alphabet
+/// configurations without runtime overhead.
+///
+/// The trait is primarily used internally by cipher implementations to handle character
+/// encoding/decoding in a generic way that works with both standard 26-letter alphabets
+/// and extended alphanumeric alphabets.
+///
+/// # Design Pattern
+///
+/// This trait uses the "type-level programming" pattern with marker types (`Latin26`, `Latin36`)
+/// to provide zero-cost alphabet selection at compile time. All methods are provided via
+/// associated constants and functions, requiring no runtime state.
+///
+/// # Implementations
+///
+/// - [`Latin26`] - Standard 26-letter alphabet (A-Z)
+/// - [`Latin36`] - Extended 36-character alphabet (A-Z, 0-9)
+///
+/// # Examples
+///
+/// Using with generic code:
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin26, Latin36};
+///
+/// fn encode_char<A: Alphabet>(ch: u8) -> Option<usize> {
+///     A::normalize(ch)
+/// }
+///
+/// // Works with both alphabets
+/// assert_eq!(encode_char::<Latin26>(b'A'), Some(0));
+/// assert_eq!(encode_char::<Latin36>(b'0'), Some(26));
+/// ```
+///
+pub trait Alphabet {
+    /// The number of characters in this alphabet.
+    ///
+    /// This constant defines the size of the alphabet, which is used for:
+    /// - Array allocation and bounds checking
+    /// - Modular arithmetic in cipher operations
+    /// - Validation of normalized indices
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use old_crypto_rs::helpers::{Alphabet, Latin26, Latin36};
+    ///
+    /// assert_eq!(Latin26::SIZE, 26);
+    /// assert_eq!(Latin36::SIZE, 36);
+    /// ```
+    ///
+    const SIZE: usize;
+
+    /// Converts a character to its 0-based index in the alphabet.
+    ///
+    /// This function takes a byte representing an ASCII character and returns its
+    /// position in the alphabet as a 0-based index. Characters not in the alphabet
+    /// return `None`.
+    ///
+    /// # Arguments
+    ///
+    /// * `ch` - An ASCII character byte to normalize
+    ///
+    /// # Returns
+    ///
+    /// - `Some(index)` - If the character is in the alphabet (0 to SIZE-1)
+    /// - `None` - If the character is not supported by this alphabet
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use old_crypto_rs::helpers::{Alphabet, Latin26, Latin36};
+    ///
+    /// // Latin26: only uppercase letters
+    /// assert_eq!(Latin26::normalize(b'A'), Some(0));
+    /// assert_eq!(Latin26::normalize(b'Z'), Some(25));
+    /// assert_eq!(Latin26::normalize(b'a'), None); // lowercase not supported
+    /// assert_eq!(Latin26::normalize(b'0'), None); // digits not supported
+    ///
+    /// // Latin36: uppercase letters and digits
+    /// assert_eq!(Latin36::normalize(b'A'), Some(0));
+    /// assert_eq!(Latin36::normalize(b'Z'), Some(25));
+    /// assert_eq!(Latin36::normalize(b'0'), Some(26));
+    /// assert_eq!(Latin36::normalize(b'9'), Some(35));
+    /// assert_eq!(Latin36::normalize(b'!'), None); // special chars not supported
+    /// ```
+    ///
+    fn normalize(ch: u8) -> Option<usize>;
+
+    /// Converts a 0-based alphabet index back to its corresponding character.
+    ///
+    /// This is the inverse operation of `normalize`. Given an index in the range
+    /// [0, SIZE), it returns the corresponding ASCII character byte.
+    ///
+    /// # Arguments
+    ///
+    /// * `idx` - The 0-based index in the alphabet (should be < SIZE)
+    ///
+    /// # Returns
+    ///
+    /// The ASCII byte value of the character at the given index.
+    ///
+    /// # Panics
+    ///
+    /// Behavior is undefined if `idx >= SIZE`. Implementations may panic or return
+    /// invalid results.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use old_crypto_rs::helpers::{Alphabet, Latin26, Latin36};
+    ///
+    /// // Latin26: indices to uppercase letters
+    /// assert_eq!(Latin26::denormalize(0), b'A');
+    /// assert_eq!(Latin26::denormalize(25), b'Z');
+    ///
+    /// // Latin36: indices to letters and digits
+    /// assert_eq!(Latin36::denormalize(0), b'A');
+    /// assert_eq!(Latin36::denormalize(25), b'Z');
+    /// assert_eq!(Latin36::denormalize(26), b'0');
+    /// assert_eq!(Latin36::denormalize(35), b'9');
+    /// ```
+    ///
+    fn denormalize(idx: usize) -> u8;
+}
+
+/// Implementation of the `Alphabet` trait for the standard 26-letter Latin alphabet (A-Z).
+///
+/// This implementation provides character encoding/decoding operations specifically for
+/// uppercase English letters. It maps:
+/// - 'A' to index 0
+/// - 'B' to index 1
+/// - ...
+/// - 'Z' to index 25
+///
+/// Any characters outside the A-Z range (including lowercase letters, digits, and
+/// special characters) are not supported and will return `None` from `normalize`.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin26};
+///
+/// // Normalize uppercase letters
+/// assert_eq!(Latin26::normalize(b'A'), Some(0));
+/// assert_eq!(Latin26::normalize(b'M'), Some(12));
+/// assert_eq!(Latin26::normalize(b'Z'), Some(25));
+///
+/// // Non-uppercase letters return None
+/// assert_eq!(Latin26::normalize(b'a'), None);
+/// assert_eq!(Latin26::normalize(b'0'), None);
+/// assert_eq!(Latin26::normalize(b' '), None);
+///
+/// // Denormalize indices back to letters
+/// assert_eq!(Latin26::denormalize(0), b'A');
+/// assert_eq!(Latin26::denormalize(12), b'M');
+/// assert_eq!(Latin26::denormalize(25), b'Z');
+/// ```
+///
+/// # See Also
+///
+/// * [`Latin36`] - Extended alphabet including digits
+/// * [`Alphabet`] - The trait definition
+///
+impl Alphabet for Latin26 {
+    const SIZE: usize = 26;
+
+    fn normalize(ch: u8) -> Option<usize> {
+        if ch.is_ascii_uppercase() {
+            Some((ch - b'A') as usize)
+        } else {
+            None
+        }
+    }
+
+    fn denormalize(idx: usize) -> u8 {
+        b'A' + idx as u8
+    }
+}
+
+/// Implementation of the `Alphabet` trait for the extended 36-character alphanumeric alphabet.
+///
+/// This implementation provides character encoding/decoding operations for both uppercase
+/// English letters (A-Z) and decimal digits (0-9). It maps:
+/// - 'A' through 'Z' to indices 0-25
+/// - '0' through '9' to indices 26-35
+///
+/// This encoding is useful for ciphers that need to handle both letters and numbers,
+/// such as some variants of substitution ciphers or alphanumeric codes.
+///
+/// # Index Mapping
+///
+/// | Character Range | Index Range | Offset      |
+/// |----------------|-------------|-------------|
+/// | A-Z            | 0-25        | ch - 'A'    |
+/// | 0-9            | 26-35       | 26 + (ch - '0') |
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin36};
+///
+/// // Normalize letters
+/// assert_eq!(Latin36::normalize(b'A'), Some(0));
+/// assert_eq!(Latin36::normalize(b'M'), Some(12));
+/// assert_eq!(Latin36::normalize(b'Z'), Some(25));
+///
+/// // Normalize digits
+/// assert_eq!(Latin36::normalize(b'0'), Some(26));
+/// assert_eq!(Latin36::normalize(b'5'), Some(31));
+/// assert_eq!(Latin36::normalize(b'9'), Some(35));
+///
+/// // Non-alphanumeric characters return None
+/// assert_eq!(Latin36::normalize(b'a'), None);
+/// assert_eq!(Latin36::normalize(b' '), None);
+/// assert_eq!(Latin36::normalize(b'!'), None);
+///
+/// // Denormalize indices to letters
+/// assert_eq!(Latin36::denormalize(0), b'A');
+/// assert_eq!(Latin36::denormalize(25), b'Z');
+///
+/// // Denormalize indices to digits
+/// assert_eq!(Latin36::denormalize(26), b'0');
+/// assert_eq!(Latin36::denormalize(35), b'9');
+/// ```
+///
+/// # See Also
+///
+/// * [`Latin26`] - Standard 26-letter alphabet
+/// * [`Alphabet`] - The trait definition
+///
+impl Alphabet for Latin36 {
+    const SIZE: usize = 36;
+
+    fn normalize(ch: u8) -> Option<usize> {
+        if ch.is_ascii_uppercase() {
+            Some((ch - b'A') as usize)
+        } else if ch.is_ascii_digit() {
+            Some(26 + (ch - b'0') as usize)
+        } else {
+            None
+        }
+    }
+
+    fn denormalize(idx: usize) -> u8 {
+        if idx < 26 {
+            b'A' + idx as u8
+        } else {
+            b'0' + (idx - 26) as u8
+        }
+    }
+}
+
 /// Removes all duplicate characters from a string, preserving the first occurrence of each.
 ///
 /// This function iterates through the input string and builds a new string containing only

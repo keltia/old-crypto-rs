@@ -41,7 +41,7 @@ use eyre::Result;
 /// This alphabet is specifically designed for ciphers that require a 5×5 grid:
 /// - Playfair cipher
 /// - Polybius square
-/// - ADFGVX cipher
+/// - ADFGX cipher
 /// - Other classical ciphers requiring 25 characters
 ///
 pub struct Latin25;
@@ -175,7 +175,7 @@ pub trait Alphabet {
     /// // Latin26: only uppercase letters
     /// assert_eq!(Latin26::normalize(b'A'), Some(0));
     /// assert_eq!(Latin26::normalize(b'Z'), Some(25));
-    /// assert_eq!(Latin26::normalize(b'a'), None); // lowercase not supported
+    /// assert_eq!(Latin26::normalize(b'a'), Some(0)); // lowercase converted to uppercase
     /// assert_eq!(Latin26::normalize(b'0'), None); // digits not supported
     ///
     /// // Latin36: uppercase letters and digits
@@ -247,8 +247,8 @@ pub trait Alphabet {
 /// assert_eq!(Latin26::normalize(b'M'), Some(12));
 /// assert_eq!(Latin26::normalize(b'Z'), Some(25));
 ///
-/// // Non-uppercase letters return None
-/// assert_eq!(Latin26::normalize(b'a'), None);
+/// // Lowercase letters are converted to uppercase
+/// assert_eq!(Latin26::normalize(b'a'), Some(0));
 /// assert_eq!(Latin26::normalize(b'0'), None);
 /// assert_eq!(Latin26::normalize(b' '), None);
 ///
@@ -267,6 +267,7 @@ impl Alphabet for Latin26 {
     const SIZE: usize = 26;
 
     fn normalize(ch: u8) -> Option<usize> {
+        let ch = ch.to_ascii_uppercase();
         if ch.is_ascii_uppercase() {
             Some((ch - b'A') as usize)
         } else {
@@ -429,8 +430,8 @@ impl Alphabet for Latin25 {
 /// assert_eq!(Latin36::normalize(b'5'), Some(31));
 /// assert_eq!(Latin36::normalize(b'9'), Some(35));
 ///
-/// // Non-alphanumeric characters return None
-/// assert_eq!(Latin36::normalize(b'a'), None);
+/// // Lowercase letters are converted to uppercase
+/// assert_eq!(Latin36::normalize(b'a'), Some(0));
 /// assert_eq!(Latin36::normalize(b' '), None);
 /// assert_eq!(Latin36::normalize(b'!'), None);
 ///
@@ -452,6 +453,7 @@ impl Alphabet for Latin36 {
     const SIZE: usize = 36;
 
     fn normalize(ch: u8) -> Option<usize> {
+        let ch = ch.to_ascii_uppercase();
         if ch.is_ascii_uppercase() {
             Some((ch - b'A') as usize)
         } else if ch.is_ascii_digit() {

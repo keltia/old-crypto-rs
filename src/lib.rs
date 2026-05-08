@@ -19,7 +19,7 @@ mod sigaba;
 
 pub use null::NullCipher;
 pub use vigenere::{AutocryptCipher, AutokeyCipher, VigenereCipher};
-pub use caesar::CaesarCipher;
+pub use caesar::{Caesar, CaesarCipher};
 pub use playfair::PlayfairCipher;
 pub use chaocipher::Chaocipher;
 pub use square::SquareCipher;

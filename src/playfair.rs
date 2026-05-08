@@ -27,44 +27,41 @@
 //! let mut ciphertext = vec![0u8; plaintext.len()];
 //! cipher.encrypt(&mut ciphertext, plaintext);
 //! ```
-//! 
-use crate::Block;
-use crate::helpers;
+//!
+use std::marker::PhantomData;
 
-const ALPHABET: &str = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+use crate::Block;
+use crate::helpers::{self, Alphabet, FillWith, Latin25, FillX};
+
 const OP_ENCRYPT: u8 = 1;
 const OP_DECRYPT: u8 = 4;
 
-/// Playfair cipher implementation using a 5×5 keyed matrix.
+/// Playfair cipher implementation, generic over an [`Alphabet`] and a [`FillWith`] policy.
 ///
-/// The `PlayfairCipher` struct holds the cipher key and maintains bidirectional tables
-/// between characters and their positions in the 5×5 Playfair matrix. This allows for
-/// efficient encryption and decryption operations.
+/// The `Playfair` struct holds the cipher key and maintains bidirectional tables
+/// between characters and their positions in the square matrix. The grid dimension
+/// is `sqrt(A::SIZE)` — for [`Latin25`] that is 5×5.
 ///
 /// # Fields
 ///
 /// * `key` - The condensed key string used to build the cipher matrix
-/// * `i2c` - Table from character (as u8) to its `Couple` position in the matrix
-/// * `c2i` - Table from matrix position to its character (as u8)
-/// 
-pub struct PlayfairCipher {
+/// * `dim` - The grid dimension (`sqrt(A::SIZE)`)
+/// * `i2c` - Table from character byte to its `Couple` position in the matrix
+/// * `c2i` - Table from matrix position to its character byte
+///
+pub struct Playfair<A: Alphabet, F: FillWith> {
     #[allow(dead_code)]
     key: String,
+    dim: usize,
     i2c: [Couple; 256],
-    c2i: [u8; 25],
+    c2i: Vec<u8>,
+    _phantom: PhantomData<(A, F)>,
 }
 
-/// Represents a coordinate pair (row, column) in the 5×5 Playfair matrix.
-///
-/// A `Couple` is used to represent either:
-/// - The position of a character in the Playfair matrix (as a coordinate)
-/// - A pair of characters to be encrypted/decrypted (as indices)
-///
-/// # Fields
-///
-/// * `r` - Row index (0-4) or first character of a bigram
-/// * `c` - Column index (0-4) or second character of a bigram
-/// 
+/// Playfair cipher over the standard 25-letter Latin alphabet (I/J merged) with 'X' as filler.
+pub type PlayfairCipher = Playfair<Latin25, FillX>;
+
+/// Represents a coordinate pair (row, column) in the Playfair matrix.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Couple {
     r: u8,
@@ -73,7 +70,7 @@ struct Couple {
 
 const INVALID_COUPLE: Couple = Couple { r: 0xFF, c: 0xFF };
 
-impl PlayfairCipher {
+impl<A: Alphabet, F: FillWith> Playfair<A, F> {
     fn lookup(&self, ch: u8) -> Couple {
         let couple = self.i2c[ch as usize];
         if couple.r == 0xFF {
@@ -84,65 +81,61 @@ impl PlayfairCipher {
 
     /// Transforms a pair of characters using the Playfair cipher rules.
     ///
-    /// This is the core encryption/decryption function that applies the Playfair transformation
-    /// rules based on the relative positions of two characters in the matrix.
-    ///
+    /// This is the core encryption/decryption function that applies the Playfair transformation⏎
+    /// rules based on the relative positions of two characters in the matrix.⏎
+    /// ⏎
     /// # Arguments
     ///
     /// * `pt` - A `Couple` where `r` and `c` represent the two characters to transform
     /// * `opt` - Operation mode: `OP_ENCRYPT` (1) for encryption, `OP_DECRYPT` (4) for decryption
     ///
-    /// # Returns
-    ///
-    /// A `Couple` containing the transformed character pair
-    ///
-    /// # Transformation Rules
-    ///
-    /// 1. **Same row**: Shift each character by `opt` positions to the right (modulo 5)
-    /// 2. **Same column**: Shift each character by `opt` positions down (modulo 5)
-    /// 3. **Rectangle**: Swap the columns of the two characters
-    /// 
+    /// # Returns⏎
+    /// ⏎
+    /// A `Couple` containing the transformed character pair⏎
+    /// ⏎
+    /// # Transformation Rules⏎
+    /// ⏎
+    /// 1. **Same row**: Shift each character by `opt` positions to the right (modulo 5)⏎
+    /// 2. **Same column**: Shift each character by `opt` positions down (modulo 5)⏎
+    /// 3. **Rectangle**: Swap the columns of the two characters⏎
+    /// ⏎
     fn transform(&self, pt: Couple, opt: u8) -> Couple {
+        let d = self.dim as u8;
         let bg1 = self.lookup(pt.r);
         let bg2 = self.lookup(pt.c);
         if bg1.r == bg2.r {
-            let ct1 = Couple { r: bg1.r, c: (bg1.c + opt) % 5 };
-            let ct2 = Couple { r: bg2.r, c: (bg2.c + opt) % 5 };
+            let ct1 = Couple { r: bg1.r, c: (bg1.c + opt) % d };
+            let ct2 = Couple { r: bg2.r, c: (bg2.c + opt) % d };
             return Couple {
-                r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
-                c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+                r: self.c2i[(ct1.r as usize) * self.dim + ct1.c as usize],
+                c: self.c2i[(ct2.r as usize) * self.dim + ct2.c as usize],
             };
         }
         if bg1.c == bg2.c {
-            let ct1 = Couple { r: (bg1.r + opt) % 5, c: bg1.c };
-            let ct2 = Couple { r: (bg2.r + opt) % 5, c: bg2.c };
+            let ct1 = Couple { r: (bg1.r + opt) % d, c: bg1.c };
+            let ct2 = Couple { r: (bg2.r + opt) % d, c: bg2.c };
             return Couple {
-                r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
-                c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+                r: self.c2i[(ct1.r as usize) * self.dim + ct1.c as usize],
+                c: self.c2i[(ct2.r as usize) * self.dim + ct2.c as usize],
             };
         }
         let ct1 = Couple { r: bg1.r, c: bg2.c };
         let ct2 = Couple { r: bg2.r, c: bg1.c };
         Couple {
-            r: self.c2i[(ct1.r as usize) * 5 + ct1.c as usize],
-            c: self.c2i[(ct2.r as usize) * 5 + ct2.c as usize],
+            r: self.c2i[(ct1.r as usize) * self.dim + ct1.c as usize],
+            c: self.c2i[(ct2.r as usize) * self.dim + ct2.c as usize],
         }
     }
 
     /// Creates a new Playfair cipher with the specified key.
     ///
-    /// The key is used to construct a 5×5 matrix by:
-    /// 1. Condensing the key (removing duplicates and converting to uppercase)
-    /// 2. Appending the remaining alphabet letters (I and J are combined)
-    /// 3. Filling the matrix row by row with these characters
+    /// The key is normalized through `A::normalize` (which handles alphabet-specific
+    /// transformations such as I/J merging for [`Latin25`]), then used to construct
+    /// the square matrix.
     ///
     /// # Arguments
     ///
     /// * `key` - The keyword used to generate the cipher matrix
-    ///
-    /// # Returns
-    ///
-    /// A new `PlayfairCipher` instance with initialized mapping tables
     ///
     /// # Example
     ///
@@ -151,35 +144,41 @@ impl PlayfairCipher {
     ///
     /// let cipher = PlayfairCipher::new("PLAYFAIREXAMPLE");
     /// ```
-    /// 
+    ///
     pub fn new(key: &str) -> Self {
-        let key = key.to_ascii_uppercase().replace('J', "I");
-        let condensed_key = helpers::condense(&format!("{}{}", key, ALPHABET));
+        let dim = (A::SIZE as f64).sqrt() as usize;
+
+        // Build full alphabet string from the Alphabet type
+        let full_alpha: String = (0..A::SIZE).map(|i| A::denormalize(i) as char).collect();
+
+        // Normalize the key through the alphabet (handles I/J merger etc.)
+        let normalized_key: String = key.as_bytes().iter()
+            .filter_map(|&b| A::normalize(b).map(|idx| A::denormalize(idx) as char))
+            .collect();
+
+        let condensed_key = helpers::condense(&format!("{}{}", normalized_key, full_alpha));
+
         let mut i2c = [INVALID_COUPLE; 256];
-        let mut c2i = [0u8; 25];
-        
-        let mut ind = 0;
+        let mut c2i = vec![0u8; A::SIZE];
+
         let key_bytes = condensed_key.as_bytes();
-        for i in 0..5 {
-            for j in 0..5 {
+        let mut ind = 0;
+        for i in 0..dim {
+            for j in 0..dim {
                 let c = key_bytes[ind];
                 let couple = Couple { r: i as u8, c: j as u8 };
                 i2c[c as usize] = couple;
-                c2i[i * 5 + j] = c;
+                c2i[i * dim + j] = c;
                 ind += 1;
             }
         }
 
-        PlayfairCipher {
-            key: condensed_key,
-            i2c,
-            c2i,
-        }
+        Playfair { key: condensed_key, dim, i2c, c2i, _phantom: PhantomData }
     }
 }
 
-impl Block for PlayfairCipher {
-    /// BlockSize is part of the interface
+impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
+    /// Block size is 2 — Playfair operates on digraphs.
     fn block_size(&self) -> usize {
         2
     }
@@ -214,12 +213,21 @@ impl Block for PlayfairCipher {
     /// assert_eq!(written, 12); // 11 chars + 1 'X' padding = 12
     /// ```
     ///
+    /// Input is normalized through `A::normalize` (handling alphabet-specific
+    /// transformations), then processed in digrams. Duplicate letters within a
+    /// digram are separated by `F::FILL`; odd-length input is padded with `F::FILL`.
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
-        let src = String::from_utf8_lossy(src).to_ascii_uppercase().replace('J', "I");
-        let src = helpers::fix_double_aligned(&src, 'X');
+        // Normalize input through the alphabet
+        let src: String = src.iter()
+            .filter_map(|&b| A::normalize(b).map(|idx| A::denormalize(idx) as char))
+            .collect();
+
+        let fill = F::FILL as char;
+        let src = helpers::fix_double_aligned(&src, fill);
         let mut src_vec = src.as_bytes().to_vec();
         if src_vec.len() % 2 == 1 {
-            src_vec.push(b'X');
+            src_vec.push(F::FILL);
         }
 
         for i in (0..src_vec.len()).step_by(2) {
@@ -232,7 +240,7 @@ impl Block for PlayfairCipher {
 
     /// Decrypts ciphertext using the Playfair cipher.
     ///
-    /// This method processes the input ciphertext in pairs of characters (digraphs) and applies
+    /// This methods processes the ciphertext in pairs of characters (digraphs) and applies
     /// the inverse Playfair transformation rules to recover the original plaintext.
     ///
     /// # Arguments

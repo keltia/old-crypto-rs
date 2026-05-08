@@ -866,18 +866,112 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
     dst.to_vec()
 }
 
-/// Expands a byte slice by inserting 'X' between consecutive duplicate characters.
+/// Expands a byte slice by inserting a filler character between consecutive duplicate characters.
 ///
-/// This function processes the input in pairs (digrams), inserting the byte `b'X'`
-/// between any two consecutive identical characters. This is commonly used in
-/// classical ciphers like Playfair to ensure all digrams consist of different characters.
+/// This function processes the input in pairs (digrams), inserting a filler character
+/// (determined by the `FillWith` trait parameter) between any two consecutive identical
+/// characters. This is commonly used in classical ciphers like Playfair to ensure all
+/// digrams consist of different characters.
+///
+/// # Type Parameters
+///
+/// * `F` - A type implementing the [`FillWith`] trait that specifies which filler
+///         character to insert between duplicates (typically [`FillX`] or [`FillQ`])
 ///
 /// # Algorithm
 ///
 /// 1. Copy the source slice into a mutable vector
 /// 2. Iterate through the vector in steps of 2 (processing digrams)
-/// 3. If two consecutive characters are identical, insert `b'X'` between them
-/// 4. Continue processing, which causes the inserted 'X' to become part of the next digram
+/// 3. If two consecutive characters are identical, insert `F::FILL` between them
+/// 4. Continue processing, which causes the inserted filler to become part of the next digram
+///
+/// # Arguments
+///
+/// * `src` - A byte slice to be expanded
+///
+/// # Returns
+///
+/// A new `Vec<u8>` with filler characters inserted between consecutive duplicates
+///
+/// # Examples
+///
+/// Using the 'X' filler (most common):
+/// ```
+/// use old_crypto_rs::helpers::{expand_with, FillX};
+///
+/// // Simple duplicate
+/// let input = b"AAA";
+/// let result = expand_with::<FillX>(input);
+/// assert_eq!(result, b"AXAXA");
+///
+/// // No duplicates
+/// let input = b"ARABESQUE";
+/// let result = expand_with::<FillX>(input);
+/// assert_eq!(result, b"ARABESQUE");
+///
+/// // Multiple consecutive duplicates
+/// let input = b"AAAA";
+/// let result = expand_with::<FillX>(input);
+/// assert_eq!(result, b"AXAXAXA");
+///
+/// // Duplicates in different positions
+/// let input = b"LANNONCE";
+/// let result = expand_with::<FillX>(input);
+/// assert_eq!(result, b"LANXNONCE");
+/// ```
+///
+/// Using the 'Q' filler (alternative):
+/// ```
+/// use old_crypto_rs::helpers::{expand_with, FillQ};
+///
+/// // Same text with 'Q' filler
+/// let input = b"AAA";
+/// let result = expand_with::<FillQ>(input);
+/// assert_eq!(result, b"AQAQA");
+///
+/// let input = b"LANNONCE";
+/// let result = expand_with::<FillQ>(input);
+/// assert_eq!(result, b"LANQNONCE");
+/// ```
+///
+/// # Performance
+///
+/// Time complexity: O(n) where n is the length of the input, though insertions may cause
+/// reallocation in worst case scenarios with many consecutive duplicates.
+/// Space complexity: O(n + k) where k is the number of filler characters inserted.
+///
+/// # See Also
+///
+/// * [`FillWith`] - Trait defining the filler character policy
+/// * [`FillX`] - 'X' filler character implementation
+/// * [`FillQ`] - 'Q' filler character implementation
+/// * [`insert`] - The helper function used to insert characters
+///
+pub fn expand_with<F: FillWith>(src: &[u8]) -> Vec<u8> {
+    let mut res = src.to_vec();
+    let mut i = 0;
+    while i < res.len().saturating_sub(1) {
+        if res[i] == res[i + 1] {
+            res = insert(&res, F::FILL, i + 1);
+        }
+        i += 2;
+    }
+    res
+}
+
+/// Expands a byte slice by inserting 'X' characters between consecutive duplicate characters.
+///
+/// This is a convenience wrapper around [`expand_with`] that uses the standard 'X' filler
+/// character ([`FillX`]). It processes the input in pairs (digrams), inserting an 'X'
+/// between any two consecutive identical characters. This is the most commonly used
+/// expansion function for classical ciphers like Playfair.
+///
+/// This function is equivalent to calling `expand_with::<FillX>(src)`.
+///
+/// # Algorithm
+///
+/// See [`expand_with`] for detailed algorithm description. This function simply delegates
+/// to `expand_with` with the `FillX` type parameter.
 ///
 /// # Arguments
 ///
@@ -889,6 +983,7 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 ///
 /// # Examples
 ///
+/// Basic usage with simple duplicates:
 /// ```
 /// use old_crypto_rs::helpers::expand;
 ///
@@ -901,6 +996,11 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 /// let input = b"ARABESQUE";
 /// let result = expand(input);
 /// assert_eq!(result, b"ARABESQUE");
+/// ```
+///
+/// More complex examples:
+/// ```
+/// use old_crypto_rs::helpers::expand;
 ///
 /// // Multiple consecutive duplicates
 /// let input = b"AAAA";
@@ -911,7 +1011,20 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 /// let input = b"LANNONCE";
 /// let result = expand(input);
 /// assert_eq!(result, b"LANXNONCE");
+///
+/// // Mixed duplicates
+/// let input = b"PJRJJJJJJS";
+/// let result = expand(input);
+/// assert_eq!(result, b"PJRJJXJXJXJXJS");
 /// ```
+///
+/// # Use Cases
+///
+/// This function is primarily used in:
+/// - Playfair cipher preprocessing
+/// - Two-square cipher preprocessing
+/// - Four-square cipher preprocessing
+/// - Any bi-grammatic classical cipher requiring duplicate handling
 ///
 /// # Performance
 ///
@@ -921,18 +1034,14 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 ///
 /// # See Also
 ///
-/// * [`insert`] - The helper function used to insert characters
+/// * [`expand_with`] - Generic version allowing custom filler characters
+/// * [`FillX`] - The 'X' filler character policy used by this function
+/// * [`FillQ`] - Alternative 'Q' filler character policy
+/// * [`FillWith`] - Trait defining filler character policies
 ///
+#[inline]
 pub fn expand(src: &[u8]) -> Vec<u8> {
-    let mut res = src.to_vec();
-    let mut i = 0;
-    while i < res.len().saturating_sub(1) {
-        if res[i] == res[i + 1] {
-            res = insert(&res, b'X', i + 1);
-        }
-        i += 2;
-    }
-    res
+    expand_with::<FillX>(src)
 }
 
 /// The 26-letter alphabet we know and love in the Western part of the world
@@ -1366,7 +1475,7 @@ mod tests {
     #[case("PJRJJJJJJS", "PJRJJXJXJXJXJS")]
     #[case("ABCDEFGHJJKLM", "ABCDEFGHJXJKLM")]
     fn test_expand_insert(#[case] in_str: &str, #[case] expected: &str) {
-        assert_eq!(expand(in_str.as_bytes()), expected.as_bytes());
+        assert_eq!(expand_with::<FillX>(in_str.as_bytes()), expected.as_bytes());
     }
 
     #[test]

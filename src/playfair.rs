@@ -147,6 +147,10 @@ impl<A: Alphabet, F: FillWith> Playfair<A, F> {
     pub fn new(key: &str) -> Self {
         let dim = (A::SIZE as f64).sqrt() as usize;
 
+        // Ensure we have a perfect square
+        //
+        assert_eq!(dim * dim, A::SIZE, "Playfair alphabet size must be a square");
+
         // Build full alphabet string from the Alphabet type
         let full_alpha: String = (0..A::SIZE).map(|i| A::denormalize(i) as char).collect();
 
@@ -271,6 +275,11 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
     /// ```
     ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        // Normalise ciphertext through the alphabet (handles lowercase, I/J merger, etc.)
+        let src: Vec<u8> = src.iter()
+            .filter_map(|&b| A::normalize(b).map(|idx| A::denormalize(idx)))
+            .collect();
+
         if src.len() % 2 == 1 {
             panic!("odd number of elements");
         }

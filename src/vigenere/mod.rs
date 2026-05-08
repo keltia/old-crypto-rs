@@ -46,6 +46,6 @@ mod autocrypt;
 mod autokey;
 mod plain;
 
-pub use autocrypt::AutocryptCipher;
-pub use autokey::AutokeyCipher;
-pub use plain::VigenereCipher;
+pub use autocrypt::{Autocrypt, AutocryptCipher};
+pub use autokey::{Autokey, AutokeyCipher};
+pub use plain::{Vigenere, VigenereCipher};

@@ -3,27 +3,32 @@
 //! of the CBC mode for modern ciphers.
 //!
 
+use std::marker::PhantomData;
+
 use crate::Block;
+use crate::helpers::{Alphabet, Latin26};
 
 #[derive(Debug)]
-pub struct AutocryptCipher {
-    /// The numeric key values (0-25) derived from the key string.
-    /// 
+pub struct Autocrypt<A: Alphabet> {
+    /// The numeric key values (0..A::SIZE) derived from the key string.
+    ///
     key: Vec<u8>,
+    _phantom: PhantomData<A>,
 }
 
-impl AutocryptCipher {
+/// Autocrypt cipher over the standard 26-letter Latin alphabet (A-Z).
+pub type AutocryptCipher = Autocrypt<Latin26>;
+
+impl<A: Alphabet> Autocrypt<A> {
     pub fn new(key: &str) -> Self {
         let key_vec = key.as_bytes().iter()
-            .map(|&b| b - b'A')
+            .filter_map(|&b| A::normalize(b).map(|idx| idx as u8))
             .collect::<Vec<_>>();
-        AutocryptCipher {
-            key: key_vec,
-        }
+        Autocrypt { key: key_vec, _phantom: PhantomData }
     }
 }
 
-impl Block for AutocryptCipher {
+impl<A: Alphabet> Block for Autocrypt<A> {
     fn block_size(&self) -> usize {
         1
     }
@@ -37,7 +42,7 @@ impl Block for AutocryptCipher {
     /// # Arguments
     ///
     /// * `dst` - The destination buffer where ciphertext will be written
-    /// * `src` - The source plaintext to encrypt (assumes uppercase A-Z characters)
+    /// * `src` - The source plaintext to encrypt (assumes alphabet characters)
     ///
     /// # Returns
     ///
@@ -61,13 +66,15 @@ impl Block for AutocryptCipher {
             return 0;
         }
 
+        let n = A::SIZE as u8;
         for (i, &p) in src.iter().enumerate() {
             if i >= dst.len() {
                 break;
             }
-            // Assumes src is A-Z (ASCII 65-90)
-            //
-            let p_val = if p >= b'A' && p <= b'Z' { p - b'A' } else { p };
+            let p_val = match A::normalize(p) {
+                Some(idx) => idx as u8,
+                None => p,
+            };
 
             // Build the key: use original key for first few chars, then ciphertext
             //
@@ -75,15 +82,15 @@ impl Block for AutocryptCipher {
                 self.key[i]
             } else {
                 // Use previously encrypted ciphertext (CBC mode)
-                // dst[i - self.key.len()] is already encrypted, convert back to 0-25
+                // dst[i - self.key.len()] is already encrypted; normalize it back to 0..n
                 //
-                dst[i - self.key.len()] - b'A'
+                A::normalize(dst[i - self.key.len()]).unwrap_or(0) as u8
             };
 
             // Encrypt this character
             //
-            let c_val = (p_val + key_val) % 26;
-            dst[i] = c_val + b'A';
+            let c_val = (p_val + key_val) % n;
+            dst[i] = A::denormalize(c_val as usize);
         }
 
         src.len().min(dst.len())
@@ -98,7 +105,7 @@ impl Block for AutocryptCipher {
     /// # Arguments
     ///
     /// * `dst` - The destination buffer where plaintext will be written
-    /// * `src` - The source ciphertext to decrypt (assumes uppercase A-Z characters)
+    /// * `src` - The source ciphertext to decrypt (assumes alphabet characters)
     ///
     /// # Returns
     ///
@@ -122,13 +129,15 @@ impl Block for AutocryptCipher {
             return 0;
         }
 
+        let n = A::SIZE as u8;
         for (i, &c) in src.iter().enumerate() {
             if i >= dst.len() {
                 break;
             }
-            // Assumes src is A-Z (ASCII 65-90)
-            //
-            let c_val = if c >= b'A' && c <= b'Z' { c - b'A' } else { c };
+            let c_val = match A::normalize(c) {
+                Some(idx) => idx as u8,
+                None => c,
+            };
 
             // Build the key: use original key for first few chars, then ciphertext
             //
@@ -137,13 +146,13 @@ impl Block for AutocryptCipher {
             } else {
                 // Use previous ciphertext value for the key
                 //
-                src[i - self.key.len()] - b'A'
+                A::normalize(src[i - self.key.len()]).unwrap_or(0) as u8
             };
 
             // Decrypt this character
             //
-            let p_val = (c_val + 26 - key_val) % 26;
-            dst[i] = p_val + b'A';
+            let p_val = (c_val + n - key_val) % n;
+            dst[i] = A::denormalize(p_val as usize);
         }
 
         src.len().min(dst.len())

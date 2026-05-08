@@ -31,23 +31,32 @@
 //! - [`Autocrypt`](crate::vigenere::autocrypt::AutocryptCipher) - The ciphertext-based vigenere variant
 //!
 
+use std::marker::PhantomData;
+
 use crate::Block;
+use crate::helpers::{Alphabet, Latin26};
 use crate::vigenere::plain::encode_one;
 
 #[derive(Debug)]
-pub struct AutokeyCipher {
-    /// The numeric key values (0-25) derived from the key string.
+pub struct Autokey<A: Alphabet> {
+    /// The numeric key values (0..A::SIZE) derived from the key string.
     key: Vec<u8>,
+    _phantom: PhantomData<A>,
 }
 
-impl AutokeyCipher {
+/// Autokey cipher over the standard 26-letter Latin alphabet (A-Z).
+pub type AutokeyCipher = Autokey<Latin26>;
+
+impl<A: Alphabet> Autokey<A> {
     pub fn new(key: &str) -> Self {
-        let key_vec = key.as_bytes().iter().map(|&b| b - b'A').collect::<Vec<_>>();
-        AutokeyCipher { key: key_vec }
+        let key_vec = key.as_bytes().iter()
+            .filter_map(|&b| A::normalize(b).map(|idx| idx as u8))
+            .collect::<Vec<_>>();
+        Autokey { key: key_vec, _phantom: PhantomData }
     }
 }
 
-impl Block for AutokeyCipher {
+impl<A: Alphabet> Block for Autokey<A> {
     fn block_size(&self) -> usize {
         1
     }
@@ -63,11 +72,11 @@ impl Block for AutokeyCipher {
     /// - If i < key.len(): use key[i]
     /// - Otherwise: use plaintext[i - key.len()]
     ///
-    /// Then apply standard Vigenère encryption: C[i] = (P[i] + K[i]) mod 26
+    /// Then apply standard Vigenère encryption: C[i] = (P[i] + K[i]) mod A::SIZE
     ///
     /// # Arguments
     /// * `dst` - Destination buffer where encrypted bytes will be written
-    /// * `src` - Source plaintext bytes (expected to be uppercase A-Z)
+    /// * `src` - Source plaintext bytes (expected to be in the alphabet)
     ///
     /// # Returns
     /// The length of the destination buffer
@@ -83,7 +92,7 @@ impl Block for AutokeyCipher {
     /// cipher.encrypt(&mut ct, pt);
     /// assert_eq!(&ct, b"RIJSS");
     /// ```
-    /// 
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() {
             return 0;
@@ -95,9 +104,10 @@ impl Block for AutokeyCipher {
             if i >= dst.len() {
                 break;
             }
-            // Assumes src is A-Z (ASCII 65-90)
-            //
-            let p_val = if p >= b'A' && p <= b'Z' { p - b'A' } else { p };
+            let p_val = match A::normalize(p) {
+                Some(idx) => idx as u8,
+                None => p,
+            };
             plain.push(p_val);
 
             // Build the key: use original key for first few chars, then plaintext
@@ -113,13 +123,13 @@ impl Block for AutokeyCipher {
 
         // We can use encode_one directly for the whole plaintext
         //
-        let ct_vals = match encode_one(plain, key) {
+        let ct_vals = match encode_one::<A>(plain, key) {
             Ok(v) => v,
             Err(_) => return 0,
         };
 
         for (i, &val) in ct_vals.iter().enumerate() {
-            dst[i] = val + b'A';
+            dst[i] = A::denormalize(val as usize);
         }
         dst.len()
     }
@@ -133,13 +143,13 @@ impl Block for AutokeyCipher {
     /// For each character at position i:
     /// - If i < key.len(): use key[i]
     /// - Otherwise: use decrypted_plaintext[i - key.len()]
-    /// - Decrypt: P[i] = (C[i] - K[i]) mod 26 (or equivalently: (C[i] + (26 - K[i])) mod 26)
+    /// - Decrypt: P[i] = (C[i] - K[i]) mod A::SIZE
     ///
     /// Each character must be decrypted in order since the plaintext is needed for the next key.
     ///
     /// # Arguments
     /// * `dst` - Destination buffer where decrypted bytes will be written
-    /// * `src` - Source ciphertext bytes (expected to be uppercase A-Z)
+    /// * `src` - Source ciphertext bytes (expected to be in the alphabet)
     ///
     /// # Returns
     /// The number of bytes written to the destination buffer
@@ -155,11 +165,12 @@ impl Block for AutokeyCipher {
     /// cipher.decrypt(&mut pt, ct);
     /// assert_eq!(&pt, b"HELLO");
     /// ```
-    /// 
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() {
             return 0;
         }
+        let n = A::SIZE as u8;
         let mut cipher = Vec::with_capacity(src.len());
         let mut plain = Vec::with_capacity(src.len());
         let mut neg_key = Vec::with_capacity(src.len());
@@ -168,9 +179,10 @@ impl Block for AutokeyCipher {
             if i >= dst.len() {
                 break;
             }
-            // Assumes src is A-Z (ASCII 65-90)
-            //
-            let c_val = if c >= b'A' && c <= b'Z' { c - b'A' } else { c };
+            let c_val = match A::normalize(c) {
+                Some(idx) => idx as u8,
+                None => c,
+            };
             cipher.push(c_val);
 
             // Build the negative key for decryption
@@ -182,16 +194,16 @@ impl Block for AutokeyCipher {
                 //
                 plain[i - self.key.len()]
             };
-            neg_key.push((26 - key_val) % 26);
+            neg_key.push((n - key_val) % n);
 
             // Decrypt this character immediately so we can use it for the next key
             //
-            let p_val = (c_val + neg_key[i]) % 26;
+            let p_val = (c_val + neg_key[i]) % n;
             plain.push(p_val);
         }
 
         for (i, &val) in plain.iter().enumerate() {
-            dst[i] = val + b'A';
+            dst[i] = A::denormalize(val as usize);
         }
 
         plain.len()

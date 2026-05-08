@@ -21,26 +21,33 @@
 //! assert_eq!(&ciphertext, b"RIJVS");
 //! ```
 //!
+use std::marker::PhantomData;
+
 use crate::Block;
+use crate::helpers::{Alphabet, Latin26};
 
 use eyre::Result;
 use crate::error::Error;
 
-/// A Vigenere cipher implementation.
+/// A Vigenere cipher implementation, generic over an [`Alphabet`].
 ///
 /// This cipher uses a keyword to perform a series of Caesar ciphers on the plaintext.
 /// It is a classic example of a polyalphabetic substitution cipher.
-/// 
+///
 #[derive(Debug)]
-pub struct VigenereCipher {
-    /// The numeric key values (0-25) derived from the key string.
+pub struct Vigenere<A: Alphabet> {
+    /// The numeric key values (0..A::SIZE) derived from the key string.
     key: Vec<u8>,
+    _phantom: PhantomData<A>,
 }
 
-impl VigenereCipher {
+/// Vigenere cipher over the standard 26-letter Latin alphabet (A-Z).
+pub type VigenereCipher = Vigenere<Latin26>;
+
+impl<A: Alphabet> Vigenere<A> {
     /// Creates a new Vigenere cipher with the given key string.
     ///
-    /// Non-alphabetic characters in the key are ignored. The key is converted
+    /// Characters not in the alphabet are ignored. The key is converted
     /// to uppercase before processing.
     ///
     /// # Arguments
@@ -49,32 +56,29 @@ impl VigenereCipher {
     ///
     pub fn new(key: &str) -> Self {
         let key_vec = key.to_ascii_uppercase().as_bytes().iter()
-            .filter(|&&b| b >= b'A' && b <= b'Z')
-            .map(|&b| b - b'A')
+            .filter_map(|&b| A::normalize(b).map(|idx| idx as u8))
             .collect::<Vec<_>>();
-        VigenereCipher {
-            key: key_vec,
-        }
+        Vigenere { key: key_vec, _phantom: PhantomData }
     }
 }
 
 /// Core function to perform modular addition of two numeric vectors.
 ///
 /// This function adds the corresponding elements of the `plain` and `key` vectors
-/// modulo 26. This is used as the basic operation for both encryption and decryption
-/// in the Vigenere cipher.
+/// modulo `A::SIZE`. This is used as the basic operation for both encryption and
+/// decryption in the Vigenere cipher.
 ///
 /// # Arguments
 ///
-/// * `plain` - A vector of numeric values (0-25) to be shifted.
-/// * `key` - A vector of numeric values (0-25) representing the shift amounts.
+/// * `plain` - A vector of numeric values (0..A::SIZE) to be shifted.
+/// * `key` - A vector of numeric values (0..A::SIZE) representing the shift amounts.
 ///
 /// # Returns
 ///
 /// Returns a `Result` containing the resulting numeric vector if the inputs are
 /// valid and have the same length, or an error otherwise.
-/// 
-pub(crate) fn encode_one(plain: Vec<u8>, key: Vec<u8>) -> Result<Vec<u8>> {
+///
+pub(crate) fn encode_one<A: Alphabet>(plain: Vec<u8>, key: Vec<u8>) -> Result<Vec<u8>> {
     if plain.is_empty() || key.is_empty() {
         return Err(Error::EmptyInput.into());
     }
@@ -82,12 +86,13 @@ pub(crate) fn encode_one(plain: Vec<u8>, key: Vec<u8>) -> Result<Vec<u8>> {
     if plain.len() != key.len() {
         return Err(Error::LengthMismatch(plain.len(), key.len()).into());
     }
-    
-    let ct = plain.iter().zip(key.iter()).map(|(p, k)| (p + k) % 26).collect::<Vec<_>>();
+
+    let n = A::SIZE as u8;
+    let ct = plain.iter().zip(key.iter()).map(|(p, k)| (p + k) % n).collect::<Vec<_>>();
     Ok(ct)
 }
 
-impl Block for VigenereCipher {
+impl<A: Alphabet> Block for Vigenere<A> {
     /// Returns the length of the Vigenere key.
     fn block_size(&self) -> usize {
         self.key.len()
@@ -95,10 +100,9 @@ impl Block for VigenereCipher {
 
     /// Encrypts source bytes into destination buffer using the Vigenere cipher.
     ///
-    /// This method maps source characters 'A'-'Z' to values 0-25, applies the
-    /// Vigenere shift from the key, and then maps the result back to uppercase letters.
-    /// Non-alphabetic characters are currently handled by applying the shift to their
-    /// raw ASCII value, though most usage expects only 'A'-'Z' input.
+    /// This method maps source characters through the alphabet, applies the
+    /// Vigenere shift from the key, and then maps the result back to characters.
+    /// Non-alphabet characters are passed through with the raw shift applied.
     ///
     /// # Arguments
     ///
@@ -108,7 +112,7 @@ impl Block for VigenereCipher {
     /// # Returns
     ///
     /// Returns the number of bytes written to `dst`.
-    /// 
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() || self.key.is_empty() {
             return 0;
@@ -121,23 +125,21 @@ impl Block for VigenereCipher {
             if i >= dst.len() {
                 break;
             }
-            // Assumes src is A-Z (ASCII 65-90)
-            let p_val = if p >= b'A' && p <= b'Z' {
-                p - b'A'
-            } else {
-                p
+            let p_val = match A::normalize(p) {
+                Some(idx) => idx as u8,
+                None => p,
             };
             plain.push(p_val);
             key.push(self.key[i % self.key.len()]);
         }
 
-        let ct_vals = match encode_one(plain, key) {
+        let ct_vals = match encode_one::<A>(plain, key) {
             Ok(v) => v,
             Err(_) => return 0,
         };
 
         for (i, &val) in ct_vals.iter().enumerate() {
-            dst[i] = val + b'A';
+            dst[i] = A::denormalize(val as usize);
         }
 
         ct_vals.len()
@@ -146,7 +148,7 @@ impl Block for VigenereCipher {
     /// Decrypts source bytes into destination buffer using the Vigenere cipher.
     ///
     /// This method reverses the Vigenere shift by subtracting the key values
-    /// from the ciphertext values modulo 26.
+    /// from the ciphertext values modulo the alphabet size.
     ///
     /// # Arguments
     ///
@@ -156,12 +158,13 @@ impl Block for VigenereCipher {
     /// # Returns
     ///
     /// Returns the number of bytes written to `dst`.
-    /// 
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         if src.is_empty() || self.key.is_empty() {
             return 0;
         }
 
+        let n = A::SIZE as u8;
         let mut cipher = Vec::with_capacity(src.len());
         let mut neg_key = Vec::with_capacity(src.len());
 
@@ -169,25 +172,22 @@ impl Block for VigenereCipher {
             if i >= dst.len() {
                 break;
             }
-            let c_val = if c >= b'A' && c <= b'Z' {
-                c - b'A'
-            } else {
-                c
+            let c_val = match A::normalize(c) {
+                Some(idx) => idx as u8,
+                None => c,
             };
             cipher.push(c_val);
-            // Vigenere decryption: (c - k) % 26
-            // We can use encode_one by providing -k mod 26
             let k = self.key[i % self.key.len()];
-            neg_key.push((26 - k) % 26);
+            neg_key.push((n - k) % n);
         }
 
-        let pt_vals = match encode_one(cipher, neg_key) {
+        let pt_vals = match encode_one::<A>(cipher, neg_key) {
             Ok(v) => v,
             Err(_) => return 0,
         };
 
         for (i, &val) in pt_vals.iter().enumerate() {
-            dst[i] = val + b'A';
+            dst[i] = A::denormalize(val as usize);
         }
 
         pt_vals.len()
@@ -197,12 +197,13 @@ impl Block for VigenereCipher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::Latin26;
 
     #[test]
     fn test_encode_one_valid_input() {
         let plain = vec![7, 4, 11, 11, 14]; // "HELLO"
         let key = vec![10, 4, 24, 18, 19]; // "KEYST"
-        let result = encode_one(plain, key).unwrap();
+        let result = encode_one::<Latin26>(plain, key).unwrap();
         let expected = vec![17, 8, 9, 3, 7]; // (H+K)%26, (E+E)%26, etc.
         assert_eq!(result, expected);
     }
@@ -211,7 +212,7 @@ mod tests {
     fn test_encode_one_empty_plaintext() {
         let plain = vec![];
         let key = vec![1, 2, 3];
-        let result = encode_one(plain, key);
+        let result = encode_one::<Latin26>(plain, key);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().to_string(), "Empty input");
     }
@@ -220,7 +221,7 @@ mod tests {
     fn test_encode_one_empty_key() {
         let plain = vec![1, 2, 3];
         let key = vec![];
-        let result = encode_one(plain, key);
+        let result = encode_one::<Latin26>(plain, key);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().to_string(), "Empty input");
     }
@@ -229,7 +230,7 @@ mod tests {
     fn test_encode_one_mismatched_lengths() {
         let plain = vec![1, 2, 3];
         let key = vec![1, 2];
-        let result = encode_one(plain, key);
+        let result = encode_one::<Latin26>(plain, key);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().to_string(), "Every input must have the same length: 3 vs 2");
     }
@@ -282,10 +283,9 @@ mod tests {
         let pt = b"DEFENDTHEEASTWALLOFTHECASTLE";
         let mut ct = vec![0u8; pt.len()];
         cipher.encrypt(&mut ct, pt);
-        
+
         let mut dec = vec![0u8; ct.len()];
         cipher.decrypt(&mut dec, &ct);
         assert_eq!(&dec, pt);
     }
 }
-

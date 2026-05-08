@@ -4,6 +4,48 @@ use std::collections::HashSet;
 
 use eyre::Result;
 
+/// Marker type representing a 25-letter Latin alphabet (A-Z with I/J merged).
+///
+/// This type is used as a type parameter to specify that an operation should work
+/// with a 25-letter alphabet where 'I' and 'J' are treated as the same character.
+/// This configuration is commonly used in classical ciphers like Playfair that
+/// require a 5×5 grid (25 characters).
+///
+/// # Character Mapping
+///
+/// The alphabet treats 'I' and 'J' as equivalent, mapping both to index 8:
+/// - 'A' through 'H' map to indices 0-7
+/// - 'I' and 'J' both map to index 8
+/// - 'K' through 'Z' map to indices 9-24
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin25};
+///
+/// // Normalize 'A' to index 0
+/// assert_eq!(Latin25::normalize(b'A'), Some(0));
+/// assert_eq!(Latin25::normalize(b'I'), Some(8));
+/// assert_eq!(Latin25::normalize(b'J'), Some(8)); // J maps to same index as I
+/// assert_eq!(Latin25::normalize(b'Z'), Some(24));
+/// assert_eq!(Latin25::normalize(b'0'), None); // Digits not supported
+///
+/// // Denormalize index back to character
+/// assert_eq!(Latin25::denormalize(0), b'A');
+/// assert_eq!(Latin25::denormalize(8), b'I'); // Always returns 'I' for index 8
+/// assert_eq!(Latin25::denormalize(24), b'Z');
+/// ```
+///
+/// # Use Cases
+///
+/// This alphabet is specifically designed for ciphers that require a 5×5 grid:
+/// - Playfair cipher
+/// - Polybius square
+/// - ADFGVX cipher
+/// - Other classical ciphers requiring 25 characters
+///
+pub struct Latin25;
+
 /// Marker type representing the standard 26-letter Latin alphabet (A-Z).
 ///
 /// This type is used as a type parameter to specify that an operation should work
@@ -24,7 +66,6 @@ use eyre::Result;
 /// assert_eq!(Latin26::denormalize(25), b'Z');
 /// ```
 pub struct Latin26;
-
 /// Marker type representing an extended 36-character alphabet (A-Z and 0-9).
 ///
 /// This type is used as a type parameter to specify that an operation should work
@@ -72,6 +113,7 @@ pub struct Latin36;
 ///
 /// # Implementations
 ///
+/// - [`Latin25`] - Standard 25-letter alphabet (A-Z) with I/J merged to fix in a 5x5 square
 /// - [`Latin26`] - Standard 26-letter alphabet (A-Z)
 /// - [`Latin36`] - Extended 36-character alphabet (A-Z, 0-9)
 ///
@@ -234,6 +276,124 @@ impl Alphabet for Latin26 {
 
     fn denormalize(idx: usize) -> u8 {
         b'A' + idx as u8
+    }
+}
+
+/// Implementation of the `Alphabet` trait for the 25-letter Latin alphabet with I/J merger.
+///
+/// This implementation provides character encoding/decoding operations specifically for
+/// a 25-character alphabet where 'I' and 'J' are treated as the same character. This
+/// configuration is essential for classical ciphers that use a 5×5 grid structure.
+///
+/// # Character Mapping Strategy
+///
+/// The implementation uses a two-step normalization process:
+/// 1. Map 'J' to 'I' (merge step)
+/// 2. Calculate index with adjustment: letters after 'I' are shifted down by 1
+///
+/// This results in the following index mapping:
+/// ```text
+/// A B C D E F G H I/J K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z
+/// 0 1 2 3 4 5 6 7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+/// ```
+///
+/// Denormalization reverses this process, always producing 'I' for index 8, and
+/// adding 1 to the character code for indices 9 and above to skip 'J'.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin25};
+///
+/// // Basic normalization
+/// assert_eq!(Latin25::normalize(b'A'), Some(0));
+/// assert_eq!(Latin25::normalize(b'H'), Some(7));
+///
+/// // I/J merger - both normalize to index 8
+/// assert_eq!(Latin25::normalize(b'I'), Some(8));
+/// assert_eq!(Latin25::normalize(b'J'), Some(8));
+///
+/// // Letters after J are shifted down
+/// assert_eq!(Latin25::normalize(b'K'), Some(9));
+/// assert_eq!(Latin25::normalize(b'Z'), Some(24));
+///
+/// // Case insensitivity
+/// assert_eq!(Latin25::normalize(b'a'), Some(0));
+/// assert_eq!(Latin25::normalize(b'j'), Some(8));
+///
+/// // Non-letters return None
+/// assert_eq!(Latin25::normalize(b'0'), None);
+/// assert_eq!(Latin25::normalize(b'!'), None);
+/// assert_eq!(Latin25::normalize(b' '), None);
+///
+/// // Denormalization always produces uppercase
+/// assert_eq!(Latin25::denormalize(0), b'A');
+/// assert_eq!(Latin25::denormalize(7), b'H');
+/// assert_eq!(Latin25::denormalize(8), b'I'); // Note: 'I', not 'J'
+/// assert_eq!(Latin25::denormalize(9), b'K');
+/// assert_eq!(Latin25::denormalize(24), b'Z');
+/// ```
+///
+/// # Usage in Ciphers
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin25};
+///
+/// // Example: Encoding a message for Playfair cipher
+/// fn encode_for_playfair(text: &str) -> Vec<usize> {
+///     text.bytes()
+///         .filter_map(|b| Latin25::normalize(b))
+///         .collect()
+/// }
+///
+/// let indices = encode_for_playfair("HELLO");
+/// assert_eq!(indices, vec![7, 4, 10, 10, 13]); // H E L L O
+///
+/// // Note: "JELLO" would produce the same result as "IELLO"
+/// let indices2 = encode_for_playfair("JELLO");
+/// assert_eq!(indices2, vec![8, 4, 10, 10, 13]); // I/J E L L O
+/// ```
+///
+/// # Performance
+///
+/// Time complexity: O(1) for both `normalize` and `denormalize`
+/// Space complexity: O(1) - no allocations
+///
+/// # See Also
+///
+/// * [`Latin26`] - Standard 26-letter alphabet without merging
+/// * [`Latin36`] - Extended alphabet including digits
+/// * [`Alphabet`] - The trait definition
+///
+impl Alphabet for Latin25 {
+    const SIZE: usize = 25;
+
+    fn normalize(ch: u8) -> Option<usize> {
+        let ch = ch.to_ascii_uppercase();
+
+        let mapped = match ch {
+            b'J' => b'I',
+            b'A'..=b'Z' => ch,
+            _ => return None,
+        };
+
+        let idx = if mapped > b'I' {
+            mapped - b'A' - 1
+        } else {
+            mapped - b'A'
+        };
+
+        Some(idx as usize)
+    }
+
+    fn denormalize(idx: usize) -> u8 {
+        let ch = if idx > 8 {
+            b'A' + idx as u8 + 1
+        } else {
+            b'A' + idx as u8
+        };
+
+        ch
     }
 }
 

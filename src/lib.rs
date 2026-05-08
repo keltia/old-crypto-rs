@@ -30,7 +30,7 @@ pub use nihilist::Nihilist;
 pub use solitaire::Solitaire;
 pub use secom::SecomCipher;
 pub use vic::VicCipher;
-pub use wheatstone::Wheatstone;
+pub use wheatstone::{WheatstoneBasic, Wheatstone};
 #[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;
 

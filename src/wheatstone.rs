@@ -2,8 +2,8 @@
 //!
 //! The Wheatstone cipher (also known as the Playfair Double) is a mechanical cipher
 //! device invented by Charles Wheatstone in the 1860s. It uses two rotating alphabetic
-//! wheels - one for plaintext (with 27 positions including a special character) and
-//! one for ciphertext (with 26 positions) - along with a pointer mechanism to
+//! wheels - one for plaintext (with `A::SIZE + 1` positions including a special character)
+//! and one for ciphertext (with `A::SIZE` positions) - along with a pointer mechanism to
 //! encrypt and decrypt messages.
 //!
 //! # Example
@@ -18,61 +18,64 @@
 //! ```
 
 use std::cell::RefCell;
+use std::marker::PhantomData;
 
 use crate::Block;
-use crate::helpers;
-use crate::helpers::{fix_double, REGULAR_ALPHABET};
+use crate::helpers::{self, fix_double, Alphabet, FillWith, Latin26, FillQ};
 
 use eyre::Result;
 use crate::error::Error;
 
-const LEN_PL: usize = REGULAR_ALPHABET.len() + 1;
-const LEN_CT: usize = REGULAR_ALPHABET.len();
-
-/// Wheatstone cipher machine implementation.
+/// Wheatstone cipher machine, generic over an [`Alphabet`] and a [`FillWith`] policy.
 ///
 /// This struct represents a Wheatstone cipher with two keyed alphabets:
-/// - A plaintext wheel (27 characters, including '+' as a separator)
-/// - A ciphertext wheel (26 characters, standard alphabet)
+/// - A plaintext wheel (`A::SIZE + 1` characters, including '+' as a separator)
+/// - A ciphertext wheel (`A::SIZE` characters)
 ///
 /// The cipher maintains internal state to track the current positions
 /// of both wheels during encryption and decryption operations.
-pub struct Wheatstone {
-    /// Plaintext wheel alphabet (27 characters)
+///
+pub struct WheatstoneBasic<A: Alphabet, F: FillWith> {
+    /// Plaintext wheel alphabet (A::SIZE + 1 characters)
     aplw: Vec<u8>,
-    /// Ciphertext wheel alphabet (26 characters)
+    /// Ciphertext wheel alphabet (A::SIZE characters)
     actw: Vec<u8>,
     /// Starting character position on the ciphertext wheel
     start: u8,
     /// Internal mutable state for wheel positions
     state: RefCell<WheatstoneState>,
+    _phantom: PhantomData<(A, F)>,
 }
+
+/// Wheatstone cipher over the standard 26-letter Latin alphabet (A-Z) with 'Q' as filler.
+pub type Wheatstone = WheatstoneBasic<Latin26, FillQ>;
 
 /// Internal state for tracking wheel positions during encryption/decryption.
 ///
 /// The Wheatstone cipher needs to maintain state between character operations
 /// as each encryption/decryption affects the position of the wheels for the
 /// next character.
+///
 struct WheatstoneState {
-    /// Current position on the plaintext wheel (0-26)
+    /// Current position on the plaintext wheel
     curpos: usize,
-    /// Current position on the ciphertext wheel (0-25)
+    /// Current position on the ciphertext wheel
     ctpos: usize,
 }
 
-impl Wheatstone {
+impl<A: Alphabet, F: FillWith> WheatstoneBasic<A, F> {
     /// Creates a new Wheatstone cipher with the provided configuration.
     ///
     /// # Arguments
     ///
-    /// * `start` - The starting character on the ciphertext wheel (typically 'A'-'Z')
+    /// * `start` - The starting character on the ciphertext wheel (typically in the alphabet)
     /// * `pkey` - The plaintext key used to shuffle the plaintext alphabet
     /// * `ckey` - The ciphertext key used to shuffle the ciphertext alphabet
     ///
     /// # Returns
     ///
-    /// Returns `Ok(Wheatstone)` if the cipher is successfully created, or
-    /// `Err(String)` if either key is empty.
+    /// Returns `Ok(WheatstoneBasic)` if the cipher is successfully created, or
+    /// `Err` if either key is empty.
     ///
     /// # Example
     ///
@@ -81,29 +84,30 @@ impl Wheatstone {
     ///
     /// let cipher = Wheatstone::new(b'M', "CIPHER", "MACHINE").unwrap();
     /// ```
-    /// 
+    ///
     pub fn new(start: u8, pkey: &str, ckey: &str) -> Result<Self> {
         if pkey.is_empty() || ckey.is_empty() {
             return Err(Error::EmptyKeys.into());
         }
 
-        // Transform with key
-        let pkey_shuffled = format!("+{}", helpers::shuffle(pkey, REGULAR_ALPHABET));
-        let ckey_shuffled = helpers::shuffle(ckey, REGULAR_ALPHABET);
+        // Build full alphabet string from the Alphabet type
+        let full_alpha: String = (0..A::SIZE).map(|i| A::denormalize(i) as char).collect();
+
+        // Transform with key — plaintext wheel gets the extra '+' separator
+        let pkey_shuffled = format!("+{}", helpers::shuffle(pkey, &full_alpha));
+        let ckey_shuffled = helpers::shuffle(ckey, &full_alpha);
 
         let aplw = pkey_shuffled.as_bytes().to_vec();
         let actw = ckey_shuffled.as_bytes().to_vec();
 
         let ctpos = actw.iter().position(|&x| x == start).unwrap_or(0);
 
-        Ok(Wheatstone {
+        Ok(WheatstoneBasic {
             aplw,
             actw,
             start,
-            state: RefCell::new(WheatstoneState {
-                curpos: 0,
-                ctpos,
-            }),
+            state: RefCell::new(WheatstoneState { curpos: 0, ctpos }),
+            _phantom: PhantomData,
         })
     }
 
@@ -120,17 +124,19 @@ impl Wheatstone {
     /// # Returns
     ///
     /// The encoded ciphertext character (as a byte)
-    /// 
+    ///
     fn encode(&self, ch: u8) -> u8 {
+        let len_pl = self.aplw.len();
+        let len_ct = self.actw.len();
         let mut state = self.state.borrow_mut();
         let a = self.aplw.iter().position(|&x| x == ch).unwrap_or(0);
         let off = if a <= state.curpos {
-            (a + LEN_PL) - state.curpos
+            (a + len_pl) - state.curpos
         } else {
             a - state.curpos
         };
         state.curpos = a;
-        state.ctpos = (state.ctpos + off) % LEN_CT;
+        state.ctpos = (state.ctpos + off) % len_ct;
         self.actw[state.ctpos]
     }
 
@@ -147,17 +153,19 @@ impl Wheatstone {
     /// # Returns
     ///
     /// The decoded plaintext character (as a byte)
-    /// 
+    ///
     fn decode(&self, ch: u8) -> u8 {
+        let len_pl = self.aplw.len();
+        let len_ct = self.actw.len();
         let mut state = self.state.borrow_mut();
         let a = self.actw.iter().position(|&x| x == ch).unwrap_or(0);
         let off = if a <= state.ctpos {
-            (a + LEN_CT) - state.ctpos
+            (a + len_ct) - state.ctpos
         } else {
             a - state.ctpos
         };
         state.ctpos = a;
-        state.curpos = (state.curpos + off) % LEN_PL;
+        state.curpos = (state.curpos + off) % len_pl;
         self.aplw[state.curpos]
     }
 
@@ -169,7 +177,7 @@ impl Wheatstone {
     ///
     /// This is called automatically before each encrypt/decrypt operation
     /// to ensure consistent results.
-    /// 
+    ///
     fn reset(&self) {
         let mut state = self.state.borrow_mut();
         state.curpos = 0;
@@ -177,7 +185,7 @@ impl Wheatstone {
     }
 }
 
-impl Block for Wheatstone {
+impl<A: Alphabet, F: FillWith> Block for WheatstoneBasic<A, F> {
     fn block_size(&self) -> usize {
         1
     }
@@ -209,9 +217,11 @@ impl Block for Wheatstone {
     /// assert_eq!(len, plaintext.len());
     /// ```
     ///
+    /// Consecutive duplicate characters are separated by `F::FILL` before encryption.
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         self.reset();
-        let src = fix_double(&String::from_utf8_lossy(src), 'Q');
+        let src = fix_double(&String::from_utf8_lossy(src), F::FILL as char);
         for (i, &ch) in src.as_bytes().iter().enumerate() {
             dst[i] = self.encode(ch);
         }

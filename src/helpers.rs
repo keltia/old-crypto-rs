@@ -152,6 +152,12 @@ pub trait Alphabet {
     ///
     const SIZE: usize;
 
+    /// The alphabet itself
+    ///
+    /// This constant define the list of used symbols/letters.
+    ///
+    const ALPHABET: &'static [u8];
+
     /// Converts a character to its 0-based index in the alphabet.
     ///
     /// This function takes a byte representing an ASCII character and returns its
@@ -265,6 +271,7 @@ pub trait Alphabet {
 ///
 impl Alphabet for Latin26 {
     const SIZE: usize = 26;
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVXWYZ";
 
     fn normalize(ch: u8) -> Option<usize> {
         let ch = ch.to_ascii_uppercase();
@@ -368,6 +375,7 @@ impl Alphabet for Latin26 {
 ///
 impl Alphabet for Latin25 {
     const SIZE: usize = 25;
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIKLMNOPQRSTUVXWYZ";
 
     fn normalize(ch: u8) -> Option<usize> {
         let ch = ch.to_ascii_uppercase();
@@ -451,6 +459,7 @@ impl Alphabet for Latin25 {
 ///
 impl Alphabet for Latin36 {
     const SIZE: usize = 36;
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIKLMNOPQRSTUVXWYZ0123456789";
 
     fn normalize(ch: u8) -> Option<usize> {
         let ch = ch.to_ascii_uppercase();

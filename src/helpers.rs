@@ -394,8 +394,60 @@ pub fn condense_str(s: &str) -> String {
     res
 }
 
-/// insert one character inside the array
-/// 
+/// Inserts a single byte at a specified position in a byte slice.
+///
+/// This function creates a new vector containing all elements from the source slice
+/// with the specified byte inserted at the given index. Elements at and after the
+/// insertion point are shifted to the right.
+///
+/// # Arguments
+///
+/// * `src` - The source byte slice to insert into
+/// * `obj` - The byte value to insert
+/// * `ind` - The index at which to insert the byte (0-based)
+///
+/// # Returns
+///
+/// A new `Vec<u8>` containing all bytes from `src` with `obj` inserted at position `ind`
+///
+/// # Panics
+///
+/// This function will panic if `ind > src.len()` due to slice indexing.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::insert;
+///
+/// // Insert at the beginning
+/// let src = b"BCD";
+/// let result = insert(src, b'A', 0);
+/// assert_eq!(result, b"ABCD");
+///
+/// // Insert in the middle
+/// let src = b"ABDE";
+/// let result = insert(src, b'C', 2);
+/// assert_eq!(result, b"ABCDE");
+///
+/// // Insert at the end
+/// let src = b"ABC";
+/// let result = insert(src, b'D', 3);
+/// assert_eq!(result, b"ABCD");
+///
+/// // Numeric example
+/// let src = &[0, 1, 2, 3];
+/// let result = insert(src, 42, 2);
+/// assert_eq!(result, vec![0, 1, 42, 2, 3]);
+/// ```
+///
+/// # Performance
+///
+/// Time complexity: O(n) where n is the length of the source slice
+/// Space complexity: O(n + 1) for the new vector
+///
+/// # See Also
+///
+/// * [`expand`] - Uses this function to insert 'X' characters between duplicates
 pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
     let mut dst = Vec::with_capacity(src.len() + 1);
     dst.extend_from_slice(&src[..ind]);

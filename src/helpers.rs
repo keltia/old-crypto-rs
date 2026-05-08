@@ -547,10 +547,10 @@ pub fn condense_str(s: &str) -> String {
     let mut seen_ascii = [false; 256];
     let mut res = String::with_capacity(s.len());
 
-    for c in s.chars() {
+    for &c in s.as_bytes() {
         if !seen_ascii[c as usize] {
             seen_ascii[c as usize] = true;
-            res.push(c);
+            res.push(c as char);
         }
     }
     res
@@ -1096,6 +1096,17 @@ mod tests {
     #[case("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ")]
     fn test_condense(#[case] in_str: &str, #[case] expected: &str) {
         assert_eq!(condense(in_str), expected);
+    }
+
+    #[rstest]
+    #[case("ABCDE", "ABCDE")]
+    #[case("AAAAA", "A")]
+    #[case("ARABESQUE", "ARBESQU")]
+    #[case("ARABESQUEABCDEFGHIKLMNOPQRSTUVWXYZ", "ARBESQUCDFGHIKLMNOPTVWXYZ")]
+    #[case("PLAYFAIRABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIRBCDEGHKMNOQSTUVWXZ")]
+    #[case("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ")]
+    fn test_condense_str(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(condense_str(in_str), expected);
     }
 
     #[rstest]

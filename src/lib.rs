@@ -18,10 +18,10 @@ mod wheatstone;
 mod sigaba;
 
 pub use null::NullCipher;
-pub use vigenere::{AutocryptCipher, AutokeyCipher, VigenereCipher};
+pub use vigenere::{Autocrypt, AutocryptCipher, Autokey, AutokeyCipher, Vigenere, VigenereCipher};
 pub use caesar::{Caesar, CaesarCipher};
 pub use playfair::PlayfairCipher;
-pub use chaocipher::Chaocipher;
+pub use chaocipher::{ChaoBasic, Chaocipher};
 pub use square::SquareCipher;
 pub use transposition::{Transposition, IrregularTransposition};
 pub use adfgvx::ADFGVX;

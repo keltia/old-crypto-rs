@@ -22,30 +22,34 @@
 //! ```
 //!
 use std::cell::RefCell;
+use std::marker::PhantomData;
 
 use crate::Block;
-use crate::helpers::REGULAR_ALPHABET;
+use crate::helpers::{Alphabet, Latin26};
 
 use eyre::Result;
 use crate::error::Error;
 
 const ZENITH: usize = 0;
-const NADIR: usize = 13;
 
-/// A Chaocipher instance with two permutation alphabets.
+/// A Chaocipher instance, generic over an [`Alphabet`].
 ///
-/// The `Chaocipher` struct maintains two 26-character alphabet keys (plaintext and cipher keys)
+/// The `Chao` struct maintains two alphabet keys (plaintext and cipher keys)
 /// and an internal state that is updated after each character encryption/decryption.
 /// The state is kept in a `RefCell` to allow interior mutability during const operations.
 ///
-pub struct Chaocipher {
-    /// The plaintext alphabet key (right alphabet) - stored as bytes
-    pkey: [u8; 26],
-    /// The cipher alphabet key (left alphabet) - stored as bytes
-    ckey: [u8; 26],
+pub struct ChaoBasic<A: Alphabet> {
+    /// The plaintext alphabet key (right alphabet)
+    pkey: Vec<u8>,
+    /// The cipher alphabet key (left alphabet)
+    ckey: Vec<u8>,
     /// Internal mutable state containing the working alphabets
     state: RefCell<ChaocipherState>,
+    _phantom: PhantomData<A>,
 }
+
+/// Chaocipher over the standard 26-letter Latin alphabet (A-Z).
+pub type Chaocipher = ChaoBasic<Latin26>;
 
 /// Internal state of the Chaocipher algorithm.
 ///
@@ -54,9 +58,9 @@ pub struct Chaocipher {
 ///
 struct ChaocipherState {
     /// The plaintext working alphabet (right alphabet)
-    pw: [u8; 26],
+    pw: Vec<u8>,
     /// The cipher working alphabet (left alphabet)
-    cw: [u8; 26],
+    cw: Vec<u8>,
     /// Lookup table: maps character byte to its position in pw
     pw_lookup: [u8; 256],
     /// Lookup table: maps character byte to its position in cw
@@ -65,10 +69,10 @@ struct ChaocipherState {
 
 impl ChaocipherState {
     /// Creates a new state from the given alphabet keys.
-    fn new(pkey: &[u8; 26], ckey: &[u8; 26]) -> Self {
+    fn new(pkey: &[u8], ckey: &[u8]) -> Self {
         let mut state = ChaocipherState {
-            pw: *pkey,
-            cw: *ckey,
+            pw: pkey.to_vec(),
+            cw: ckey.to_vec(),
             pw_lookup: [0; 256],
             cw_lookup: [0; 256],
         };
@@ -82,17 +86,17 @@ impl ChaocipherState {
     /// in the working alphabets, enabling O(1) character lookups.
     #[inline]
     fn rebuild_lookups(&mut self) {
-        for i in 0..26 {
+        for i in 0..self.pw.len() {
             self.pw_lookup[self.pw[i] as usize] = i as u8;
             self.cw_lookup[self.cw[i] as usize] = i as u8;
         }
     }
 }
 
-impl Chaocipher {
+impl<A: Alphabet> ChaoBasic<A> {
     /// Creates a new Chaocipher instance with the provided keys.
     ///
-    /// Both keys must be exactly 26 characters long (matching the standard English alphabet).
+    /// Both keys must be exactly `A::SIZE` characters long.
     ///
     /// # Arguments
     ///
@@ -101,7 +105,7 @@ impl Chaocipher {
     ///
     /// # Returns
     ///
-    /// Returns `Ok(Chaocipher)` if the keys are valid, or `Err(String)` if either key
+    /// Returns `Ok(Chao)` if the keys are valid, or `Err` if either key
     /// has an incorrect length.
     ///
     /// # Example
@@ -116,22 +120,18 @@ impl Chaocipher {
     /// ```
     ///
     pub fn new(pkey: &str, ckey: &str) -> Result<Self> {
-        if pkey.len() != REGULAR_ALPHABET.len() || ckey.len() != REGULAR_ALPHABET.len() {
-            return Err(Error::AlphabetTooShort(REGULAR_ALPHABET.len()).into());
+        if pkey.len() != A::SIZE || ckey.len() != A::SIZE {
+            return Err(Error::AlphabetTooShort(A::SIZE).into());
         }
 
-        let pkey_bytes = pkey.as_bytes();
-        let ckey_bytes = ckey.as_bytes();
+        let pkey_bytes = pkey.as_bytes().to_vec();
+        let ckey_bytes = ckey.as_bytes().to_vec();
 
-        let mut pkey_array = [0u8; 26];
-        let mut ckey_array = [0u8; 26];
-        pkey_array.copy_from_slice(pkey_bytes);
-        ckey_array.copy_from_slice(ckey_bytes);
-
-        Ok(Chaocipher {
-            pkey: pkey_array,
-            ckey: ckey_array,
-            state: RefCell::new(ChaocipherState::new(&pkey_array, &ckey_array)),
+        Ok(ChaoBasic {
+            pkey: pkey_bytes.clone(),
+            ckey: ckey_bytes.clone(),
+            state: RefCell::new(ChaocipherState::new(&pkey_bytes, &ckey_bytes)),
+            _phantom: PhantomData,
         })
     }
 
@@ -154,9 +154,7 @@ impl Chaocipher {
     /// at position `idx`, both alphabets are rotated and specific positions (between zenith and
     /// nadir) are shifted to create the permutation.
     ///
-    /// The cipher alphabet is shifted left by `idx` positions, then a character is extracted
-    /// and rotated within a specific range. The plaintext alphabet is shifted by `idx + 1`
-    /// positions with a similar extraction and rotation.
+    /// The nadir is always at the midpoint of the alphabet (`len / 2`).
     ///
     /// # Arguments
     ///
@@ -164,17 +162,19 @@ impl Chaocipher {
     /// * `idx` - The position of the character that was just processed
     ///
     fn advance(state: &mut ChaocipherState, idx: usize) {
+        let nadir = state.cw.len() / 2;
+
         // First we shift the left alphabet (cw)
         Self::lshift_n(&mut state.cw, idx);
         let l = state.cw[ZENITH + 1];
-        state.cw[ZENITH + 1..NADIR + 1].rotate_left(1);
-        state.cw[NADIR] = l;
+        state.cw[ZENITH + 1..nadir + 1].rotate_left(1);
+        state.cw[nadir] = l;
 
         // Then we shift the right alphabet (pw)
         Self::lshift_n(&mut state.pw, idx + 1);
         let l = state.pw[ZENITH + 2];
-        state.pw[ZENITH + 2..NADIR + 1].rotate_left(1);
-        state.pw[NADIR] = l;
+        state.pw[ZENITH + 2..nadir + 1].rotate_left(1);
+        state.pw[nadir] = l;
 
         // Rebuild lookup tables after permutation
         state.rebuild_lookups();
@@ -220,13 +220,13 @@ impl Chaocipher {
     ///
     fn reset(&self) {
         let mut state = self.state.borrow_mut();
-        state.pw = self.pkey;
-        state.cw = self.ckey;
+        state.pw = self.pkey.clone();
+        state.cw = self.ckey.clone();
         state.rebuild_lookups();
     }
 }
 
-impl Block for Chaocipher {
+impl<A: Alphabet> Block for ChaoBasic<A> {
     /// Returns the block size of the cipher.
     ///
     /// Chaocipher operates on single characters, so the block size is always 1.
@@ -313,6 +313,7 @@ impl Block for Chaocipher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::REGULAR_ALPHABET;
 
     use rstest::rstest;
 
@@ -366,7 +367,7 @@ mod tests {
 
         {
             let mut state = c.state.borrow_mut();
-            Chaocipher::advance(&mut state, idx);
+            ChaoBasic::<Latin26>::advance(&mut state, idx);
         }
         assert_eq!(String::from_utf8_lossy(&c.state.borrow().cw), expected_cw);
         assert_eq!(String::from_utf8_lossy(&c.state.borrow().pw), expected_pw);

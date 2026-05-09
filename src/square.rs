@@ -26,12 +26,14 @@
 
 use std::fmt::Debug;
 use std::marker::PhantomData;
+
+use eyre::Result;
+
 use crate::Block;
+use crate::error::Error;
 use crate::helpers;
 use crate::helpers::{Alphabet, Latin25, Latin36};
 
-use eyre::Result;
-use crate::error::Error;
 
 // -----
 

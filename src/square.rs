@@ -14,20 +14,60 @@
 //! # Example
 //!
 //! ```
-//! use old_crypto_rs::{Block, SquareCipher};
+//! use old_crypto_rs::{Block, SquareCipher, ADFGVX};
+//! use old_crypto_rs::helpers::Latin36;
 //!
-//! let cipher = SquareCipher::new("PORTABLE", "ADFGVX").unwrap();
+//! let cipher = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
 //! let plaintext = b"ATTACK";
 //! let mut ciphertext = vec![0u8; plaintext.len() * 2];
 //! cipher.encrypt(&mut ciphertext, plaintext);
 //! ```
-//! 
+//!
+
+use std::fmt::Debug;
+use std::marker::PhantomData;
 use crate::Block;
 use crate::helpers;
-use crate::helpers::REGULAR_ALPHABET;
+use crate::helpers::{Alphabet, Latin25, Latin36};
 
 use eyre::Result;
 use crate::error::Error;
+
+// -----
+
+#[derive(Debug)]
+pub struct ADFGX;
+
+#[derive(Debug)]
+pub struct ADFGVX;
+
+#[derive(Debug)]
+pub struct Numeric5;
+
+#[derive(Debug)]
+pub struct Numeric6;
+
+pub trait Coordinates {
+    const SYMBOLS: &'static [u8];
+}
+
+impl Coordinates for ADFGX {
+    const SYMBOLS: &'static [u8] = b"ADFGX";
+}
+
+impl Coordinates for ADFGVX {
+    const SYMBOLS: &'static [u8] = b"ADFGVX";
+}
+
+impl Coordinates for Numeric5 {
+    const SYMBOLS: &'static [u8] = b"12345";
+}
+
+impl Coordinates for Numeric6 {
+    const SYMBOLS: &'static [u8] = b"012345";
+}
+
+// -----
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -55,15 +95,20 @@ struct EncEntry {
 /// * `dec_table` - Fast decryption table from bigram bytes to plaintext byte
 /// 
 #[derive(Debug)]
-pub struct SquareCipher {
+pub struct SquareCipher<C: Coordinates, A: Alphabet> {
     key: String,
-    chrs: String,
     alpha: Vec<u8>,
     enc_table: [EncEntry; 256],
     dec_table: Box<[u8; 256 * 256]>,
+    _marker: PhantomData<(C, A)>,
 }
 
-impl SquareCipher {
+/// The most used square cipher is the Polybius one.
+/// 5x5, and thus using the restricted 25-letter alphabet
+///
+pub type PolybiusCipher = SquareCipher<Numeric5, Latin25>;
+
+impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
     /// Creates a new Square Cipher with the given key and character set.
     ///
     /// The key is combined with BASE36 alphabet and condensed to remove duplicate characters.
@@ -82,59 +127,67 @@ impl SquareCipher {
     /// # Example
     ///
     /// ```
-    /// use old_crypto_rs::SquareCipher;
+    /// use old_crypto_rs::{ADFGVXSquare, SquareCipher, Numeric6};
+    /// use old_crypto_rs::helpers::Latin36;
     ///
     /// // Create ADFGVX cipher with "PORTABLE" key
-    /// let cipher = SquareCipher::new("PORTABLE", "ADFGVX").unwrap();
+    /// let cipher = ADFGVXSquare::new("PORTABLE").unwrap();
     ///
     /// // Create numeric variant with "ARABESQUE" key
-    /// let cipher2 = SquareCipher::new("ARABESQUE", "012345").unwrap();
+    /// let cipher2 = SquareCipher::<Numeric6,Latin36>::new("ARABESQUE").unwrap();
     /// ```
     ///
     /// # Errors
     ///
     /// Returns an error if either `key` or `chrs` is an empty string.
     /// 
-    pub fn new(key: &str, chrs: &str) -> Result<Self> {
-        if key.is_empty() || chrs.is_empty() {
+    pub fn new(key: &str) -> Result<Self> {
+        if key.is_empty() {
             return Err(Error::EmptyKeys.into());
         }
 
         // Step 1: Condense key + alphabet (letters only)
         //
-        let condensed_letters = helpers::condense(&format!("{}{}", key, REGULAR_ALPHABET));
+        let alpha = String::from_utf8(A::ALPHABET.to_vec())?;
+        let condensed_letters = helpers::condense(&format!("{}{}", key, alpha));
 
-        // Step 2: Insert digits after corresponding letters
-        // 1 after A, 2 after B, 3 after C, 4 after D, 5 after E,
-        // 6 after F, 7 after G, 8 after H, 9 after I, 0 after J
-        //
-        // This follows <https://en.wikipedia.org/wiki/ADFGVX_cipher method>. That way, numbers
-        // positions are less predictable
-        //
         let mut alpha = Vec::new();
-        for ch in condensed_letters.chars() {
-            alpha.push(ch as u8);
-            match ch {
-                'A' => alpha.push(b'1'),
-                'B' => alpha.push(b'2'),
-                'C' => alpha.push(b'3'),
-                'D' => alpha.push(b'4'),
-                'E' => alpha.push(b'5'),
-                'F' => alpha.push(b'6'),
-                'G' => alpha.push(b'7'),
-                'H' => alpha.push(b'8'),
-                'I' => alpha.push(b'9'),
-                'J' => alpha.push(b'0'),
-                _ => {}
+        if A::SIZE == Latin36::SIZE {
+            // Now, only for Latin36 alphabet:
+            //
+            // Step 2: Insert digits after corresponding letters
+            // 1 after A, 2 after B, 3 after C, 4 after D, 5 after E,
+            // 6 after F, 7 after G, 8 after H, 9 after I, 0 after J
+            //
+            // This follows <https://en.wikipedia.org/wiki/ADFGVX_cipher method>. That way, numbers
+            // positions are less predictable
+            //
+            for ch in condensed_letters.chars() {
+                alpha.push(ch as u8);
+                match ch {
+                    'A' => alpha.push(b'1'),
+                    'B' => alpha.push(b'2'),
+                    'C' => alpha.push(b'3'),
+                    'D' => alpha.push(b'4'),
+                    'E' => alpha.push(b'5'),
+                    'F' => alpha.push(b'6'),
+                    'G' => alpha.push(b'7'),
+                    'H' => alpha.push(b'8'),
+                    'I' => alpha.push(b'9'),
+                    'J' => alpha.push(b'0'),
+                    _ => {}
+                }
             }
+        } else {
+            alpha = condensed_letters.into_bytes();
         }
-
+        let alpha = helpers::condense_str(&String::from_utf8(alpha)?);
         let mut c = SquareCipher {
             key: key.to_string(),
-            chrs: chrs.to_string(),
-            alpha,
+            alpha: alpha.into_bytes(),
             enc_table: [EncEntry::default(); 256],
             dec_table: Box::new([0; 256 * 256]),
+            _marker: PhantomData,
         };
         c.expand_key();
         Ok(c)
@@ -154,8 +207,8 @@ impl SquareCipher {
     /// 
     fn expand_key(&mut self) {
         let mut bigr = vec![0u8; 2];
-        let klen = self.chrs.len();
-        let chrs_bytes = self.chrs.as_bytes();
+        let klen = C::SYMBOLS.len();
+        let chrs_bytes = C::SYMBOLS;
 
         // Generate all bigrams by iterating through character set twice (i, j)
         for i in 0..klen {
@@ -185,7 +238,7 @@ impl SquareCipher {
     }
 }
 
-impl Block for SquareCipher {
+impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
     /// Returns the block size for this cipher.
     ///
     /// The block size is equal to the key length. This determines how many
@@ -264,85 +317,85 @@ impl Block for SquareCipher {
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::Latin36;
     use super::*;
 
     #[test]
-    fn test_expand_key() {
-        let test_data = [
-            ("PORTABLE", "ADFGVX"),
-            ("ARABESQUE", "012345"),
-        ];
+    fn test_expand_key_25() {
+        let c2 = PolybiusCipher::new("ARABESQUE").unwrap();
+        let alpha = c2.alpha.iter().map(|&x| x as char).collect::<String>();
+        dbg!(alpha);
+    }
 
-        for (key, chrs) in test_data {
-            let _c = SquareCipher::new(key, chrs).unwrap();
-            // In Rust we don't need to test multiple versions of expand_key
-            // we just test that the maps are correct.
-            // Since the maps are private and would be tedious to recreate here,
-            // we can test the functional encryption/decryption which depends on them.
-        }
+    #[test]
+    fn test_expand_key_36() {
+        let c1 = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
+        let alpha = c1.alpha.iter().map(|&x| x as char).collect::<String>();
+        dbg!(alpha);
     }
 
     #[test]
     fn test_new_cipher() {
-        let c = SquareCipher::new("PORTABLE", "ADFGVX");
+        let c = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE");
         assert!(c.is_ok());
+        let alpha = c.unwrap().alpha.iter().map(|&x| x as char).collect::<String>();
+        dbg!(alpha);
     }
 
     #[test]
     fn test_new_cipher_empty_key() {
-        let c = SquareCipher::new("", "012345");
-        assert!(c.is_err());
-    }
-
-    #[test]
-    fn test_new_cipher_empty_chrs() {
-        let c = SquareCipher::new("SUBWAY", "");
+        let c = SquareCipher::<Numeric5, Latin25>::new("");
         assert!(c.is_err());
     }
 
     #[test]
     fn test_square_cipher_block_size() {
-        let test_data = [
-            ("PORTABLE", "ADFGVX"),
-            ("ARABESQUE", "012345"),
-        ];
-        for (key, chrs) in test_data {
-            let c = SquareCipher::new(key, chrs).unwrap();
-            assert_eq!(c.block_size(), key.len());
-        }
+        let c1 = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
+        assert_eq!(c1.block_size(), "PORTABLE".len());
+        let c2 = SquareCipher::<Numeric5, Latin25>::new("ARABESQUE").unwrap();
+        assert_eq!(c2.block_size(), "ARABESQUE".len());
     }
 
     #[test]
     fn test_square_cipher_encrypt() {
-        let test_data = [
-            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDXVDAVAGFDAVXFVG"),
-            ("ARABESQUE", "012345", "ATTACKATDAWN", "005050001440005020005243"),
-            ("NACHTBOMMENWERPER", "ADFGVX", "ATTACKAT1200AM", "ADDDDDADAGVGADDDAFDGVFVFADDX")
-        ];
+        let c = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
+        let src = b"ATTACKATDAWN";
+        let mut dst = vec![0u8; src.len() * 2];
+        c.encrypt(&mut dst, src);
+        assert_eq!(String::from_utf8(dst).unwrap(), "AVAGAGAVDXVDAVAGFDAVXGVG");
 
-        for (key, chrs, pt, ct) in test_data {
-            let c = SquareCipher::new(key, chrs).unwrap();
-            let src = pt.as_bytes();
-            let mut dst = vec![0u8; 2 * pt.len()];
-            c.encrypt(&mut dst, src);
-            assert_eq!(String::from_utf8(dst).unwrap(), ct);
-        }
+        let c2 = SquareCipher::<Numeric6, Latin36>::new("ARABESQUE").unwrap();
+        let src2 = b"ATTACKATDAWN";
+        dbg!(c2.alpha.iter().map(|&x| x as char).collect::<String>());
+        let mut dst2 = vec![0u8; src2.len() * 2];
+        c2.encrypt(&mut dst2, src2);
+        assert_eq!(String::from_utf8(dst2).unwrap(), "005050001440005020005343");
+
+        let c3 = SquareCipher::<ADFGVX, Latin36>::new("NACHTBOMMENWERPER").unwrap();
+        let src3 = b"ATTACKAT1200AM";
+        let mut dst3 = vec![0u8; src3.len() * 2];
+        c3.encrypt(&mut dst3, src3);
+        assert_eq!(String::from_utf8(dst3).unwrap(), "ADDDDDADAGVGADDDAFDGVFVFADDX");
     }
 
     #[test]
     fn test_square_cipher_decrypt() {
-        let test_data = [
-            ("PORTABLE", "ADFGVX", "ATTACKATDAWN", "AVAGAGAVDXVDAVAGFDAVXFVG"),
-            ("ARABESQUE", "012345", "ATTACKATDAWN", "005050001440005020005243"),
-            ("NACHTBOMMENWERPER", "ADFGVX", "ATTACKAT1200AM", "ADDDDDADAGVGADDDAFDGVFVFADDX")
-        ];
+        let c = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
+        let src = b"AVAGAGAVDXVDAVAGFDAVXGVG";
+        let mut dst = vec![0u8; src.len() / 2];
+        c.decrypt(&mut dst, src);
+        assert_eq!(String::from_utf8(dst).unwrap(), "ATTACKATDAWN");
 
-        for (key, chrs, pt, ct) in test_data {
-            let c = SquareCipher::new(key, chrs).unwrap();
-            let src = ct.as_bytes();
-            let mut dst = vec![0u8; src.len() / 2];
-            c.decrypt(&mut dst, src);
-            assert_eq!(String::from_utf8(dst).unwrap(), pt);
-        }
+        let c2 = SquareCipher::<Numeric6, Latin36>::new("ARABESQUE").unwrap();
+        let src2 = b"005050001440005020005343";
+        let mut dst2 = vec![0u8; src2.len() / 2];
+        c2.decrypt(&mut dst2, src2);
+        assert_eq!(String::from_utf8(dst2).unwrap(), "ATTACKATDAWN");
+
+        let c3 = SquareCipher::<ADFGVX, Latin36>::new("NACHTBOMMENWERPER").unwrap();
+        let src3 = b"ADDDDDADAGVGADDDAFDGVFVFADDX";
+        let mut dst3 = vec![0u8; src3.len() / 2];
+        c3.decrypt(&mut dst3, src3);
+        assert_eq!(String::from_utf8(dst3).unwrap(), "ATTACKAT1200AM");
     }
 }

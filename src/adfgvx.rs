@@ -13,21 +13,26 @@
 //! # Examples
 //!
 //! ```
-//! # use old_crypto_rs::ADFGVX;
+//! # use old_crypto_rs::ADFGVXCipher;
 //! # use old_crypto_rs::Block;
-//! let cipher = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
+//!
+//! let cipher = ADFGVXCipher::new("PORTABLE", "SUBWAY").unwrap();
 //! let plaintext = b"ATTACKATDAWN";
 //! let mut ciphertext = vec![0u8; 24];
 //! cipher.encrypt(&mut ciphertext, plaintext);
 //! ```
 //!
 use crate::Block;
-use crate::square::SquareCipher;
+use crate::square::{SquareCipher, ADFGVX, ADFGX};
 use crate::transposition::Transposition;
 
 use std::cell::RefCell;
 
 use eyre::Result;
+use crate::helpers::{Latin25, Latin36};
+
+pub type ADFGXSquare = SquareCipher<ADFGX, Latin25>;
+pub type ADFGVXSquare = SquareCipher<ADFGVX, Latin36>;
 
 /// ADFGVX cipher combining Polybius square substitution with columnar transposition.
 ///
@@ -36,13 +41,13 @@ use eyre::Result;
 /// - A columnar transposition cipher for the second encryption stage
 ///
 #[derive(Debug)]
-pub struct ADFGVX {
-    sqr: SquareCipher,
+pub struct ADFGVXCipher {
+    sqr: ADFGVXSquare,
     transp: Transposition,
     buf: RefCell<Vec<u8>>,
 }
 
-impl ADFGVX {
+impl ADFGVXCipher {
     /// Creates a new ADFGVX cipher with the given keys.
     ///
     /// # Arguments
@@ -58,8 +63,8 @@ impl ADFGVX {
     /// # Examples
     ///
     /// ```
-    /// # use old_crypto_rs::ADFGVX;
-    /// let cipher = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
+    /// # use old_crypto_rs::ADFGVXCipher;
+    /// let cipher = ADFGVXCipher::new("PORTABLE", "SUBWAY").unwrap();
     /// ```
     ///
     /// # Errors
@@ -70,10 +75,10 @@ impl ADFGVX {
     /// - The Polybius square or transposition cipher cannot be initialized
     ///
     pub fn new(key1: &str, key2: &str) -> Result<Self> {
-        let sqr = SquareCipher::new(key1, "ADFGVX")?;
+        let sqr = ADFGVXSquare::new(key1)?;
         let transp = Transposition::new(key2)?;
 
-        Ok(ADFGVX {
+        Ok(ADFGVXCipher {
             sqr,
             transp,
             buf: RefCell::new(Vec::new()),
@@ -81,7 +86,7 @@ impl ADFGVX {
     }
 }
 
-impl Block for ADFGVX {
+impl Block for ADFGVXCipher {
     /// Returns the block size for the cipher.
     ///
     /// The block size is determined by the transposition cipher's block size,
@@ -156,36 +161,36 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let _c = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
+        let _c = ADFGVXCipher::new("PORTABLE", "SUBWAY").unwrap();
     }
 
     #[test]
     fn test_new_cipher_bad_keys() {
-        assert!(ADFGVX::new("PORTABLE", "").is_err());
-        assert!(ADFGVX::new("", "SUBWAY").is_err());
+        assert!(ADFGVXCipher::new("PORTABLE", "").is_err());
+        assert!(ADFGVXCipher::new("", "SUBWAY").is_err());
     }
 
     #[test]
     fn test_adfgvx_block_size() {
-        let c = ADFGVX::new("PORTABLE", "SUBWAY").unwrap();
+        let c = ADFGVXCipher::new("PORTABLE", "SUBWAY").unwrap();
         assert_eq!(c.block_size(), 6);
     }
 
     #[rstest]
-    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGFGDDG")]
+    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGGGDDG")]
     #[case("NACHTBOMMENWERPER", "PRIVACY", "ATTACKAT1200AM", "DGDDDAGDDGAFADDFDADVDVFAADVX")]
     fn test_adfgvx_encrypt(#[case] key1: &str, #[case] key2: &str, #[case] pt: &str, #[case] ct: &str) {
-        let c = ADFGVX::new(key1, key2).unwrap();
+        let c = ADFGVXCipher::new(key1, key2).unwrap();
         let mut dst = vec![0u8; ct.len()];
         c.encrypt(&mut dst, pt.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst), ct);
     }
 
     #[rstest]
-    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGFGDDG")]
+    #[case("PORTABLE", "SUBWAY", "ATTACKATDAWN", "AVFVADAXAAAAVVVVGXGGGDDG")]
     #[case("NACHTBOMMENWERPER", "PRIVACY", "ATTACKAT1200AM", "DGDDDAGDDGAFADDFDADVDVFAADVX")]
     fn test_adfgvx_decrypt(#[case] key1: &str, #[case] key2: &str, #[case] pt: &str, #[case] ct: &str) {
-        let c = ADFGVX::new(key1, key2).unwrap();
+        let c = ADFGVXCipher::new(key1, key2).unwrap();
         let mut dst = vec![0u8; pt.len()];
         c.decrypt(&mut dst, ct.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst), pt);

@@ -15,6 +15,8 @@ pub enum Error {
     EmptyInput,
     #[error("Keys must be not be empty")]
     EmptyKeys,
+    #[error("Incompatible variants, like 5x5 but Latin36.")]
+    IncompatibleVariants,
     #[error("Key must be at least {0} characters long")]
     KeyTooShort(usize),
     #[error("Alphabet must be {0} characters long")]

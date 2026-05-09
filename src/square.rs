@@ -145,6 +145,12 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
         if key.is_empty() {
             return Err(Error::EmptyKeys.into());
         }
+        // Check that we have compatible variants.
+        //
+        let n = C::SYMBOLS.len();
+        if A::SIZE != n * n {
+            return Err(Error::IncompatibleVariants.into());
+        }
 
         // Step 1: Condense key + alphabet (letters only)
         //

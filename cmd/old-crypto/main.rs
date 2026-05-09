@@ -3,7 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::{ADFGVX, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher};
+use old_crypto_rs::{ADFGVXCipher, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher, PolybiusCipher};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -127,7 +127,7 @@ impl App {
                 }
             },
             "ADFGVX" => {
-                match ADFGVX::new(&self.key1, &self.key2) {
+                match ADFGVXCipher::new(&self.key1, &self.key2) {
                     Ok(cipher) => {
                         let mut d = vec![0u8; src.len() * 4]; // ADFGVX doubles length then might pad
                         let n = cipher.encrypt(&mut d, src);
@@ -150,7 +150,7 @@ impl App {
                 cipher.encrypt(&mut d, src);
                 self.result = String::from_utf8_lossy(&d).to_string();
             }
-            "Square" => match SquareCipher::new(&self.key1, &self.key2) {
+            "Square" => match PolybiusCipher::new(&self.key1) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 2];
                     let n = cipher.encrypt(&mut d, src);

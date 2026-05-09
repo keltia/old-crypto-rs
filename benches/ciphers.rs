@@ -1,5 +1,5 @@
 use old_crypto_rs::{
-    ADFGVX, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
+    ADFGVXCipher, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
     SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher,
     Wheatstone, AutokeyCipher, AutocryptCipher, helpers, Solitaire,
 };
@@ -22,6 +22,8 @@ fn main() {
 
 #[divan::bench_group]
 mod b0_encryption {
+    use old_crypto_rs::helpers::Latin36;
+    use old_crypto_rs::Numeric6;
     use super::*;
 
     #[divan::bench]
@@ -66,7 +68,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b05_square(bencher: Bencher) {
-        let c = SquareCipher::new(KEY2, "012345").unwrap();
+        let c = SquareCipher::<Numeric6, Latin36>::new(KEY2).unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
@@ -116,7 +118,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b10_adfgvx(bencher: Bencher) {
-        let c = ADFGVX::new(KEY2, KEY1).unwrap();
+        let c = ADFGVXCipher::new(KEY2, KEY1).unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
@@ -188,6 +190,8 @@ mod b0_encryption {
 
 #[divan::bench_group]
 mod b1_decryption {
+    use old_crypto_rs::helpers::Latin36;
+    use old_crypto_rs::Numeric6;
     use super::*;
 
     #[divan::bench]
@@ -268,7 +272,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b05_square(bencher: Bencher) {
-        let c = SquareCipher::new(KEY2, "012345").unwrap();
+        let c = SquareCipher::<Numeric6,Latin36>::new(KEY2).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);
@@ -329,7 +333,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b10_adfgvx(bencher: Bencher) {
-        let c = ADFGVX::new(KEY2, KEY1).unwrap();
+        let c = ADFGVXCipher::new(KEY2, KEY1).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);

@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVX, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher};
+use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, REGULAR_ALPHABET};
 
 use eyre::Result;
@@ -60,7 +60,7 @@ fn main() -> Result<()>{
 
     allciphers.push(Cph {
         name: format!("Polybius Square ({})", KEY2),
-        c: Box::new(SquareCipher::new(KEY2, "012345").unwrap()),
+        c: Box::new(PolybiusCipher::new(KEY2).unwrap()),
         size: PLAIN.len() * 2,
     });
 
@@ -84,13 +84,13 @@ fn main() -> Result<()>{
 
     allciphers.push(Cph {
         name: format!("ADFGVX ({}, {})", KEY2, KEY1),
-        c: Box::new(ADFGVX::new("ARABESQUE", "SUBWAY").unwrap()),
+        c: Box::new(ADFGVXCipher::new("ARABESQUE", "SUBWAY").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
         name: format!("ADFGVX ({}, {})", KEY5, KEY6),
-        c: Box::new(ADFGVX::new(KEY5, KEY6).unwrap()),
+        c: Box::new(ADFGVXCipher::new(KEY5, KEY6).unwrap()),
         size: PLAIN.len() * 2,
     });
 

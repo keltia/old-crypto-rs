@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher};
+use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, REGULAR_ALPHABET};
 
 use eyre::Result;

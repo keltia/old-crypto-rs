@@ -39,6 +39,7 @@
 /// - ADFGX cipher
 /// - Other classical ciphers requiring 25 characters
 ///
+#[derive(Debug)]
 pub struct Latin25;
 
 /// Marker type representing the standard 26-letter Latin alphabet (A-Z).
@@ -60,7 +61,9 @@ pub struct Latin25;
 /// assert_eq!(Latin26::denormalize(0), b'A');
 /// assert_eq!(Latin26::denormalize(25), b'Z');
 /// ```
+#[derive(Debug)]
 pub struct Latin26;
+
 /// Marker type representing an extended 36-character alphabet (A-Z and 0-9).
 ///
 /// This type is used as a type parameter to specify that an operation should work
@@ -87,6 +90,7 @@ pub struct Latin26;
 /// assert_eq!(Latin36::denormalize(35), b'9');
 /// ```
 ///
+#[derive(Debug)]
 pub struct Latin36;
 
 /// Trait defining operations for working with different alphabet encodings in classical ciphers.

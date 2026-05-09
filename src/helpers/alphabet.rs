@@ -458,7 +458,7 @@ impl Alphabet for Latin25 {
 ///
 impl Alphabet for Latin36 {
     const SIZE: usize = 36;
-    const ALPHABET: &'static [u8] = b"ABCDEFGHIKLMNOPQRSTUVXWYZ0123456789";
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVXWYZ0123456789";
 
     fn normalize(ch: u8) -> Option<usize> {
         let ch = ch.to_ascii_uppercase();

@@ -162,6 +162,7 @@ helpers                     fastest       │ slowest       │ median        �
 
 - more ciphers ~~(Vigenère and its 2 autoclave variants incoming)~~
 - ~~implement compile-time type safety through zero-sized types (ZST), see square.rs and playfair for example.~~
+- improvements to the UI of the application
 - more tests (and better ones!)
 - better display of results
 - refactoring to reduce code duplication: always in progress

@@ -1,3 +1,14 @@
+//! Trait used to represent different alphabets and their operations.
+//!
+//! This module provides a trait `Alphabet` that is used to represent different
+//! alphabets and their operations. It allows for generic code to work with
+//! different alphabets without needing to know the specifics of each alphabet.
+//!
+//! # Alphabet Types
+//!
+//! The `Alphabet` trait defines a set of constants and functions that are used
+//! to convert between characters and their numeric representation (indices)
+//!
 
 /// Marker type representing a 25-letter Latin alphabet (A-Z with I/J merged).
 ///

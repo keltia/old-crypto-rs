@@ -34,11 +34,6 @@ use crate::error::Error;
 use crate::helpers;
 use crate::helpers::{Alphabet, Coordinates, Latin25, Latin36, Numeric5};
 
-
-// -----
-
-// -----
-
 /// Compact encoding entry for a single plaintext byte.
 ///
 /// `len` is 0 for unmapped bytes, or 2 for the bigram length.

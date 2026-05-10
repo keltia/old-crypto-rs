@@ -23,13 +23,13 @@
 //! ```
 //!
 use crate::Block;
-use crate::square::{SquareCipher, ADFGVX, ADFGX};
+use crate::helpers::{Latin25, Latin36, ADFGVX, ADFGX};
+use crate::square::SquareCipher;
 use crate::transposition::Transposition;
 
 use std::cell::RefCell;
 
 use eyre::Result;
-use crate::helpers::{Latin25, Latin36};
 
 pub type ADFGXSquare = SquareCipher<ADFGX, Latin25>;
 pub type ADFGVXSquare = SquareCipher<ADFGVX, Latin36>;

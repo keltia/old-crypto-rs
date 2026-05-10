@@ -22,7 +22,7 @@ pub use vigenere::{Autocrypt, AutocryptCipher, Autokey, AutokeyCipher, Vigenere,
 pub use caesar::{Caesar, CaesarCipher};
 pub use playfair::{Playfair, PlayfairCipher};
 pub use chaocipher::{ChaoBasic, Chaocipher};
-pub use square::{SquareCipher, PolybiusCipher, ADFGVX, ADFGX, Numeric5, Numeric6};
+pub use square::{SquareCipher, PolybiusCipher};
 pub use transposition::{Transposition, IrregularTransposition};
 pub use adfgvx::{ADFGVXCipher, ADFGXSquare, ADFGVXSquare};
 pub use straddling::StraddlingCheckerboard;

@@ -14,8 +14,8 @@
 //! # Example
 //!
 //! ```
-//! use old_crypto_rs::{Block, SquareCipher, ADFGVX};
-//! use old_crypto_rs::helpers::Latin36;
+//! use old_crypto_rs::{Block, SquareCipher};
+//! use old_crypto_rs::helpers::{Latin36, ADFGVX};
 //!
 //! let cipher = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
 //! let plaintext = b"ATTACK";
@@ -32,42 +32,10 @@ use eyre::Result;
 use crate::Block;
 use crate::error::Error;
 use crate::helpers;
-use crate::helpers::{Alphabet, Latin25, Latin36};
+use crate::helpers::{Alphabet, Coordinates, Latin25, Latin36, Numeric5};
 
 
 // -----
-
-#[derive(Debug)]
-pub struct ADFGX;
-
-#[derive(Debug)]
-pub struct ADFGVX;
-
-#[derive(Debug)]
-pub struct Numeric5;
-
-#[derive(Debug)]
-pub struct Numeric6;
-
-pub trait Coordinates {
-    const SYMBOLS: &'static [u8];
-}
-
-impl Coordinates for ADFGX {
-    const SYMBOLS: &'static [u8] = b"ADFGX";
-}
-
-impl Coordinates for ADFGVX {
-    const SYMBOLS: &'static [u8] = b"ADFGVX";
-}
-
-impl Coordinates for Numeric5 {
-    const SYMBOLS: &'static [u8] = b"12345";
-}
-
-impl Coordinates for Numeric6 {
-    const SYMBOLS: &'static [u8] = b"012345";
-}
 
 // -----
 
@@ -129,8 +97,8 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
     /// # Example
     ///
     /// ```
-    /// use old_crypto_rs::{ADFGVXSquare, SquareCipher, Numeric6};
-    /// use old_crypto_rs::helpers::Latin36;
+    /// use old_crypto_rs::{ADFGVXSquare, SquareCipher};
+    /// use old_crypto_rs::helpers::{Latin36, ADFGVX, Numeric6};
     ///
     /// // Create ADFGVX cipher with "PORTABLE" key
     /// let cipher = ADFGVXSquare::new("PORTABLE").unwrap();
@@ -325,7 +293,7 @@ impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::Latin36;
+    use crate::helpers::{Latin36, Numeric6, ADFGVX};
     use super::*;
 
     #[test]

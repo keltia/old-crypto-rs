@@ -2,9 +2,11 @@
 //!
 
 mod alphabet;
+mod coord;
 mod fill;
 
 pub use alphabet::*;
+pub use coord::*;
 pub use fill::*;
 
 use std::collections::HashSet;

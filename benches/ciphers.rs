@@ -22,8 +22,7 @@ fn main() {
 
 #[divan::bench_group]
 mod b0_encryption {
-    use old_crypto_rs::helpers::Latin36;
-    use old_crypto_rs::Numeric6;
+    use old_crypto_rs::helpers::{Latin36, Numeric6};
     use super::*;
 
     #[divan::bench]
@@ -190,8 +189,7 @@ mod b0_encryption {
 
 #[divan::bench_group]
 mod b1_decryption {
-    use old_crypto_rs::helpers::Latin36;
-    use old_crypto_rs::Numeric6;
+    use old_crypto_rs::helpers::{Latin36, Numeric6};
     use super::*;
 
     #[divan::bench]

@@ -220,6 +220,9 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
     /// transformations), then processed in digrams. Duplicate letters within a
     /// digram are separated by `F::FILL`; odd-length input is padded with `F::FILL`.
     ///
+    /// NOTE: sometimes, when encountering a double letter (see JKF test below), they did not insert
+    /// an 'X' between the letters, instead leaving them in ciphertext directly.
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // Normalize input through the alphabet
         let src: String = src.iter()
@@ -227,14 +230,24 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
             .collect();
 
         let fill = F::FILL as char;
-        let src = helpers::fix_double_aligned(&src, fill);
+        let src = if fill != '-' {
+            helpers::fix_double_aligned(&src, fill)
+        } else {
+            src.to_string()
+        };
         let mut src_vec = src.as_bytes().to_vec();
         if src_vec.len() % 2 == 1 {
             src_vec.push(F::FILL);
         }
 
         for i in (0..src_vec.len()).step_by(2) {
-            let bg = self.transform(Couple { r: src_vec[i], c: src_vec[i+1] }, OP_ENCRYPT);
+            // Handle the `NoFill` case
+            //
+            let bg = if F::FILL == b'-' && src_vec[i] == src_vec[i+1] {
+                Couple { r: src_vec[i], c: src_vec[i+1] }
+            } else {
+                self.transform(Couple { r: src_vec[i], c: src_vec[i+1] }, OP_ENCRYPT)
+            };
             dst[i] = bg.r;
             dst[i+1] = bg.c;
         }
@@ -285,7 +298,11 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
         }
         let op_decrypt = self.dim as u8 - 1;
         for i in (0..src.len()).step_by(2) {
-            let bg = self.transform(Couple { r: src[i], c: src[i+1] }, op_decrypt);
+            let bg = if F::FILL == b'-' && src[i] == src[i+1] {
+                Couple { r: src[i], c: src[i+1] }
+            } else {
+                self.transform(Couple { r: src[i], c: src[i+1] }, op_decrypt)
+            };
             dst[i] = bg.r;
             dst[i+1] = bg.c;
         }
@@ -295,6 +312,7 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::NoFill;
     use super::*;
 
     #[test]
@@ -336,6 +354,26 @@ mod tests {
         let mut dst = vec![0u8; ct.len()];
         c.decrypt(&mut dst, ct);
         assert_eq!(dst, pt);
+    }
+
+    #[test]
+    fn test_playfair_jkf_encrypt() {
+        let c = Playfair::<Latin25, NoFill>::new("ROYALNEWZEALANDNAVY");
+        let pt = b"PTBOATONEOWENINELOSTINACTIONINBLACKETTSTRAITTWOMILESSWMERESUCOVEXCREWOFTWELVEXREQUESTANYINFORMATIONX";
+        let ct = b"KXIEYUREBEZWEHEWRYTUHEYFSKREHEGOYFIWTTTUOLKSYCAIPOBOTEIZONTXBYBNTGONEYCUZWRGDSONSXBOUYWRHEBAAHYUSEDQ";
+        let mut dst = vec![0u8; ct.len()];
+        c.encrypt(&mut dst, pt);
+        assert_eq!(String::from_utf8(dst), String::from_utf8(ct.to_vec()));
+    }
+
+    #[test]
+    fn test_playfair_jkf_decrypt() {
+        let c = Playfair::<Latin25, NoFill>::new("ROYALNEWZEALANDNAVY");
+        let pt = b"PTBOATONEOWENINELOSTINACTIONINBLACKETTSTRAITTWOMILESSWMERESUCOVEXCREWOFTWELVEXREQUESTANYINFORMATIONX";
+        let ct = b"KXIEYUREBEZWEHEWRYTUHEYFSKREHEGOYFIWTTTUOLKSYCAIPOBOTEIZONTXBYBNTGONEYCUZWRGDSONSXBOUYWRHEBAAHYUSEDQ";
+        let mut dst = vec![0u8; ct.len()];
+        c.decrypt(&mut dst, ct);
+        assert_eq!(String::from_utf8(dst), String::from_utf8(pt.to_vec()));
     }
 
     #[test]

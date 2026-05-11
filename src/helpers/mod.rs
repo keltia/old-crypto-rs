@@ -238,9 +238,14 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 /// * [`FillWith`] - Trait defining the filler character policy
 /// * [`FillX`] - 'X' filler character implementation
 /// * [`FillQ`] - 'Q' filler character implementation
+/// * [`NoFill`] - No filler character implementation
+/// * [`expand`] - Generic version allowing custom filler characters
 /// * [`insert`] - The helper function used to insert characters
 ///
 pub fn expand_with<F: FillWith>(src: &[u8]) -> Vec<u8> {
+    if F::FILL == b'-' {
+        return src.to_vec();
+    }
     let mut res = src.to_vec();
     let mut i = 0;
     while i < res.len().saturating_sub(1) {
@@ -781,6 +786,18 @@ mod tests {
     #[case("ABCDEFGHJJKLM", "ABCDEFGHJQJKLM")]
     fn test_expand_with_q(#[case] in_str: &str, #[case] expected: &str) {
         assert_eq!(expand_with::<FillQ>(in_str.as_bytes()), expected.as_bytes());
+    }
+
+    #[rstest]
+    #[case("AAA", "AAA")]
+    #[case("AAAA", "AAAA")]
+    #[case("AAABRAACADAABRA", "AAABRAACADAABRA")]
+    #[case("ARABESQUE", "ARABESQUE")]
+    #[case("LANNONCE", "LANNONCE")]
+    #[case("PJRJJJJJJS", "PJRJJJJJJS")]
+    #[case("ABCDEFGHJJKLM", "ABCDEFGHJJKLM")]
+    fn test_expand_with_nothing(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(expand_with::<NoFill>(in_str.as_bytes()), expected.as_bytes());
     }
 
     #[rstest]

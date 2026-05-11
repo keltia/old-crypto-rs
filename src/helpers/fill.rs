@@ -60,10 +60,11 @@ pub trait FillWith {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::helpers::{FillWith, FillX, FillQ};
+    /// use old_crypto_rs::helpers::{FillWith, FillX, FillQ, NoFill};
     ///
     /// assert_eq!(FillX::FILL, b'X');
     /// assert_eq!(FillQ::FILL, b'Q');
+    /// assert_eq!(NoFill::FILL, b'-');
     /// ```
     const FILL: u8;
 }
@@ -173,6 +174,19 @@ pub struct FillX;
 ///
 pub struct FillQ;
 
+/// Marker type representing the NO filler character policy for digram handling.
+///
+/// This marker type implements the [`FillWith`] trait with the filler character set to '-'.
+///
+/// # See Also
+///
+/// * [`FillQ`] - Standard filler using 'Q'
+/// * [`FillX`] - Standard filler using 'X'
+/// * [`FillWith`] - The trait definition
+/// * [`fix_double_aligned`] - Function that handles duplicate letters
+///
+pub struct NoFill;
+
 /// Implementation of the `FillWith` trait for the 'X' filler character policy.
 ///
 /// This implementation sets the filler character to 'X' (ASCII byte value 88),
@@ -234,3 +248,37 @@ impl FillWith for FillQ {
     const FILL: u8 = b'Q';
 }
 
+/// Implementation of the `FillWith` trait for the '-' filler character policy, aka No filling
+///
+/// This implementation sets the filler character to '-' to signify that there will be no filler
+/// for duplicated letters in digrams.  These will be encrypted and decrypted as they are.
+///
+/// This variation is mentioned in [KAHN 96] when describing the messages exchanged when President-to-be
+/// John F. Kennedy's torpedo boat got destroyed by Japânese troops, and he and his crew had to hide
+/// for days before being recovered.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{FillWith, NoFill};
+///
+/// // Access the filler character at compile time
+/// const FILLER: u8 = NoFill::FILL;
+/// assert_eq!(FILLER, b'-');
+///
+/// // Use in generic functions
+/// fn get_filler<F: FillWith>() -> char {
+///     F::FILL as char
+/// }
+/// assert_eq!(get_filler::<NoFill>(), '-');
+/// ```
+///
+/// # See Also
+///
+/// * [`FillQ`] - The marker type documentation
+/// * [`FillX`] - The marker type documentation
+/// * [`FillWith`] - The trait definition
+///
+impl FillWith for NoFill {
+    const FILL: u8 = b'-';
+}

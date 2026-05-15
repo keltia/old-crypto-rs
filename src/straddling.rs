@@ -12,11 +12,12 @@
 //!
 
 use std::marker::PhantomData;
+
 use crate::Block;
-use crate::helpers::{shuffle, English, French, Frequent, German, SC_ALPHABET};
+use crate::error::Error;
+use crate::helpers::{shuffle, Alphabet, English, French, Frequent, German, LatinSC};
 
 use eyre::Result;
-use crate::error::Error;
 
 /// Compact encoding entry for a single plaintext byte.
 ///
@@ -59,7 +60,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// ```
 ///
 #[derive(Debug)]
-pub struct Straddling<F: Frequent> {
+pub struct Straddling<A: Alphabet, F: Frequent> {
     /// The keyword used to shuffle the alphabet.
     key: String,
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
@@ -75,10 +76,10 @@ pub struct Straddling<F: Frequent> {
     /// Fast lookup for whether a digit is a long-code prefix.
     longc_mask: [bool; 10],
     /// The frequent letters.
-    _marker: PhantomData<F>,
+    _marker: PhantomData<(A, F)>,
 }
 
-impl<F: Frequent> Straddling<F> {
+impl<A: Alphabet, F: Frequent> Straddling<A, F> {
     /// Creates a new straddling checkerboard cipher with default frequency.
     ///
     /// Uses "ESANTIRU" as the default high-frequency letters and the standard
@@ -108,31 +109,12 @@ impl<F: Frequent> Straddling<F> {
     /// ```
     ///
     pub fn new(key: &str, chrs: &str) -> Result<Self> {
-        Self::new_with_freq(key, chrs, SC_ALPHABET)
-    }
-
-    /// Creates a new straddling checkerboard cipher with custom frequency and alphabet.
-    ///
-    /// Allows full customization of which letters get single-digit codes and
-    /// what alphabet to use.
-    ///
-    /// # Arguments
-    ///
-    /// * `key` - The keyword used to shuffle the alphabet (must not be empty)
-    /// * `chrs` - A string of at least 2 digits for "long" cipher digit prefixes
-    /// * `alphabet` - The alphabet to use for the checkerboard
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(StraddlingCheckerboard)` on success, or `Err(String)` if validation fails.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if:
-    /// - `key` is empty
-    /// - `chrs` contains fewer than 2 characters
-    ///
-    pub fn new_with_freq(key: &str, chrs: &str, alphabet: &str) -> Result<Self> {
+        // Default alphabet.
+        //
+        let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
+            Ok(a) => a,
+            Err(e) => return Err(Error::InvalidAlphabet.into()),
+        };
         if key.is_empty() {
             return Err(Error::EmptyKeys.into());
         }
@@ -141,18 +123,17 @@ impl<F: Frequent> Straddling<F> {
         }
 
         let longc = vec![chrs.as_bytes()[0], chrs.as_bytes()[1]];
-        let full = if key.is_empty() {
-            alphabet.to_string()
-        } else {
-            shuffle(key, alphabet)
-        };
-        // Remove digits from full if they were added by the key but not in the alphabet
-        let full_clean: String = full.chars().filter(|&c| alphabet.contains(c)).collect();
+
+        // Shake the alphabet a bit
+        //
+        let full = shuffle(key, &alphabet);
+        dbg!(&full);
         let shortc = Self::extract(ALL_CIPHER, &longc);
+        dbg!(&shortc);
 
         let mut c = Straddling {
             key: key.to_string(),
-            full: full_clean,
+            full,
             longc,
             enc_table: [EncEntry::default(); 256],
             dec1: [0; 10],
@@ -275,11 +256,36 @@ impl<F: Frequent> Straddling<F> {
     }
 }
 
-pub type EnglishStraddling = Straddling<English>;
-pub type FrenchStraddling = Straddling<French>;
-pub type GermanStraddling = Straddling<German>;
+impl<A: Alphabet, F: Frequent> std::fmt::Display for Straddling<A, F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let longc = self.longc.iter().map(|&x| x as char).collect::<String>();
+        let dec1 = self.dec1.iter().map(|&x| x as char).collect::<String>();
+        let dec2 = self
+            .dec2
+            .iter()
+            .map(|row| row.iter().map(|&x| x as char).collect::<String>())
+            .filter(|row| !row.is_empty())
+            .collect::<Vec<String>>();
+        write!(
+            f,
+            "straddling full='{}', longc='{}', dec1='{}', dec2='{}'",
+            self.full,
+            longc,
+            dec1,
+            dec2.join(",")
+        )
+    }
+}
 
-impl<F: Frequent> Block for Straddling<F> {
+// -----
+
+pub type EnglishStraddling = Straddling<LatinSC, English>;
+pub type FrenchStraddling = Straddling<LatinSC, French>;
+pub type GermanStraddling = Straddling<LatinSC, German>;
+
+// -----
+
+impl<A: Alphabet, F: Frequent> Block for Straddling<A,  F> {
     /// Returns the block size, which equals the key length.
     ///
     /// # Returns

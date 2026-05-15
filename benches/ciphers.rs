@@ -22,7 +22,7 @@ fn main() {
 
 #[divan::bench_group]
 mod b0_encryption {
-    use old_crypto_rs::helpers::{Latin36, Numeric6};
+    use old_crypto_rs::helpers::{English, Latin36, Numeric6};
     use super::*;
 
     #[divan::bench]
@@ -107,7 +107,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b09_straddling(bencher: Bencher) {
-        let c = Straddling::new(KEY2, "37").unwrap();
+        let c = Straddling::<English>::new(KEY2, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
@@ -127,7 +127,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b11_nihilist(bencher: Bencher) {
-        let c = Nihilist::new(KEY2, KEY1, "37").unwrap();
+        let c = Nihilist::<English>::new(KEY2, KEY1, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
@@ -137,7 +137,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = VicCipher::new("89", "741776", PASSPHRASE, "77651").unwrap();
+        let c = VicCipher::<English>::new("89", "741776", PASSPHRASE, "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 3];
         bencher.bench_local(|| {
@@ -189,12 +189,12 @@ mod b0_encryption {
 
 #[divan::bench_group]
 mod b1_decryption {
-    use old_crypto_rs::helpers::{Latin36, Numeric6};
+    use old_crypto_rs::helpers::{English, Latin36, Numeric6};
     use super::*;
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = VicCipher::new("89", "741776", PASSPHRASE, "77651").unwrap();
+        let c = VicCipher::<English>::new("89", "741776", PASSPHRASE, "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 3];
         c.encrypt(&mut ct, src);
@@ -343,7 +343,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b09_straddling(bencher: Bencher) {
-        let c = Straddling::new(KEY2, "37").unwrap();
+        let c = Straddling::<English>::new(KEY2, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);
@@ -355,7 +355,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b11_nihilist(bencher: Bencher) {
-        let c = Nihilist::new(KEY2, KEY1, "37").unwrap();
+        let c = Nihilist::<English>::new(KEY2, KEY1, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);

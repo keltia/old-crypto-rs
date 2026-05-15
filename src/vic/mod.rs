@@ -224,8 +224,8 @@ impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::rstest;
     use crate::helpers::{to_numeric, English, LatinSC};
+    use crate::vic::subr::{addmod10_inplace, chainadd_inplace, expand5to10, first_encode, submod10};
 
     #[test]
     fn test_new_cipher() {

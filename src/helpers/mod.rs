@@ -4,10 +4,12 @@
 mod alphabet;
 mod coord;
 mod fill;
+mod lang;
 
 pub use alphabet::*;
 pub use coord::*;
 pub use fill::*;
+pub use lang::*;
 
 use std::collections::HashSet;
 

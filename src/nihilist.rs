@@ -17,10 +17,11 @@
 //! ```
 
 use crate::Block;
-use crate::straddling::StraddlingCheckerboard;
+use crate::straddling::Straddling;
 use crate::transposition::Transposition;
 
 use eyre::Result;
+use crate::helpers::Frequent;
 
 /// Nihilist cipher combining straddling checkerboard and transposition.
 ///
@@ -29,14 +30,14 @@ use eyre::Result;
 /// 2. Applies columnar transposition to the resulting digits
 ///
 /// The decryption process reverses these steps in opposite order.
-pub struct Nihilist {
+pub struct Nihilist<F: Frequent> {
     /// Straddling checkerboard for initial text-to-digits conversion
-    sc: StraddlingCheckerboard,
+    sc: Straddling<F>,
     /// Transposition cipher for super-encipherment
     transp: Transposition,
 }
 
-impl Nihilist {
+impl<F: Frequent> Nihilist<F> {
     /// Creates a new Nihilist cipher with the specified keys.
     ///
     /// # Arguments
@@ -65,7 +66,7 @@ impl Nihilist {
     /// - `key2` is empty or invalid for the transposition cipher
     /// - `chrs` is not exactly two characters or contains invalid positions
     pub fn new(key1: &str, key2: &str, chrs: &str) -> Result<Self> {
-        let sc = StraddlingCheckerboard::new(key1, chrs)?;
+        let sc = Straddling::<F>::new(key1, chrs)?;
         let transp = Transposition::new(key2)?;
 
         Ok(Nihilist {
@@ -75,7 +76,7 @@ impl Nihilist {
     }
 }
 
-impl Block for Nihilist {
+impl<F: Frequent> Block for Nihilist<F> {
     /// Returns the block size of the cipher.
     ///
     /// The block size is determined by the transposition cipher's key length.
@@ -133,23 +134,24 @@ impl Block for Nihilist {
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::English;
     use super::*;
 
     #[test]
     fn test_new_cipher() {
-        let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+        let c = Nihilist::<English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
         assert_eq!(c.block_size(), 6);
     }
 
     #[test]
     fn test_new_cipher_bad_keys() {
-        assert!(Nihilist::new("PORTABLE", "", "89").is_err());
-        assert!(Nihilist::new("", "SUBWAY", "62").is_err());
+        assert!(Nihilist::<English>::new("PORTABLE", "", "89").is_err());
+        assert!(Nihilist::<English>::new("", "SUBWAY", "62").is_err());
     }
 
     #[test]
     fn test_nihilist_encrypt() {
-        let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+        let c = Nihilist::<English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
         let pt = "IFYOUCANREADTHIS";
         let ct = "1037306631738227035749";
         let mut dst = vec![0u8; ct.len()];
@@ -159,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_nihilist_decrypt() {
-        let c = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+        let c = Nihilist::<English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
         let pt = "IFYOUCANREADTHIS";
         let ct = "1037306631738227035749";
         let mut dst = vec![0u8; pt.len()];

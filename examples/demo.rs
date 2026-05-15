@@ -1,5 +1,5 @@
-use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, StraddlingCheckerboard, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher};
-use old_crypto_rs::helpers::{shuffle, transp_shuffle, REGULAR_ALPHABET};
+use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Straddling, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
+use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, REGULAR_ALPHABET};
 
 use eyre::Result;
 
@@ -96,13 +96,13 @@ fn main() -> Result<()>{
 
     allciphers.push(Cph {
         name: format!("Straddling ({})", KEY2),
-        c: Box::new(StraddlingCheckerboard::new(KEY2, "37").unwrap()),
+        c: Box::new(EnglishStraddling::new(KEY2, "37").unwrap()),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
         name: format!("Nihilist ({}, {})", KEY2, KEY1),
-        c: Box::new(Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap()),
+        c: Box::new(Nihilist::<English>::new("ARABESQUE", "SUBWAY", "37").unwrap()),
         size: PLAIN.len() * 2,
     });
 
@@ -112,7 +112,7 @@ fn main() -> Result<()>{
     const RNDN: &str = "77651";
     allciphers.push(Cph {
         name: format!("VIC ({}, {}, {}, {})", PERSN, INDN, PHRS, RNDN),
-        c: Box::new(VicCipher::new(PERSN, INDN, PHRS, RNDN).unwrap()),
+        c: Box::new(VicCipher::<English>::new(PERSN, INDN, PHRS, RNDN).unwrap()),
         size: PLAIN.len() * 2,
     });
 

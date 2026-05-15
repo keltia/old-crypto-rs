@@ -1,6 +1,6 @@
 use old_crypto_rs::{
     ADFGVXCipher, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
-    SecomCipher, SquareCipher, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher,
+    SecomCipher, SquareCipher, Straddling, Transposition, VicCipher, VigenereCipher,
     Wheatstone, AutokeyCipher, AutocryptCipher, helpers, Solitaire,
 };
 
@@ -107,7 +107,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b09_straddling(bencher: Bencher) {
-        let c = StraddlingCheckerboard::new(KEY2, "37").unwrap();
+        let c = Straddling::new(KEY2, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 2];
         bencher.bench_local(|| {
@@ -343,7 +343,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b09_straddling(bencher: Bencher) {
-        let c = StraddlingCheckerboard::new(KEY2, "37").unwrap();
+        let c = Straddling::new(KEY2, "37").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);

@@ -3,12 +3,13 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::{ADFGVXCipher, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, StraddlingCheckerboard, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher, PolybiusCipher};
+use old_crypto_rs::{ADFGVXCipher, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, EnglishStraddling, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher, PolybiusCipher};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 use std::io::{self, stdout};
+use old_crypto_rs::helpers::English;
 
 enum InputMode {
     Normal,
@@ -166,7 +167,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "Straddling" => match StraddlingCheckerboard::new(&self.key1, &self.key2) {
+            "Straddling" => match EnglishStraddling::new(&self.key1, &self.key2) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 3];
                     let n = cipher.encrypt(&mut d, src);
@@ -174,7 +175,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "Nihilist" => match Nihilist::new(&self.key1, &self.key2, &self.key3) {
+            "Nihilist" => match Nihilist::<English>::new(&self.key1, &self.key2, &self.key3) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 3];
                     let n = cipher.encrypt(&mut d, src);
@@ -182,7 +183,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "VIC" => match VicCipher::new(&self.key1, &self.key2, &self.key3, &self.key4) {
+            "VIC" => match VicCipher::<English>::new(&self.key1, &self.key2, &self.key3, &self.key4) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 4];
                     let n = cipher.encrypt(&mut d, src);

@@ -9,8 +9,8 @@
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
-use crate::straddling::StraddlingCheckerboard;
-use crate::helpers::{to_numeric, SC_ALPHABET};
+use crate::straddling::Straddling;
+use crate::helpers::{to_numeric, Frequent, SC_ALPHABET};
 
 use eyre::Result;
 
@@ -22,16 +22,16 @@ use eyre::Result;
 /// - A second irregular transposition
 /// 
 #[derive(Debug)]
-pub struct VicCipher {
+pub struct VicCipher<F: Frequent> {
     // First transposition
     firsttp: Transposition,
     // Second transposition
     secondtp: IrregularTransposition,
     // Straddling Checkerboard
-    pub sc: StraddlingCheckerboard,
+    pub sc: Straddling<F>,
 }
 
-impl VicCipher {
+impl<F: Frequent> VicCipher<F> {
     /// Creates a new VIC cipher instance with the specified key material.
     ///
     /// This constructor performs the complex key derivation process used in the VIC cipher,
@@ -79,7 +79,7 @@ impl VicCipher {
 
         // Straddling Checkerboard using 'sckey' (converted to letters) and 'persn'
         let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();
-        let sc = StraddlingCheckerboard::new_with_freq(&sc_key_str, persn, "ATONESIR", SC_ALPHABET)?;
+        let sc = Straddling::<F>::new_with_freq(&sc_key_str, persn, SC_ALPHABET)?;
 
         Ok(VicCipher {
             firsttp,
@@ -279,7 +279,7 @@ fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().map(|&v| b[((v as i32 + 9) % 10) as usize]).collect()
 }
 
-impl Block for VicCipher {
+impl<F: Frequent> Block for VicCipher<F> {
     fn block_size(&self) -> usize {
         1
     }
@@ -402,11 +402,11 @@ impl Block for VicCipher {
 mod tests {
     use super::*;
     use rstest::rstest;
-    use crate::helpers::to_numeric;
+    use crate::helpers::{to_numeric, English};
 
     #[test]
     fn test_new_cipher() {
-        let _c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let _c = VicCipher::<English>::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
     }
 
     #[rstest]
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn test_vic_cipher_full() {
-        let c = VicCipher::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = VicCipher::<English>::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
         
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];

@@ -9,10 +9,11 @@
 //! - A keyword to shuffle the alphabet
 //! - Two "long" cipher digits that prefix two-digit codes
 //! - Eight "short" cipher digits for single-digit codes
-//! - A frequency string to determine which letters get single-digit codes
 //!
+
+use std::marker::PhantomData;
 use crate::Block;
-use crate::helpers::{shuffle, SC_ALPHABET};
+use crate::helpers::{shuffle, English, French, Frequent, German, SC_ALPHABET};
 
 use eyre::Result;
 use crate::error::Error;
@@ -48,17 +49,17 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// # Examples
 ///
 /// ```
-/// use old_crypto_rs::StraddlingCheckerboard;
+/// use old_crypto_rs::EnglishStraddling;
 /// use old_crypto_rs::Block;
 ///
-/// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+/// let cipher = EnglishStraddling::new("ARABESQUE", "89").unwrap();
 /// let mut encrypted = vec![0u8; 100];
 /// let len = cipher.encrypt(&mut encrypted, b"ATTACK");
 /// encrypted.truncate(len);
 /// ```
 ///
 #[derive(Debug)]
-pub struct StraddlingCheckerboard {
+pub struct Straddling<F: Frequent> {
     /// The keyword used to shuffle the alphabet.
     key: String,
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
@@ -73,9 +74,11 @@ pub struct StraddlingCheckerboard {
     dec2: [[u8; 10]; 10],
     /// Fast lookup for whether a digit is a long-code prefix.
     longc_mask: [bool; 10],
+    /// The frequent letters.
+    _marker: PhantomData<F>,
 }
 
-impl StraddlingCheckerboard {
+impl<F: Frequent> Straddling<F> {
     /// Creates a new straddling checkerboard cipher with default frequency.
     ///
     /// Uses "ESANTIRU" as the default high-frequency letters and the standard
@@ -99,13 +102,13 @@ impl StraddlingCheckerboard {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::StraddlingCheckerboard;
+    /// use old_crypto_rs::EnglishStraddling;
     ///
-    /// let cipher = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+    /// let cipher = EnglishStraddling::new("ARABESQUE", "89").unwrap();
     /// ```
     ///
     pub fn new(key: &str, chrs: &str) -> Result<Self> {
-        Self::new_with_freq(key, chrs, "ESANTIRU", SC_ALPHABET)
+        Self::new_with_freq(key, chrs, SC_ALPHABET)
     }
 
     /// Creates a new straddling checkerboard cipher with custom frequency and alphabet.
@@ -117,7 +120,6 @@ impl StraddlingCheckerboard {
     ///
     /// * `key` - The keyword used to shuffle the alphabet (must not be empty)
     /// * `chrs` - A string of at least 2 digits for "long" cipher digit prefixes
-    /// * `freq_str` - Letters that should receive single-digit encodings
     /// * `alphabet` - The alphabet to use for the checkerboard
     ///
     /// # Returns
@@ -130,7 +132,7 @@ impl StraddlingCheckerboard {
     /// - `key` is empty
     /// - `chrs` contains fewer than 2 characters
     ///
-    pub fn new_with_freq(key: &str, chrs: &str, freq_str: &str, alphabet: &str) -> Result<Self> {
+    pub fn new_with_freq(key: &str, chrs: &str, alphabet: &str) -> Result<Self> {
         if key.is_empty() {
             return Err(Error::EmptyKeys.into());
         }
@@ -148,7 +150,7 @@ impl StraddlingCheckerboard {
         let full_clean: String = full.chars().filter(|&c| alphabet.contains(c)).collect();
         let shortc = Self::extract(ALL_CIPHER, &longc);
 
-        let mut c = StraddlingCheckerboard {
+        let mut c = Straddling {
             key: key.to_string(),
             full: full_clean,
             longc,
@@ -156,13 +158,14 @@ impl StraddlingCheckerboard {
             dec1: [0; 10],
             dec2: [[0; 10]; 10],
             longc_mask: [false; 10],
+            _marker: PhantomData,
         };
         for &c_digit in &c.longc {
             if c_digit.is_ascii_digit() {
                 c.longc_mask[(c_digit - b'0') as usize] = true;
             }
         }
-        c.expand_key(shortc, freq_str.as_bytes());
+        c.expand_key(shortc, F::SYMBOLS);
         Ok(c)
     }
 
@@ -272,7 +275,11 @@ impl StraddlingCheckerboard {
     }
 }
 
-impl Block for StraddlingCheckerboard {
+pub type EnglishStraddling = Straddling<English>;
+pub type FrenchStraddling = Straddling<French>;
+pub type GermanStraddling = Straddling<German>;
+
+impl<F: Frequent> Block for Straddling<F> {
     /// Returns the block size, which equals the key length.
     ///
     /// # Returns
@@ -444,20 +451,20 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let c = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+        let c = EnglishStraddling::new("ARABESQUE", "89").unwrap();
         assert_eq!(c.full, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
         assert_eq!(c.longc, b"89");
     }
 
     #[test]
     fn test_new_cipher_bad_keys() {
-        assert!(StraddlingCheckerboard::new("ARABESQUE", "").is_err());
-        assert!(StraddlingCheckerboard::new("", "89").is_err());
+        assert!(Straddling::<English>::new("ARABESQUE", "").is_err());
+        assert!(Straddling::<German>::new("", "89").is_err());
     }
 
     #[test]
     fn test_expand_key() {
-        let c = StraddlingCheckerboard::new("ARABESQUE", "89").unwrap();
+        let c = EnglishStraddling::new("ARABESQUE", "89").unwrap();
         let v = c.enc_table[b'V' as usize];
         let k = c.enc_table[b'K' as usize];
         let a = c.enc_table[b'A' as usize];
@@ -478,7 +485,7 @@ mod tests {
     #[case(b'3', vec!["30", "31", "32", "33", "34", "35", "36", "37", "38", "39"])]
     #[case(b'1', vec!["10", "11", "12", "13", "14", "15", "16", "17", "18", "19"])]
     fn test_times10(#[case] c: u8, #[case] expected: Vec<&str>) {
-        assert_eq!(StraddlingCheckerboard::times10(c), expected);
+        assert_eq!(Straddling::<English>::times10(c), expected);
     }
 
     #[rstest]
@@ -486,7 +493,7 @@ mod tests {
     #[case(b"16", b"02345789")]
     #[case(b"42", b"01356789")]
     fn test_extract(#[case] two: &[u8], #[case] expected: &[u8]) {
-        assert_eq!(StraddlingCheckerboard::extract(ALL_CIPHER, two), expected);
+        assert_eq!(Straddling::<English>::extract(ALL_CIPHER, two), expected);
     }
 
     #[rstest]
@@ -497,7 +504,7 @@ mod tests {
     #[case("SUBWAY", "89", "TOLKIEN", "6819388137")]
     #[case("PORTABLE", "89", "RETRIBUTION", "1721693526840")]
     fn test_straddling_encrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
-        let c = StraddlingCheckerboard::new(key, chrs).unwrap();
+        let c = EnglishStraddling::new(key, chrs).unwrap();
         let mut dst = vec![0u8; 100];
         c.encrypt(&mut dst, pt.as_bytes());
         let sct = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();
@@ -512,7 +519,7 @@ mod tests {
     #[case("SUBWAY", "89", "TOLKIEN", "6819388137")]
     #[case("PORTABLE", "89", "RETRIBUTION", "1721693526840")]
     fn test_straddling_decrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
-        let c = StraddlingCheckerboard::new(key, chrs).unwrap();
+        let c = EnglishStraddling::new(key, chrs).unwrap();
         let mut dst = vec![0u8; 100];
         c.decrypt(&mut dst, ct.as_bytes());
         let spt = String::from_utf8_lossy(&dst).trim_matches('\0').to_string();

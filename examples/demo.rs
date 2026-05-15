@@ -117,23 +117,21 @@ fn main() -> Result<()>{
     });
 
     const SPHASS: &str = "IDREAMOFJEANNIEWITHT";
-    const FREQ: &str = "ATONESI";
     allciphers.push(Cph {
-        name: format!("SECOM ({}, {})", SPHASS, FREQ),
-        c: Box::new(SecomCipher::new(SPHASS, FREQ).unwrap()),
+        name: format!("SECOM ({}, English)", SPHASS),
+        c: Box::new(SecomCipher::<English>::new(SPHASS)?),
         size: PLAIN.len() * 2,
     });
 
-    const FREQ1: &str = "ESANTIR";
     allciphers.push(Cph {
-        name: format!("SECOM ({}, {})", SPHASS, FREQ1),
-        c: Box::new(SecomCipher::new(SPHASS, FREQ1).unwrap()),
+        name: format!("SECOM ({}, French)", SPHASS),
+        c: Box::new(SecomCipher::<French>::new(SPHASS)?),
         size: PLAIN.len() * 2,
     });
 
     allciphers.push(Cph {
         name: format!("Chaocipher official ({}, {})", KEY_PLAIN, KEY_CIPHER),
-        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER).unwrap()),
+        c: Box::new(Chaocipher::new(KEY_PLAIN, KEY_CIPHER)?),
         size: PLAIN.len(),
     });
 

@@ -147,7 +147,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b13_secom(bencher: Bencher) {
-        let c = SecomCipher::new(PASSPHRASE, "ATONESI").unwrap();
+        let c = SecomCipher::<English>::new(PASSPHRASE).unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 3];
         bencher.bench_local(|| {
@@ -208,7 +208,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b13_secom(bencher: Bencher) {
-        let c = SecomCipher::new(PASSPHRASE, "ATONESI").unwrap();
+        let c = SecomCipher::<English>::new(PASSPHRASE).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);

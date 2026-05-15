@@ -191,7 +191,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "SECOM" => match SecomCipher::new(&self.key1, &self.key2) {
+            "SECOM" => match SecomCipher::<English>::new(&self.key1) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 2];
                     let n = cipher.encrypt(&mut d, src);

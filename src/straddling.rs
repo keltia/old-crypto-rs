@@ -113,7 +113,7 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
         //
         let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
             Ok(a) => a,
-            Err(e) => return Err(Error::InvalidAlphabet.into()),
+            Err(_) => return Err(Error::InvalidAlphabet.into()),
         };
         if key.is_empty() {
             return Err(Error::EmptyKeys.into());
@@ -127,9 +127,7 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
         // Shake the alphabet a bit
         //
         let full = shuffle(key, &alphabet);
-        dbg!(&full);
         let shortc = Self::extract(ALL_CIPHER, &longc);
-        dbg!(&shortc);
 
         let mut c = Straddling {
             key: key.to_string(),
@@ -464,8 +462,8 @@ mod tests {
 
     #[test]
     fn test_new_cipher_bad_keys() {
-        assert!(Straddling::<English>::new("ARABESQUE", "").is_err());
-        assert!(Straddling::<German>::new("", "89").is_err());
+        assert!(Straddling::<LatinSC, English>::new("ARABESQUE", "").is_err());
+        assert!(Straddling::<LatinSC, German>::new("", "89").is_err());
     }
 
     #[test]
@@ -491,7 +489,7 @@ mod tests {
     #[case(b'3', vec!["30", "31", "32", "33", "34", "35", "36", "37", "38", "39"])]
     #[case(b'1', vec!["10", "11", "12", "13", "14", "15", "16", "17", "18", "19"])]
     fn test_times10(#[case] c: u8, #[case] expected: Vec<&str>) {
-        assert_eq!(Straddling::<English>::times10(c), expected);
+        assert_eq!(Straddling::<LatinSC, English>::times10(c), expected);
     }
 
     #[rstest]
@@ -499,7 +497,7 @@ mod tests {
     #[case(b"16", b"02345789")]
     #[case(b"42", b"01356789")]
     fn test_extract(#[case] two: &[u8], #[case] expected: &[u8]) {
-        assert_eq!(Straddling::<English>::extract(ALL_CIPHER, two), expected);
+        assert_eq!(Straddling::<LatinSC, English>::extract(ALL_CIPHER, two), expected);
     }
 
     #[rstest]

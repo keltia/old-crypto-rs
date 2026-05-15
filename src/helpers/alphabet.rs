@@ -10,6 +10,8 @@
 //! to convert between characters and their numeric representation (indices)
 //!
 
+use crate::helpers::SC_ALPHABET;
+
 /// Marker type representing a 25-letter Latin alphabet (A-Z with I/J merged).
 ///
 /// This type is used as a type parameter to specify that an operation should work
@@ -103,6 +105,9 @@ pub struct Latin26;
 ///
 #[derive(Debug)]
 pub struct Latin36;
+
+#[derive(Debug)]
+pub struct LatinSC;
 
 /// Trait defining operations for working with different alphabet encodings in classical ciphers.
 ///
@@ -381,6 +386,7 @@ impl Alphabet for Latin26 {
 ///
 /// * [`Latin26`] - Standard 26-letter alphabet without merging
 /// * [`Latin36`] - Extended alphabet including digits
+/// * [`LatinSC`] - Regular alphabet with uppercase letters and 2 characters for straddling checkerboards.
 /// * [`Alphabet`] - The trait definition
 ///
 impl Alphabet for Latin25 {
@@ -465,6 +471,7 @@ impl Alphabet for Latin25 {
 /// # See Also
 ///
 /// * [`Latin26`] - Standard 26-letter alphabet
+/// * [`LatinSC`] - Regular alphabet with uppercase letters and 2 characters for straddling checkerboards.
 /// * [`Alphabet`] - The trait definition
 ///
 impl Alphabet for Latin36 {
@@ -487,6 +494,79 @@ impl Alphabet for Latin36 {
             b'A' + idx as u8
         } else {
             b'0' + (idx - 26) as u8
+        }
+    }
+}
+
+/// Implementation of the `Alphabet` trait for the standard 26-letter Latin alphabet (A-Z) plus
+/// two special characters, '-' and '/'.
+///
+/// This implementation provides character encoding/decoding operations specifically for
+/// uppercase English letters. It maps:
+/// - 'A' to index 0
+/// - 'B' to index 1
+/// - ...
+/// - 'Z' to index 25
+/// - '-' to index 26
+/// - '/' to index 27
+///
+/// Any characters outside the A-Z range (including lowercase letters, digits, and
+/// special characters) are not supported and will return `None` from `normalize`.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, LatinSC};
+///
+/// // Normalize uppercase letters
+/// assert_eq!(Latin26::normalize(b'A'), Some(0));
+/// assert_eq!(Latin26::normalize(b'M'), Some(12));
+/// assert_eq!(Latin26::normalize(b'Z'), Some(25));
+/// assert_eq!(Latin26::normalize(b'-'), Some(26));
+///
+/// // Lowercase letters are converted to uppercase
+/// assert_eq!(Latin26::normalize(b'a'), Some(0));
+/// assert_eq!(Latin26::normalize(b'0'), None);
+/// assert_eq!(Latin26::normalize(b' '), None);
+///
+/// // Denormalize indices back to letters
+/// assert_eq!(Latin26::denormalize(0), b'A');
+/// assert_eq!(Latin26::denormalize(12), b'M');
+/// assert_eq!(Latin26::denormalize(25), b'Z');
+/// assert_eq!(Latin26::denormalize(27), b'/';
+/// ```
+///
+/// # See Also
+///
+/// * [`Latin26`] - Regular alphabet with uppercase letters only
+/// * [`Latin35`] - Regular alphabet with uppercase letters with I/J merged for 5x5 grid
+/// * [`Latin36`] - Extended alphabet including digits
+/// * [`Alphabet`] - The trait definition
+///
+impl Alphabet for LatinSC {
+    const SIZE: usize = 28;
+    const ALPHABET: &'static [u8] = SC_ALPHABET.as_bytes();
+
+    fn normalize(ch: u8) -> Option<usize> {
+        let ch = ch.to_ascii_uppercase();
+        if ch.is_ascii_uppercase() {
+            Some((ch - b'A') as usize)
+        } else if ch == b'-' {
+            Some(26)
+        } else if ch == b'/' {
+            Some(27)
+        } else {
+            None
+        }
+    }
+
+    fn denormalize(idx: usize) -> u8 {
+        if idx < 26 {
+            b'A' + idx as u8
+        } else if idx == 26 {
+            b'-' as u8
+        } else {
+            b'/' as u8
         }
     }
 }

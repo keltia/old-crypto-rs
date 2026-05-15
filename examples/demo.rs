@@ -112,7 +112,7 @@ fn main() -> Result<()>{
     const RNDN: &str = "77651";
     allciphers.push(Cph {
         name: format!("VIC ({}, {}, {}, {})", PERSN, INDN, PHRS, RNDN),
-        c: Box::new(VicCipher::<LatinSC, English>::new(PERSN, INDN, PHRS, RNDN).unwrap()),
+        c: Box::new(VicCipher::<LatinSC, English>::new(INDN, PHRS, RNDN)?),
         size: PLAIN.len() * 2,
     });
 

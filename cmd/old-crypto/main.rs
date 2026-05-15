@@ -183,7 +183,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "VIC" => match VicCipher::<LatinSC, English>::new(&self.key1, &self.key2, &self.key3, &self.key4) {
+            "VIC" => match VicCipher::<LatinSC, English>::new(&self.key1, &self.key2, &self.key3) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 4];
                     let n = cipher.encrypt(&mut d, src);

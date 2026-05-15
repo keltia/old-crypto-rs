@@ -1,7 +1,7 @@
 use eyre::Result;
 
 use old_crypto_rs::Block;
-use old_crypto_rs::helpers::{English, Frequent, shuffle, Alphabet, LatinSC};
+use old_crypto_rs::helpers::{English, Frequent, shuffle, Alphabet, LatinSC, condense_str, condense};
 
 use std::marker::PhantomData;
 
@@ -54,9 +54,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// ```
 ///
 #[derive(Debug)]
-struct Straddling<A: Alphabet, F: Frequent> {
-    /// The keyword used to shuffle the alphabet.
-    key: String,
+struct VicStraddling<A: Alphabet, F: Frequent> {
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
     /// The shuffled alphabet after applying the key.
@@ -73,7 +71,7 @@ struct Straddling<A: Alphabet, F: Frequent> {
     _marker: PhantomData<(A,F)>,
 }
 
-impl<A: Alphabet, F: Frequent> std::fmt::Display for Straddling<A, F> {
+impl<A: Alphabet, F: Frequent> std::fmt::Display for VicStraddling<A, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let longc = self.longc.iter().map(|&x| x as char).collect::<String>();
         let dec1 = self.dec1.iter().map(|&x| x as char).collect::<String>();
@@ -94,32 +92,32 @@ impl<A: Alphabet, F: Frequent> std::fmt::Display for Straddling<A, F> {
     }
 }
 
-impl<A: Alphabet, F: Frequent> Straddling<A, F> {
-    pub fn new(key: &str, chrs: &str) -> Result<Self> {
+impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
+    pub fn new(indexes: &str) -> Result<Self> {
         // Default alphabet.
         //
-        let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
+        let mut alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
             Ok(a) => a,
             Err(e) => return Err(Error::InvalidAlphabet.into()),
         };
-        if key.is_empty() {
-            return Err(Error::EmptyKeys.into());
-        }
-        if chrs.len() < 2 {
-            return Err(Error::TooShort(chrs.len(), 2).into());
-        }
 
-        let longc = vec![chrs.as_bytes()[0], chrs.as_bytes()[1]];
+        dbg!(&indexes);
+        let longc = vec![indexes.as_bytes()[8], indexes.as_bytes()[9]];
+        dbg!(&longc);
 
         // Shake the alphabet a bit
         //
-        let full = shuffle(key, &alphabet);
+        let mut alpha = vec![];
+        let mut nkey = F::SYMBOLS;
+        alpha.append(&mut nkey.to_vec());
+        alpha.append(&mut alphabet.as_bytes().to_vec());
+
+        let full = condense(String::from_utf8(alpha)?.as_str());
         dbg!(&full);
-        let shortc = Self::extract(ALL_CIPHER, &longc);
+        let shortc = indexes.as_bytes()[0..=7].to_vec();
         dbg!(&shortc);
 
-        let mut c = Straddling {
-            key: key.to_string(),
+        let mut c = VicStraddling {
             full,
             longc,
             enc_table: [EncEntry::default(); 256],
@@ -252,10 +250,11 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
 
 const KEY: &str = "ARABESQUE";
 const PT1: &str = "ATTACKAT2AM";
-const PT2: &str = "IFYOUCANREADTHIS";
+const KEY2: &str = "1305427698";
+const PT2: &str = "RETRIBUTION";
 
 fn main() -> Result<()> {
-    let cipher = Straddling::<LatinSC, English>::new(KEY, "89")?;
+    let cipher = VicStraddling::<LatinSC, English>::new(KEY2)?;
     println!("{}", cipher);
 
     let mut encrypted = vec![0u8; 100];
@@ -263,14 +262,11 @@ fn main() -> Result<()> {
     encrypted.truncate(len);
     println!("{}", std::str::from_utf8(&encrypted)?);
 
-    let cipher = Straddling::<LatinSC, English>::new(KEY, "37")?;
-    println!("{}", cipher);
-
-    let mut encrypted = vec![0u8; 100];
-    let len = cipher.encrypt(&mut encrypted, PT2.as_bytes());
-    encrypted.truncate(len);
-    println!("{}", std::str::from_utf8(&encrypted)?);
-
+    let mut decrypted = vec![0u8; 100];
+    let len = cipher.decrypt(&mut decrypted, encrypted.as_slice());
+    decrypted.truncate(len);
+    println!("{}", std::str::from_utf8(&decrypted)?);
+    assert_eq!(PT1, std::str::from_utf8(&decrypted)?);
     Ok(())
 }
 
@@ -306,9 +302,9 @@ pub enum Error {
     RowGenerationFailed,
 }
 
-pub type EnglishStraddling = Straddling<LatinSC, English>;
+pub type EnglishStraddling = VicStraddling<LatinSC, English>;
 
-impl<A: Alphabet, F: Frequent> Block for Straddling<A, F> {
+impl<A: Alphabet, F: Frequent> Block for VicStraddling<A, F> {
     /// Returns the block size, which equals the key length.
     ///
     /// # Returns
@@ -316,7 +312,7 @@ impl<A: Alphabet, F: Frequent> Block for Straddling<A, F> {
     /// The length of the cipher key in bytes.
     ///
     fn block_size(&self) -> usize {
-        self.key.len()
+        1
     }
 
     /// Encrypts plaintext into digit ciphertext.

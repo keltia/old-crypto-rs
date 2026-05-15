@@ -551,9 +551,9 @@ impl Alphabet for LatinSC {
         let ch = ch.to_ascii_uppercase();
         if ch.is_ascii_uppercase() {
             Some((ch - b'A') as usize)
-        } else if ch == b'-' {
-            Some(26)
         } else if ch == b'/' {
+            Some(26)
+        } else if ch == b'-' {
             Some(27)
         } else {
             None
@@ -564,9 +564,9 @@ impl Alphabet for LatinSC {
         if idx < 26 {
             b'A' + idx as u8
         } else if idx == 26 {
-            b'-' as u8
-        } else {
             b'/' as u8
+        } else {
+            b'-' as u8
         }
     }
 }

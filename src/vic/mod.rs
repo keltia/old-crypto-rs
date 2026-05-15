@@ -9,10 +9,14 @@
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
-use crate::straddling::Straddling;
-use crate::helpers::{to_numeric, Alphabet, Frequent};
+use crate::helpers::{Alphabet, Frequent};
+use crate::vic::straddling::VicStraddling;
+use crate::vic::subr::{expand_key, rebuild_plaintext, split_plaintext, str2int};
 
 use eyre::Result;
+
+pub(crate) mod straddling;
+pub(crate) mod subr;
 
 /// VIC cipher implementation combining straddling checkerboard and transposition ciphers.
 ///
@@ -28,7 +32,7 @@ pub struct VicCipher<A: Alphabet, F: Frequent> {
     // Second transposition
     secondtp: IrregularTransposition,
     // Straddling Checkerboard
-    pub sc: Straddling<A, F>,
+    pub sc: VicStraddling<A, F>,
 }
 
 impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
@@ -65,7 +69,7 @@ impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
     /// ).unwrap();
     /// ```
     ///
-    pub fn new(persn: &str, ind: &str, phrase: &str, imsg: &str) -> Result<Self> {
+    pub fn new(ind: &str, phrase: &str, imsg: &str) -> Result<Self> {
         let imsg_int = str2int(imsg);
         let ikey5 = str2int(&ind[..5]);
 
@@ -82,8 +86,8 @@ impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
         // Straddling Checkerboard using 'sckey' (converted to letters) and 'persn'
         //
         let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();
-        let sc = Straddling::<A, F>::new(&sc_key_str, persn)?;
-
+        dbg!(&sc_key_str);
+        let sc = VicStraddling::<A, F>::new(&sc_key_str)?;
         Ok(VicCipher {
             firsttp,
             secondtp,
@@ -92,195 +96,6 @@ impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
     }
 }
 
-/// Intermediate structure holding expanded key material.
-///
-/// This structure contains the derived keys used for the two transpositions
-/// and the straddling checkerboard.
-///
-#[derive(Debug)]
-struct ExpandedKey {
-    /// Key for the first (regular) transposition
-    second: Vec<u8>,
-    /// Key for the second (irregular) transposition
-    third: Vec<u8>,
-    /// Key for the straddling checkerboard
-    sckey: Vec<u8>,
-}
-
-/// Expands the key material into the three keys needed for the VIC cipher.
-///
-/// This function performs the complex key derivation process using chain addition
-/// and modular arithmetic to generate the transposition and checkerboard keys.
-///
-/// # Arguments
-///
-/// * `phrase` - Key phrase (at least 20 characters) split into two parts
-/// * `imsg` - Initial message number as byte array
-/// * `ikey5` - First 5 digits of indicator as byte array
-///
-/// # Returns
-///
-/// Returns an `ExpandedKey` structure containing all derived key material.
-///
-fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
-    let ph1: Vec<u8> = to_numeric(&phrase[..10]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
-    let ph2: Vec<u8> = to_numeric(&phrase[10..20]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
-
-    let mut first = submod10(imsg, ikey5);
-    first = chainadd_extend(&first, 5);
-
-    addmod10_inplace(&mut first, &ph1);
-    let second = first_encode(&first, &ph2);
-
-    let mut r = second.clone();
-    for _ in 0..5 {
-        chainadd_inplace(&mut r);
-    }
-
-    // In VIC, the key for the second transposition and the SC is derived 
-    // from the 5th iteration of chain addition.
-    let third = r.clone();
-    let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
-    let sckey = to_numeric(&r_str);
-
-    ExpandedKey {
-        second,
-        third,
-        sckey,
-    }
-}
-
-
-/// Converts a string of digits to a vector of integers.
-///
-/// # Arguments
-///
-/// * `str` - String containing ASCII digits ('0'-'9')
-///
-/// # Returns
-///
-/// Returns a vector of bytes where each byte is the numeric value (0-9) of the digit.
-///
-#[inline]
-fn str2int(str: &str) -> Vec<u8> {
-    str.bytes().map(|b| b - b'0').collect()
-}
-
-/// Adds two vectors element-wise modulo 10 in-place.
-///
-/// Each element in `a` is replaced with `(a[i] + b[i]) % 10`. The operation
-/// stops when either vector is exhausted.
-///
-/// # Arguments
-///
-/// * `a` - Mutable slice that will be modified with the result
-/// * `b` - Slice to add to `a`
-///
-#[inline]
-fn addmod10_inplace(a: &mut [u8], b: &[u8]) {
-    for (x, y) in a.iter_mut().zip(b) {
-        *x = (*x + *y) % 10;
-    }
-}
-
-#[inline]
-fn submod10(a: &[u8], b: &[u8]) -> Vec<u8> {
-    a.iter().zip(b).map(|(x, y)| (x + 10 - y) % 10).collect()
-}
-
-/// Performs chain addition in-place on a vector.
-///
-/// Chain addition adds each element to its right neighbor (wrapping around at the end)
-/// and stores the result modulo 10 in the original position.
-///
-/// # Arguments
-///
-/// * `a` - Mutable slice to perform chain addition on
-///
-fn chainadd_inplace(a: &mut [u8]) {
-    let l = a.len();
-    if l < 2 { return; }
-    let first = a[0];
-    for i in 0..l - 1 {
-        a[i] = (a[i] + a[i + 1]) % 10;
-    }
-    a[l - 1] = (a[l - 1] + first) % 10;
-}
-
-/// Extends a vector using chain addition.
-///
-/// Each new element is the sum of the element at current index and its successor.
-///
-/// # Arguments
-///
-/// * `a` - Initial slice
-/// * `n` - Number of elements to add
-///
-fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
-    let mut res = Vec::with_capacity(a.len() + n);
-    res.extend_from_slice(a);
-    for i in 0..n {
-        let sum = (res[i] + res[i+1]) % 10;
-        res.push(sum);
-    }
-    res
-}
-
-/// In the original VIC cipher, in order to confuse the adversary even more, plaintext is cut
-/// around the middle, and the two parts are swapped with a marker in between.
-///
-/// (cf. Kahn on Codes)
-///
-//     let ml = pt.len() / 2;
-//     let intv = rand::rng().random_range(1..=(ml / 2));
-//     let ml = ml - intv;
-/// Example:
-/// "ABCDEFGH" is split around the middle and becomes "EFGH-ABCD".
-///
-fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
-    let mut beg = pt[0..ml].to_vec();
-    let mut res = pt[ml..].to_vec();
-    res.append(&mut vec![b'-' as u8]);
-    res.append(&mut beg);
-    res
-}
-
-/// Expands a 5-element vector to 10 elements using chain addition.
-///
-/// The result contains the original 5 elements followed by 5 elements
-/// generated by chain addition.
-///
-/// # Arguments
-///
-/// * `a` - Input slice (typically 5 elements)
-///
-/// # Returns
-///
-/// Returns a 10-element vector.
-///
-#[inline]
-#[cfg(test)]
-fn expand5to10(a: &[u8]) -> Vec<u8> {
-    chainadd_extend(a, 5)
-}
-
-/// Encodes vector `a` using vector `b` as a lookup table.
-///
-/// Each element in `a` is used as an index (after adjustment) into vector `b`.
-///
-/// # Arguments
-///
-/// * `a` - Vector of indices
-/// * `b` - Lookup table vector
-///
-/// # Returns
-///
-/// Returns a vector where each element is `b[((a[i] + 10) % 10) - 1]`.
-///
-#[inline]
-fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
-    a.iter().map(|&v| b[((v as i32 + 9) % 10) as usize]).collect()
-}
 
 impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
     fn block_size(&self) -> usize {
@@ -365,11 +180,16 @@ impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
         let mut buf_tp1 = vec![0u8; tp2_len];
         let tp1_len = self.firsttp.decrypt(&mut buf_tp1, &buf_tp2[..tp2_len]);
 
+        dbg!(String::from_utf8_lossy(buf_tp1.as_slice()));
         let mut buf_sc = vec![0u8; tp1_len];
         let sc_len = self.sc.decrypt(&mut buf_sc, &buf_tp1[..tp1_len]);
         let sc_plain = &buf_sc[..sc_len];
 
-        if let Some(dash_pos) = sc_plain.iter().position(|&b| b == b'-') {
+        let res = rebuild_plaintext(sc_plain);
+        dst.copy_from_slice(res.as_slice());
+        res.len()
+
+/*        if let Some(dash_pos) = sc_plain.iter().position(|&b| b == b'-') {
             let after = &sc_plain[dash_pos + 1..];
             let before = &sc_plain[..dash_pos];
             let mut out_len = 0;
@@ -398,7 +218,7 @@ impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
             dst[..n].copy_from_slice(&sc_plain[..n]);
             n
         }
-    }
+*/    }
 }
 
 #[cfg(test)]
@@ -409,59 +229,12 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let _c = VicCipher::<LatinSC, English>::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
-    }
-
-    #[rstest]
-    #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
-    #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
-    fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
-        let res: Vec<u8> = to_numeric(s).into_iter().map(|x| (x as u8 + 1) % 10).collect();
-        assert_eq!(res, r);
-    }
-
-    #[rstest]
-    #[case(vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![0, 6, 0, 0, 6])]
-    #[case(vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![4, 1, 7, 2, 8])]
-    fn test_addmod10(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
-        addmod10_inplace(&mut a, &b);
-        assert_eq!(a, c);
-    }
-
-    #[rstest]
-    #[case(vec![8, 6, 1, 5, 4], vec![2, 0, 9, 5, 2], vec![6, 6, 2, 0, 2])]
-    #[case(vec![7, 7, 6, 5, 1], vec![7, 4, 1, 7, 7], vec![0, 3, 5, 8, 4])]
-    fn test_submod10(#[case] a: Vec<u8>, #[case] b: Vec<u8>, #[case] c: Vec<u8>) {
-        assert_eq!(submod10(&a, &b), c);
-    }
-
-    #[rstest]
-    #[case(vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 2])]
-    #[case(vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 8])]
-    fn test_chainadd_inplace(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>) {
-        chainadd_inplace(&mut a);
-        assert_eq!(a, b);
-    }
-
-    #[rstest]
-    #[case(vec![8, 6, 1, 5, 4], vec![8, 6, 1, 5, 4, 4, 7, 6, 9, 8])]
-    #[case(vec![7, 7, 6, 5, 1], vec![7, 7, 6, 5, 1, 4, 3, 1, 6, 5])]
-    #[case(vec![0, 3, 5, 8, 4], vec![0, 3, 5, 8, 4, 3, 8, 3, 2, 7])]
-    fn test_expand5to10(#[case] a: Vec<u8>, #[case] b: Vec<u8>) {
-        assert_eq!(expand5to10(&a), b);
-    }
-
-    #[test]
-    fn test_first_encode() {
-        let r1 = vec![6, 5, 5, 1, 5, 1, 7, 8, 9, 1];
-        let r2 = vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9];
-        let r = vec![0, 2, 2, 1, 2, 1, 5, 8, 3, 1];
-        assert_eq!(first_encode(&r1, &r2), r);
+        let _c = VicCipher::<LatinSC, English>::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
     }
 
     #[test]
     fn test_vic_cipher_full() {
-        let c = VicCipher::<LatinSC, English>::new("89", "741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = VicCipher::<LatinSC, English>::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
         
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];
@@ -626,15 +399,6 @@ mod tests {
         // Ranks: 0 7 9 4 1 6 3 5 8 2
         //
         assert_eq!(sckey, vec![0, 7, 9, 4, 1, 6, 3, 5, 8, 2]);
-    }
-
-    #[rstest]
-    #[case(b"ABCDEFGH", 1, b"BCDEFGH-A")]
-    #[case(b"ABCDEFGH", 4, b"EFGH-ABCD")]
-    #[case(b"ABCDEFGH", 7, b"H-ABCDEFG")]
-    fn test_split_plaintext_cases(#[case] pt: &[u8], #[case] ml: usize, #[case] expected: &[u8]) {
-        let out = split_plaintext(pt, ml);
-        assert_eq!(out, expected);
     }
 
     #[test]

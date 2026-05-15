@@ -1,11 +1,18 @@
 //! Subroutines for SECOM cipher implementation.
 //!
-//! Internal module for the SECOM straddling checkerboard
+//! Internal module for the SECOM straddling checkerboard.  It is quite different from the
+//! VIC-based checkerboard, because it uses an alphabet with digits, plus "*" as space.
 //!
-use crate::Block;
+//! >NOTE: no need to add the Alphabet trait there, only the `Frequent` one for the checkerboard
+//! variations.
+//!
+use std::marker::PhantomData;
 
 use eyre::Result;
+
+use crate::Block;
 use crate::error::Error;
+use crate::helpers::Frequent;
 
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
@@ -28,7 +35,7 @@ struct EncEntry {
 /// It always has 3 "long" digits that prefix two-digit codes.
 ///
 #[derive(Debug)]
-pub(crate) struct SecomCheckerboard {
+pub(crate) struct SecomCheckerboard<F: Frequent> {
     /// The three digits that prefix two-digit codes.
     pub(crate) longc: [u8; 3],
     /// Fast encoding table indexed by plaintext byte.
@@ -37,9 +44,11 @@ pub(crate) struct SecomCheckerboard {
     dec1: [u8; 10],
     /// Fast decoding table for two-digit codes.
     dec2: [[u8; 10]; 10],
+    ///
+    _marker: PhantomData<F>,
 }
 
-impl SecomCheckerboard {
+impl<F: Frequent> SecomCheckerboard<F> {
     /// Creates a new SECOM checkerboard.
     ///
     /// # Arguments
@@ -47,7 +56,7 @@ impl SecomCheckerboard {
     /// * `header` - A 10-digit permutation used to define the layout.
     /// * `freq` - A string of 7 frequent characters that will get single-digit codes.
     ///
-    pub(crate) fn new(header: [u8; 10], freq: &str) -> Result<Self> {
+    pub(crate) fn new(header: [u8; 10]) -> Result<Self> {
         let mut longc = [0u8; 3];
         for (i, &pos) in FREQ_BLANK_POS.iter().enumerate() {
             longc[i] = header[pos];
@@ -59,7 +68,7 @@ impl SecomCheckerboard {
 
         // Place frequent letters on the top row.
         //
-        let mut freq_iter = freq.as_bytes().iter();
+        let mut freq_iter = F::SYMBOLS.iter();
         for col in 0..10 {
             if FREQ_BLANK_POS.contains(&col) {
                 continue;
@@ -82,6 +91,7 @@ impl SecomCheckerboard {
         // The SECOM alphabet consists of A-Z, 0-9, and '*' for space.
         //
         let base_alphabet = BASE_ALPHABET;
+        let freq = String::from_utf8(F::SYMBOLS.to_vec())?;
         let mut checker_extra = String::with_capacity(30);
         for c in base_alphabet.chars() {
             if !freq.contains(c) {
@@ -111,11 +121,12 @@ impl SecomCheckerboard {
             enc,
             dec1,
             dec2,
+            _marker: PhantomData,
         })
     }
 }
 
-impl Block for SecomCheckerboard {
+impl<F: Frequent> Block for SecomCheckerboard<F> {
     fn block_size(&self) -> usize {
         1
     }
@@ -202,13 +213,13 @@ impl Block for SecomCheckerboard {
 
 #[cfg(test)]
 mod tests {
+    use crate::helpers::English;
     use super::*;
 
     #[test]
     fn test_checkerboard_layout() {
         let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let freq = "ATONESI";
-        let cb = SecomCheckerboard::new(header, freq).unwrap();
+        let cb = SecomCheckerboard::<English>::new(header).unwrap();
         
         // FREQ_BLANK_POS = [2, 5, 8]
         // header[2]=2, header[5]=5, header[8]=8 should be long digits
@@ -238,8 +249,7 @@ mod tests {
     #[test]
     fn test_checkerboard_two_digits() {
         let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let freq = "ATONESI";
-        let cb = SecomCheckerboard::new(header, freq).unwrap();
+        let cb = SecomCheckerboard::<English>::new(header).unwrap();
 
         // Let's test some characters that should be 2 digits.
         // Alphabet: ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789
@@ -270,7 +280,7 @@ mod tests {
     #[test]
     fn test_buffer_too_small() {
         let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let cb = SecomCheckerboard::new(header, "ATONESI").unwrap();
+        let cb = SecomCheckerboard::<English>::new(header).unwrap();
         let mut dst = [0u8; 3];
         // "ATONESI" -> 7 digits.
         let n = cb.encrypt(&mut dst, b"ATONESI");
@@ -281,7 +291,7 @@ mod tests {
     #[test]
     fn test_invalid_chars() {
         let header = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        let cb = SecomCheckerboard::new(header, "ATONESI").unwrap();
+        let cb = SecomCheckerboard::<English>::new(header).unwrap();
         let mut dst = [0u8; 10];
         // '#' is not in alphabet, should be skipped
         let n = cb.encrypt(&mut dst, b"A#T");

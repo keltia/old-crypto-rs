@@ -67,6 +67,7 @@ pub(crate) use subr::{
 
 use crate::{Block, Transposition};
 use crate::error::Error;
+use crate::helpers::Frequent;
 
 use eyre::Result;
 
@@ -77,16 +78,16 @@ use eyre::Result;
 /// columnar transpositions (one regular and one disrupted).
 ///
 #[derive(Debug)]
-pub struct SecomCipher {
+pub struct SecomCipher<F: Frequent> {
     /// The internal straddling checkerboard.
-    checker: SecomCheckerboard,
+    checker: SecomCheckerboard<F>,
     /// First (regular) columnar transposition.
     tp1: Transposition,
     /// The second (disrupted) columnar transposition.
     tp2: SecomDisruptedTransposition,
 }
 
-impl SecomCipher {
+impl<F: Frequent> SecomCipher<F> {
     /// Creates a new `SecomCipher` instance.
     ///
     /// # Arguments
@@ -94,7 +95,7 @@ impl SecomCipher {
     /// * `key_phrase` - A string of at least 20 letters used for key derivation.
     /// * `freq` - A 7-letter frequency string for the checkerboard (e.g., "ESTONIA").
     ///
-    pub fn new(key_phrase: &str, freq: &str) -> Result<Self> {
+    pub fn new(key_phrase: &str) -> Result<Self> {
         let key = normalize_key_phrase(key_phrase);
         if key.len() < 20 {
             return Err(Error::KeyTooShort(20).into());
@@ -123,7 +124,7 @@ impl SecomCipher {
         //
         let last_row = rows.last().ok_or(Error::RowGenerationFailed)?.clone();
         let header_digits = rank_digits_1to0(&last_row);
-        let checker = SecomCheckerboard::new(vec_to_array_10(&header_digits)?, freq)?;
+        let checker = SecomCheckerboard::<F>::new(vec_to_array_10(&header_digits)?)?;
 
         // Derive the lengths of both transpositions
         //
@@ -189,7 +190,7 @@ impl SecomCipher {
     }
 }
 
-impl Block for SecomCipher {
+impl<F: Frequent> Block for SecomCipher<F> {
     fn block_size(&self) -> usize {
         1
     }
@@ -305,7 +306,7 @@ mod tests {
     #[test]
     fn test_checkerboard_example() {
         let header = vec![8, 1, 3, 9, 0, 6, 5, 4, 2, 7];
-        let checker = SecomCheckerboard::new(vec_to_array_10(&header).unwrap(), "ESTONIA").unwrap();
+        let checker = SecomCheckerboard::<Special>::new(vec_to_array_10(&header).unwrap()).unwrap();
         assert_eq!(checker.longc, [3, 6, 2]);
 
         let mut out = vec![0u8; 256];
@@ -323,7 +324,7 @@ mod tests {
         // From the example: header = [8, 1, 3, 9, 0, 6, 5, 4, 2, 7], freq = "ESTONIA"
         //
         let header = [8, 1, 3, 9, 0, 6, 5, 4, 2, 7];
-        let checker = SecomCheckerboard::new(header, "ESTONIA").unwrap();
+        let checker = SecomCheckerboard::<Special>::new(header).unwrap();
 
         let pt = b"HELLO";
         let mut ct = vec![0u8; 10];
@@ -389,10 +390,16 @@ mod tests {
         assert_eq!(order, vec![0, 4, 9, 6, 2, 5, 8, 3, 1, 7]);
     }
 
+    struct Special;
+
+    impl Frequent for Special {
+        const SYMBOLS: &'static [u8] = b"ESTONIA";
+    }
+
     #[test]
     fn test_full_cipher_example() {
         let key_phrase = "MAKE NEW FRIENDS BUT KEEP THE OLD";
-        let cipher = SecomCipher::new(key_phrase, "ESTONIA").unwrap();
+        let cipher = SecomCipher::<Special>::new(key_phrase).unwrap();
 
         let pt = b"RV TOMORROW AT 1400PM TO COMPLETE TRANSACTION USE DEADDROP AS USUAL";
         let mut ct = vec![0u8; 256];
@@ -410,18 +417,5 @@ mod tests {
             dec_str,
             "RV TOMORROW AT 1400PM TO COMPLETE TRANSACTION USE DEADDROP AS USUAL"
         );
-    }
-
-    #[test]
-    fn test_custom_freq() {
-        let key_phrase = "MAKE NEW FRIENDS BUT KEEP THE OLD";
-        let freq = "BCDFGHJ";
-        let cipher = SecomCipher::new(key_phrase, freq).unwrap();
-        let pt = b"HELLO WORLD";
-        let mut ct = vec![0u8; 128];
-        let ct_len = cipher.encrypt(&mut ct, pt);
-        let mut dec = vec![0u8; 128];
-        let dec_len = cipher.decrypt(&mut dec, &ct[..ct_len]);
-        assert_eq!(&dec[..dec_len], pt);
     }
 }

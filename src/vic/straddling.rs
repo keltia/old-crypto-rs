@@ -10,7 +10,7 @@
 use eyre::Result;
 
 use crate::Block;
-use crate::helpers::{Alphabet, English, Frequent, condense};
+use crate::helpers::{Alphabet, Frequent, condense};
 
 use crate::error::Error;
 use std::marker::PhantomData;
@@ -64,7 +64,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// ```
 ///
 #[derive(Debug)]
-pub(crate) struct VicStraddling<A: Alphabet, F: Frequent> {
+pub struct VicStraddling<A: Alphabet, F: Frequent> {
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
     /// The shuffled alphabet after applying the key.
@@ -106,9 +106,9 @@ impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
     pub fn new(indexes: &str) -> Result<Self> {
         // Default alphabet.
         //
-        let mut alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
+        let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
             Ok(a) => a,
-            Err(e) => return Err(Error::InvalidAlphabet.into()),
+            Err(_) => return Err(Error::InvalidAlphabet.into()),
         };
 
         dbg!(&indexes);
@@ -118,7 +118,7 @@ impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
         // Shake the alphabet a bit
         //
         let mut alpha = vec![];
-        let mut nkey = F::SYMBOLS;
+        let nkey = F::SYMBOLS;
         alpha.append(&mut nkey.to_vec());
         alpha.append(&mut alphabet.as_bytes().to_vec());
 
@@ -394,7 +394,7 @@ impl<A: Alphabet, F: Frequent> Block for VicStraddling<A, F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::LatinSC;
+    use crate::helpers::{English, LatinSC};
 
     use super::*;
     use eyre::Result;

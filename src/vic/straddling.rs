@@ -10,9 +10,9 @@
 use eyre::Result;
 
 use crate::Block;
-use crate::helpers::{Alphabet, Frequent, condense, Derive};
-
+use crate::helpers::{Alphabet, Frequent, Derive};
 use crate::error::Error;
+
 use std::marker::PhantomData;
 
 /// Compact encoding entry for a single plaintext byte.

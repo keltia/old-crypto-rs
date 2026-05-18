@@ -201,13 +201,16 @@ pub(crate) fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
 mod tests {
     use super::*;
     use rstest::rstest;
-    use crate::helpers::{to_numeric, English, LatinSC};
+    use crate::helpers::{to_numeric, EnglishExt, Horizontal, LatinSC};
     use crate::vic::subr::{addmod10_inplace, submod10};
     use crate::VicCipher;
 
+    type OurVic = VicCipher::<LatinSC, Horizontal, EnglishExt>;
+
     #[test]
     fn test_new_cipher() {
-        let _c = VicCipher::<LatinSC, English>::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = OurVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651");
+        assert!(c.is_ok());
     }
 
     #[rstest]

@@ -9,7 +9,7 @@ use ratatui::{
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 use std::io::{self, stdout};
-use old_crypto_rs::helpers::{English, LatinSC};
+use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
 
 enum InputMode {
     Normal,
@@ -183,7 +183,7 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "VIC" => match VicCipher::<LatinSC, English>::new(&self.key1, &self.key2, &self.key3) {
+            "VIC" => match VicCipher::<LatinSC, Horizontal, EnglishExt>::new(&self.key1, &self.key2, &self.key3) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 4];
                     let n = cipher.encrypt(&mut d, src);

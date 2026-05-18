@@ -1,5 +1,5 @@
 use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
-use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, LatinSC, REGULAR_ALPHABET};
+use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, EnglishExt, French, Horizontal, LatinSC, REGULAR_ALPHABET};
 
 use eyre::Result;
 
@@ -112,7 +112,7 @@ fn main() -> Result<()>{
     const RNDN: &str = "77651";
     allciphers.push(Cph {
         name: format!("VIC ({}, {}, {}, {})", PERSN, INDN, PHRS, RNDN),
-        c: Box::new(VicCipher::<LatinSC, English>::new(INDN, PHRS, RNDN)?),
+        c: Box::new(VicCipher::<LatinSC, Horizontal, EnglishExt>::new(INDN, PHRS, RNDN)?),
         size: PLAIN.len() * 2,
     });
 

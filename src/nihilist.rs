@@ -155,7 +155,7 @@ mod tests {
         let c = Nihilist::<LatinSC, English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
         dbg!(&c);
         let pt = "IFYOUCANREADTHIS";
-        let ct = "1037306631738227035749";
+        let ct = "1037308871737227035649";
         let mut dst = vec![0u8; ct.len()];
         c.encrypt(&mut dst, pt.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst), ct);
@@ -165,7 +165,7 @@ mod tests {
     fn test_nihilist_decrypt() {
         let c = Nihilist::<LatinSC, English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
         let pt = "IFYOUCANREADTHIS";
-        let ct = "1037306631738227035749";
+        let ct = "1037308871737227035649";
         let mut dst = vec![0u8; pt.len()];
         c.decrypt(&mut dst, ct.as_bytes());
         assert_eq!(String::from_utf8_lossy(&dst).trim_matches('\0'), pt);

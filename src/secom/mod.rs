@@ -54,11 +54,11 @@
 //! (plain text is in English)
 //!
 
-mod checkerboard;
+mod straddling;
 mod disrupted;
 mod subr;
 
-pub(crate) use checkerboard::SecomCheckerboard;
+pub(crate) use straddling::SecomCheckerboard;
 pub(crate) use disrupted::SecomDisruptedTransposition;
 pub(crate) use subr::{
     addmod10, chain_add_row, letters_to_digits_1to0, normalize_key_phrase, rank_digits_1to0,

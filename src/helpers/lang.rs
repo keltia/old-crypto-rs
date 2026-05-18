@@ -17,6 +17,28 @@
 //! NOTE: We use the WP page as a reference, except for English & French as it would probably invalidate
 //! all the tests in the library.
 
+/// Trait for languages that define their most frequently occurring symbols.
+///
+/// This trait allows language-specific types to provide a set of symbols
+/// (as bytes) that are most commonly used in that language. This is useful
+/// for frequency analysis and cryptographic applications.
+///
+pub trait Frequent {
+    /// The most frequent symbols in the language, ordered by frequency.
+    ///
+    /// These symbols are represented as ASCII bytes for efficient processing.
+    ///
+    const SYMBOLS: &'static [u8];
+
+    /// This is the character we use to mark a potential hole in a checkerboard.
+    /// The default is a period (.), but it can be overridden by a specific `impl`.
+    ///
+    const HOLE: &'static [u8] = b".";
+}
+
+// These are default implementations for the Frequent trait -----
+// Mostly for checkerboards with 2 holes.
+
 /// Represents the French language for frequency analysis.
 ///
 /// French uses the symbol set "ESANTIRU" as its most frequent characters.
@@ -59,41 +81,97 @@ pub struct Spanish;
 #[derive(Debug)]
 pub struct Dutch;
 
-/// Trait for languages that define their most frequently occurring symbols.
-///
-/// This trait allows language-specific types to provide a set of symbols
-/// (as bytes) that are most commonly used in that language. This is useful
-/// for frequency analysis and cryptographic applications.
-///
-pub trait Frequent {
-    /// The most frequent symbols in the language, ordered by frequency.
-    ///
-    /// These symbols are represented as ASCII bytes for efficient processing.
-    ///
-    const SYMBOLS: &'static [u8];
-}
-
 impl Frequent for French {
-    const SYMBOLS: &'static [u8] = b"ESANTIRU";
+    const SYMBOLS: &'static [u8] = b"ESANTIRU..";
 }
 
 impl Frequent for English {
-    const SYMBOLS: &'static [u8] = b"ATONESIR";
+    const SYMBOLS: &'static [u8] = b"ATONESIR..";
 }
 
 impl Frequent for German {
-    const SYMBOLS: &'static [u8] = b"ENSRIATD";
+    const SYMBOLS: &'static [u8] = b"ENSRIATD..";
 }
 
 impl Frequent for Italian {
-    const SYMBOLS: &'static [u8] = b"EAIONLRT";
+    const SYMBOLS: &'static [u8] = b"EAIONLRT..";
 }
 
 impl Frequent for Spanish {
-    const SYMBOLS: &'static [u8] = b"EAOSRNID";
+    const SYMBOLS: &'static [u8] = b"EAOSRNID..";
 }
 
 impl Frequent for Dutch {
-    const SYMBOLS: &'static [u8] = b"ENATIROD";
+    const SYMBOLS: &'static [u8] = b"ENATIROD..";
 }
+
+// These are default implementations for the Frequent trait -----
+// Mostly for checkerboards with 3 holes.
+
+/// Represents the French language for frequency analysis.
+///
+/// French uses the symbol set "ESANTIRU" as its most frequent characters.
+///
+#[derive(Debug)]
+pub struct FrenchExt;
+
+/// Represents the English language for frequency analysis.
+///
+/// English uses the symbol set "ATONESIR" as its most frequent characters.
+///
+#[derive(Debug)]
+pub struct EnglishExt;
+
+/// Represents the German language for frequency analysis.
+///
+/// German uses the symbol set "ENSRIATD" as its most frequent characters.
+///
+#[derive(Debug)]
+pub struct GermanExt;
+
+/// Represents the German language for frequency analysis.
+///
+/// German uses the symbol set "EAIONLRT" as its most frequent characters.
+///
+#[derive(Debug)]
+pub struct ItalianExt;
+
+#[derive(Debug)]
+/// Represents the German language for frequency analysis.
+///
+/// German uses the symbol set "EAOSRNID" as its most frequent characters.
+///
+pub struct SpanishExt;
+
+/// Represents the Dutch language for frequency analysis.
+///
+/// Dutch uses the symbol set "ENATIROD" as its most frequent characters.
+///
+#[derive(Debug)]
+pub struct DutchExt;
+
+impl Frequent for FrenchExt {
+    const SYMBOLS: &'static [u8] = b"ESANTIR...";
+}
+
+impl Frequent for EnglishExt {
+    const SYMBOLS: &'static [u8] = b"ATONESI...";
+}
+
+impl Frequent for GermanExt {
+    const SYMBOLS: &'static [u8] = b"ENSRIAT...";
+}
+
+impl Frequent for ItalianExt {
+    const SYMBOLS: &'static [u8] = b"EAIONLR...";
+}
+
+impl Frequent for SpanishExt {
+    const SYMBOLS: &'static [u8] = b"EAOSRNI...";
+}
+
+impl Frequent for DutchExt {
+    const SYMBOLS: &'static [u8] = b"ENATIRO...";
+}
+
 

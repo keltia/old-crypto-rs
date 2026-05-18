@@ -2,7 +2,8 @@ use std::hint::black_box;
 
 use divan::Bencher;
 
-use old_crypto_rs::helpers::{SC_ALPHABET, shuffle, transp_shuffle, condense, condense_str, fix_double_aligned, expand, fix_double};
+use old_crypto_rs::helpers::{SC_ALPHABET, shuffle, transp_shuffle, condense, condense_str, fix_double_aligned, expand, fix_double, to_numeric};
+use old_crypto_rs::column_order_from_digits;
 
 const PLAIN: &str = "CETOOTESTCHIFFREAVECADFGVXETLESCLESMASTODONETSOCIAL";
 
@@ -75,6 +76,23 @@ mod fix_double {
             black_box(fix_double_aligned(PLAIN, 'Q'));
         });
     }
+}
 
+#[divan::bench_group]
+mod to_numeric {
+    use super::*;
 
+    #[divan::bench]
+    fn bench_to_numeric(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(to_numeric("8238965327"));
+        })
+    }
+
+    #[divan::bench]
+    fn bench_column_order_from_digits(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(column_order_from_digits(&[8,2,3,8,9,6,5,3,2,7]));
+        });
+    }
 }

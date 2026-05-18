@@ -10,7 +10,7 @@
 use eyre::Result;
 
 use crate::Block;
-use crate::helpers::{Alphabet, Frequent, condense};
+use crate::helpers::{Alphabet, Frequent, condense, Derive};
 
 use crate::error::Error;
 use std::marker::PhantomData;
@@ -64,7 +64,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// ```
 ///
 #[derive(Debug)]
-pub struct VicStraddling<A: Alphabet, F: Frequent> {
+pub struct VicStraddling<A: Alphabet, D: Derive<F>, F:Frequent> {
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
     /// The shuffled alphabet after applying the key.
@@ -78,10 +78,10 @@ pub struct VicStraddling<A: Alphabet, F: Frequent> {
     /// Fast lookup for whether a digit is a long-code prefix.
     longc_mask: [bool; 10],
     /// The frequent letters.
-    _marker: PhantomData<(A, F)>,
+    _marker: PhantomData<(A, D, F)>,
 }
 
-impl<A: Alphabet, F: Frequent> std::fmt::Display for VicStraddling<A, F> {
+impl<A: Alphabet, D: Derive<F>, F: Frequent> std::fmt::Display for VicStraddling<A, D, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let longc = self.longc.iter().map(|&x| x as char).collect::<String>();
         let dec1 = self.dec1.iter().map(|&x| x as char).collect::<String>();
@@ -102,7 +102,7 @@ impl<A: Alphabet, F: Frequent> std::fmt::Display for VicStraddling<A, F> {
     }
 }
 
-impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
+impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
     pub fn new(indexes: &str) -> Result<Self> {
         // Default alphabet.
         //
@@ -113,19 +113,14 @@ impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
 
         dbg!(&indexes);
         let longc = vec![indexes.as_bytes()[8], indexes.as_bytes()[9]];
-        dbg!(&longc);
+        dbg!(String::from_utf8(longc.to_vec())?);
 
         // Shake the alphabet a bit
         //
-        let mut alpha = vec![];
-        let nkey = F::SYMBOLS;
-        alpha.append(&mut nkey.to_vec());
-        alpha.append(&mut alphabet.as_bytes().to_vec());
-
-        let full = condense(String::from_utf8(alpha)?.as_str());
+        let full = String::from_utf8(D::derive(alphabet.as_bytes()))?;
         dbg!(&full);
         let shortc = indexes.as_bytes()[0..=7].to_vec();
-        dbg!(&shortc);
+        dbg!(String::from_utf8(shortc.to_vec())?);
 
         let mut c = VicStraddling {
             full,
@@ -206,7 +201,7 @@ impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
     ///
     fn expand_key(&mut self, shortc: Vec<u8>, freq: &[u8]) {
         let longc = Self::set_times10(&self.longc);
-        dbg!(&longc);
+        dbg!(longc.join(","));
 
         let mut i = 0;
         let mut j = 0;
@@ -240,7 +235,7 @@ impl<A: Alphabet, F: Frequent> VicStraddling<A, F> {
     }
 }
 
-impl<A: Alphabet, F: Frequent> Block for VicStraddling<A, F> {
+impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
     /// Returns the block size, which equals the key length.
     ///
     /// # Returns
@@ -394,7 +389,7 @@ impl<A: Alphabet, F: Frequent> Block for VicStraddling<A, F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::{English, LatinSC};
+    use crate::helpers::{English, Horizontal, LatinSC};
 
     use super::*;
     use eyre::Result;
@@ -405,7 +400,7 @@ mod tests {
         let ct1 = "1331919713882288199";
         const KEY2: &str = "1305427698";
 
-        let cipher = VicStraddling::<LatinSC, English>::new(KEY2)?;
+        let cipher = VicStraddling::<LatinSC, Horizontal, English>::new(KEY2)?;
         println!("{}", cipher);
 
         let mut encrypted = vec![0u8; 100];

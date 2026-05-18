@@ -5,6 +5,7 @@ mod alphabet;
 mod coord;
 mod fill;
 mod lang;
+mod derive;
 
 pub use alphabet::*;
 pub use coord::*;

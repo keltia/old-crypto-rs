@@ -14,6 +14,11 @@ use crate::Block;
 use crate::error::Error;
 use crate::helpers::Frequent;
 
+/// The positions of the three holes in the checkerboard.
+///
+/// This is from using "ESTONIA" as "ES-TO-NI-A".  We need 3 holes because we have 3 rows.
+/// The Classic "AT-ONE-SIR" is not usable here, because only 2 holes.
+/// 
 const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
 /// Our alphabet includes digits and 3 more caracters, because we have 3 digits.
@@ -98,7 +103,8 @@ impl<F: Frequent> SecomCheckerboard<F> {
                 checker_extra.push(c);
             }
         }
-
+        dbg!(&freq);
+        dbg!(&checker_extra);
         // Fill the three rows under long digits, starting at their column.
         //
         let mut symbols = checker_extra.as_bytes().iter();

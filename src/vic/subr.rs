@@ -44,7 +44,7 @@ pub(crate) fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey
     for _ in 0..5 {
         chainadd_inplace(&mut r);
     }
-
+    dbg!(&r);
     // In VIC, the key for the second transposition and the SC is derived
     // from the 5th iteration of chain addition.
     let third = r.clone();

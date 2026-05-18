@@ -185,6 +185,8 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
         let sc_plain = &buf_sc[..sc_len];
 
         let res = rebuild_plaintext(sc_plain);
+        assert_eq!(res.len(), sc_len - 1);
+        assert_eq!(res.len(), dst.len());
         dst.copy_from_slice(res.as_slice());
         res.len()
     }

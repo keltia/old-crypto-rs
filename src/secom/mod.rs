@@ -64,6 +64,7 @@ pub(crate) use subr::{
     addmod10, chain_add_row, letters_to_digits_1to0, normalize_key_phrase, rank_digits_1to0,
     read_out_columns, transposition_widths_from_last_row, vec_to_array_10,
 };
+pub use subr::column_order_from_digits;
 
 use crate::{Block, Transposition};
 use crate::error::Error;

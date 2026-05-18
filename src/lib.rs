@@ -28,7 +28,7 @@ pub use adfgvx::{ADFGVXCipher, ADFGXSquare, ADFGVXSquare};
 pub use straddling::{EnglishStraddling, FrenchStraddling, GermanStraddling, Straddling};
 pub use nihilist::Nihilist;
 pub use solitaire::Solitaire;
-pub use secom::SecomCipher;
+pub use secom::{SecomCipher, column_order_from_digits};
 pub use vic::VicCipher;
 pub use wheatstone::{WheatstoneBasic, Wheatstone};
 #[cfg(feature = "sigaba")]

@@ -108,7 +108,9 @@ pub(crate) fn transposition_widths_from_last_row(row: &[u8]) -> Result<(usize, u
 
 /// Derives a column reading order from a digit key.
 ///
-pub(crate) fn column_order_from_digits(key: &[u8]) -> Vec<usize> {
+/// This is `helpers::to_numeric`  but optimised for digits only.
+///
+pub fn column_order_from_digits(key: &[u8]) -> Vec<usize> {
     let mut indexed: Vec<(usize, u8)> = key.iter().enumerate().map(|(i, &d)| (i, d)).collect();
     indexed.sort_by_key(|&(i, d)| (if d == 0 { 10 } else { d }, i));
     indexed.into_iter().map(|(i, _)| i).collect()

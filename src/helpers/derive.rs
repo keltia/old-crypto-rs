@@ -62,6 +62,43 @@ pub trait Derive<F: Frequent> {
 }
 
 impl<F: Frequent> Derive<F> for Horizontal {
+    /// Derives a horizontal permutation of the alphabet by placing frequent letters first,
+    /// followed by the remaining letters in their original order.
+    ///
+    /// # Algorithm
+    ///
+    /// 1. Create an output vector with capacity equal to the alphabet length.
+    /// 2. Iterate through `F::SYMBOLS` (the frequent letters and holes):
+    ///    - For each symbol that exists in the input alphabet and hasn't been added yet,
+    ///      append it to the output.
+    /// 3. Iterate through the remaining letters in the original alphabet:
+    ///    - For each letter not yet in the output, append it.
+    ///
+    /// # Example
+    ///
+    /// With `F::SYMBOLS = "ATONESIR.."` and alphabet "ABCDEFGHIJKLMNOPQRSTUVWXYZ-/":
+    ///
+    /// ```text
+    /// Step 1: Extract frequent letters from SYMBOLS that exist in alphabet
+    ///         Result: A T O N E S I R
+    ///
+    /// Step 2: Append remaining letters from alphabet in order
+    ///         Result: A T O N E S I R B C D F G H J K L M P Q U V W X Y Z - /
+    ///
+    /// Final checkerboard layout (10×3):
+    /// A T O N E S I R . .
+    /// B C D F G H J K L M
+    /// P Q U V W X Y Z - /
+    /// ```
+    ///
+    /// # Parameters
+    ///
+    /// * `alphabet` - The source alphabet to derive from (typically all available characters)
+    ///
+    /// # Returns
+    ///
+    /// A new vector
+    ///
     fn derive(alphabet: &[u8]) -> Vec<u8> {
         let mut out = Vec::with_capacity(alphabet.len());
 

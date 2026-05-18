@@ -118,27 +118,6 @@ impl<F: Frequent> Derive<F> for Horizontal {
     }
 }
 
-#[derive(Debug)]
-struct English;
-
-impl Frequent for English {
-    const SYMBOLS: &'static [u8] = b"ATONESIR..";
-}
-
-#[derive(Debug)]
-struct EnglishExt;
-
-impl Frequent for EnglishExt {
-    const SYMBOLS: &'static [u8] = b"ATONESI...";
-}
-
-#[derive(Debug)]
-struct EnglishAlt;
-
-impl Frequent for EnglishAlt {
-    const SYMBOLS: &'static [u8] = b"ESTONIA...";
-}
-
 // -----
 
 impl<F: Frequent> Derive<F> for Vertical {
@@ -236,7 +215,8 @@ impl<F: Frequent> Derive<F> for Vertical {
 #[cfg(test)]
 mod tests {
     use rstest::*;
-    use crate::helpers::derive::{Derive, English, EnglishAlt, EnglishExt, Horizontal, Vertical};
+    use crate::helpers::derive::{Derive, Horizontal, Vertical};
+    use crate::helpers::{English, EnglishAlt, EnglishExt};
 
     #[rstest]
     #[case("AT.ONE.SIR", 2)]

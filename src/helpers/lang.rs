@@ -174,4 +174,8 @@ impl Frequent for DutchExt {
     const SYMBOLS: &'static [u8] = b"ENATIRO...";
 }
 
+pub struct EnglishAlt;
 
+impl Frequent for EnglishAlt {
+    const SYMBOLS: &'static [u8] = b"ESTONIA...";
+}

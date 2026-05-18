@@ -105,7 +105,46 @@ impl Frequent for EnglishAlt {
 // -----
 
 impl<F: Frequent> Derive<F> for Vertical {
-   fn derive(alphabet: &[u8]) -> Vec<u8> {
+    /// Derives a vertical permutation of the alphabet by placing frequent letters in the top row
+    /// and arranging remaining letters vertically across straddling rows.
+    ///
+    /// # Algorithm
+    ///
+    /// 1. Count the number of holes (`.` characters) in `F::SYMBOLS` to determine the number of
+    ///    straddling rows needed.
+    /// 2. Extract the frequent letters from `F::SYMBOLS` (excluding holes) into a `top` vector.
+    /// 3. Collect all remaining letters from the alphabet (those not in `top`) into a `tail` vector.
+    /// 4. Start the output with the frequent letters from `top`.
+    /// 5. If there are no holes, append `tail` directly (vertical == horizontal case).
+    /// 6. Otherwise, fill the `tail` letters vertically across `holes` rows, then read back
+    ///    row-by-row horizontally.
+    ///
+    /// # Example
+    ///
+    /// With `F::SYMBOLS = "ATONESI..."` (3 holes) and alphabet containing remaining letters
+    /// `BCDFGHJKLMPQRUVWXYZ0123456789-`:
+    ///
+    /// ```text
+    /// Top row:  A T O N E S I
+    /// Tail:     B C D F G H J K L M P Q R U V W X Y Z 0 1 2 3 4 5 6 7 8 9 -
+    ///
+    /// Fill vertically into 3 rows:
+    /// Row 0:    B F J M R W Z 2 5 8
+    /// Row 1:    C G K P U X 0 3 6 9
+    /// Row 2:    D H L Q V Y 1 4 7 -
+    ///
+    /// Final output: A T O N E S I B F J M R W Z 2 5 8 C G K P U X 0 3 6 9 D H L Q V Y 1 4 7 -
+    /// ```
+    ///
+    /// # Parameters
+    ///
+    /// * `alphabet` - The source alphabet to derive from (typically all available characters)
+    ///
+    /// # Returns
+    ///
+    /// A new vector containing the vertically-derived permutation of the alphabet
+    /// 
+    fn derive(alphabet: &[u8]) -> Vec<u8> {
         let holes = F::SYMBOLS
             .iter()
             .filter(|&&b| b == F::HOLE)

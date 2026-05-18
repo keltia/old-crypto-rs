@@ -33,7 +33,7 @@ pub trait Frequent {
     /// This is the character we use to mark a potential hole in a checkerboard.
     /// The default is a period (.), but it can be overridden by a specific `impl`.
     ///
-    const HOLE: &'static [u8] = b".";
+    const HOLE: u8 = b'.';
 }
 
 // These are default implementations for the Frequent trait -----

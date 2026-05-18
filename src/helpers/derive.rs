@@ -85,21 +85,21 @@ impl<F: Frequent> Derive<F> for Horizontal {
 struct English;
 
 impl Frequent for English {
-    const SYMBOLS: &'static [u8] = b"ATONESIR--";
+    const SYMBOLS: &'static [u8] = b"ATONESIR..";
 }
 
 #[derive(Debug)]
 struct EnglishExt;
 
 impl Frequent for EnglishExt {
-    const SYMBOLS: &'static [u8] = b"ATONESI---";
+    const SYMBOLS: &'static [u8] = b"ATONESI...";
 }
 
 #[derive(Debug)]
 struct EnglishAlt;
 
 impl Frequent for EnglishAlt {
-    const SYMBOLS: &'static [u8] = b"ESTONIA---";
+    const SYMBOLS: &'static [u8] = b"ESTONIA...";
 }
 
 // -----
@@ -108,13 +108,13 @@ impl<F: Frequent> Derive<F> for Vertical {
    fn derive(alphabet: &[u8]) -> Vec<u8> {
         let holes = F::SYMBOLS
             .iter()
-            .filter(|&&b| b == b'-')
+            .filter(|&&b| b == F::HOLE)
             .count();
 
         let top: Vec<u8> = F::SYMBOLS
             .iter()
             .copied()
-            .filter(|&b| b != b'-')
+            .filter(|&b| b != F::HOLE)
             .collect();
 
         let tail: Vec<u8> = alphabet
@@ -163,20 +163,20 @@ mod tests {
     use crate::helpers::derive::{Derive, English, EnglishAlt, EnglishExt, Horizontal, Vertical};
 
     #[rstest]
-    #[case("AT-ONE-SIR", 2)]
-    #[case("ES-TO-NI-A", 3)]
-    #[case("ESTONIA---", 3)]
+    #[case("AT.ONE.SIR", 2)]
+    #[case("ES.TO.NI.A", 3)]
+    #[case("ESTONIA...", 3)]
     fn test_hole_count(#[case] alphabet: &str, #[case] holes: usize) {
         let res = alphabet.bytes()
-            .filter_map(|b| (b == b'-').then_some(1))
+            .filter_map(|b| (b == b'.').then_some(1))
             .sum::<usize>();
         assert_eq!(res, holes);
     }
 
     #[test]
     fn test_horizontal_derive() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*/";
-        let expected = "ATONESIRBCDFGHJKLMPQUVWXYZ*/".bytes().collect::<Vec<_>>();
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-/";
+        let expected = "ATONESIRBCDFGHJKLMPQUVWXYZ-/".bytes().collect::<Vec<_>>();
 
         let result = <Horizontal as Derive<English>>::derive(alphabet.as_bytes());
         assert_eq!(String::from_utf8(result).unwrap(), String::from_utf8(expected).unwrap());
@@ -184,8 +184,8 @@ mod tests {
 
     #[test]
     fn test_horizontal_derive_ext() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789";
-        let expected = "ATONESIBCDFGHJKLMPQRUVWXYZ*0123456789".bytes().collect::<Vec<_>>();
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789";
+        let expected = "ATONESIBCDFGHJKLMPQRUVWXYZ-0123456789".bytes().collect::<Vec<_>>();
 
         let result = <Horizontal as Derive<EnglishExt>>::derive(alphabet.as_bytes());
         assert_eq!(String::from_utf8(result).unwrap(), String::from_utf8(expected).unwrap());
@@ -193,8 +193,8 @@ mod tests {
 
     #[test]
     fn test_vertical_derive() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*/";
-        let expected = "ATONESIRBDGJLPUWY*CFHKMQVXZ/".bytes().collect::<Vec<_>>();
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-/";
+        let expected = "ATONESIRBDGJLPUWY-CFHKMQVXZ/".bytes().collect::<Vec<_>>();
 
         let result = <Vertical as Derive<English>>::derive(alphabet.as_bytes());
         assert_eq!(String::from_utf8(result).unwrap(), String::from_utf8(expected).unwrap());
@@ -202,8 +202,8 @@ mod tests {
 
     #[test]
     fn test_vertical_derive_ext() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*";
-        let expected = "ATONESIBFJMRWZ258CGKPUX0369DHLQVY147*".bytes().collect::<Vec<_>>();
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
+        let expected = "ATONESIBFJMRWZ258CGKPUX0369DHLQVY147-".bytes().collect::<Vec<_>>();
 
         let result = <Vertical as Derive<EnglishExt>>::derive(alphabet.as_bytes());
         assert_eq!(String::from_utf8(result).unwrap(), String::from_utf8(expected).unwrap());
@@ -211,8 +211,8 @@ mod tests {
 
     #[test]
     fn test_vertical_derive_alt() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789*";
-        let expected = "ESTONIABFJMRWZ258CGKPUX0369DHLQVY147*".bytes().collect::<Vec<_>>();
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
+        let expected = "ESTONIABFJMRWZ258CGKPUX0369DHLQVY147-".bytes().collect::<Vec<_>>();
 
         let result = <Vertical as Derive<EnglishAlt>>::derive(alphabet.as_bytes());
         assert_eq!(String::from_utf8(result).unwrap(), String::from_utf8(expected).unwrap());

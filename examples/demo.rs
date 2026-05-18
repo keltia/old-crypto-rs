@@ -199,7 +199,7 @@ fn main() -> Result<()>{
         } else {
             fixpt = PLAIN.to_string();
             dst = vec![0u8; cp.size];
-            dst1 = vec![0u8; cp.size];
+            dst1 = vec![0u8; fixpt.len()];
         }
 
         // For Playfair, always pass PLAIN since it does its own processing

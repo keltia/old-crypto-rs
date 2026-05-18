@@ -9,7 +9,7 @@
 //!
 use crate::Block;
 use crate::transposition::{Transposition, IrregularTransposition};
-use crate::helpers::{Alphabet, Frequent};
+use crate::helpers::{Alphabet, Derive, Frequent};
 use crate::vic::straddling::VicStraddling;
 use crate::vic::subr::{expand_key, rebuild_plaintext, split_plaintext, str2int};
 
@@ -26,16 +26,16 @@ pub(crate) mod subr;
 /// - A second irregular transposition
 /// 
 #[derive(Debug)]
-pub struct VicCipher<A: Alphabet, F: Frequent> {
+pub struct VicCipher<A: Alphabet, D: Derive<F>, F: Frequent> {
     // First transposition
     firsttp: Transposition,
     // Second transposition
     secondtp: IrregularTransposition,
     // Straddling Checkerboard
-    pub sc: VicStraddling<A, F>,
+    pub sc: VicStraddling<A, D, F>,
 }
 
-impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
+impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
     /// Creates a new VIC cipher instance with the specified key material.
     ///
     /// This constructor performs the complex key derivation process used in the VIC cipher,
@@ -87,7 +87,7 @@ impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
         //
         let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();
         dbg!(&sc_key_str);
-        let sc = VicStraddling::<A, F>::new(&sc_key_str)?;
+        let sc = VicStraddling::<A, D, F>::new(&sc_key_str)?;
         Ok(VicCipher {
             firsttp,
             secondtp,
@@ -97,7 +97,7 @@ impl<A: Alphabet, F: Frequent> VicCipher<A, F> {
 }
 
 
-impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
+impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
     fn block_size(&self) -> usize {
         1
     }
@@ -180,7 +180,6 @@ impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
         let mut buf_tp1 = vec![0u8; tp2_len];
         let tp1_len = self.firsttp.decrypt(&mut buf_tp1, &buf_tp2[..tp2_len]);
 
-        dbg!(String::from_utf8_lossy(buf_tp1.as_slice()));
         let mut buf_sc = vec![0u8; tp1_len];
         let sc_len = self.sc.decrypt(&mut buf_sc, &buf_tp1[..tp1_len]);
         let sc_plain = &buf_sc[..sc_len];
@@ -188,53 +187,26 @@ impl<A: Alphabet, F: Frequent> Block for VicCipher<A, F> {
         let res = rebuild_plaintext(sc_plain);
         dst.copy_from_slice(res.as_slice());
         res.len()
-
-/*        if let Some(dash_pos) = sc_plain.iter().position(|&b| b == b'-') {
-            let after = &sc_plain[dash_pos + 1..];
-            let before = &sc_plain[..dash_pos];
-            let mut out_len = 0;
-
-            if out_len + after.len() <= dst.len() {
-                dst[..after.len()].copy_from_slice(after);
-                out_len += after.len();
-            } else {
-                let n = dst.len().saturating_sub(out_len);
-                dst[..n].copy_from_slice(&after[..n]);
-                return out_len + n;
-            }
-
-            if out_len + before.len() <= dst.len() {
-                dst[out_len..out_len + before.len()].copy_from_slice(before);
-                out_len += before.len();
-            } else {
-                let n = dst.len().saturating_sub(out_len);
-                dst[out_len..out_len + n].copy_from_slice(&before[..n]);
-                out_len += n;
-            }
-
-            out_len
-        } else {
-            let n = sc_plain.len().min(dst.len());
-            dst[..n].copy_from_slice(&sc_plain[..n]);
-            n
-        }
-*/    }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::{to_numeric, English, LatinSC};
+    use crate::helpers::{to_numeric, English, Horizontal, LatinSC};
     use crate::vic::subr::{addmod10_inplace, chainadd_inplace, expand5to10, first_encode, submod10};
+
+    type TestVic = VicCipher::<LatinSC, Horizontal, English>;
 
     #[test]
     fn test_new_cipher() {
-        let _c = VicCipher::<LatinSC, English>::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651");
+        assert!(c.is_ok());
     }
 
     #[test]
     fn test_vic_cipher_full() {
-        let c = VicCipher::<LatinSC, English>::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
         
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];
@@ -248,7 +220,7 @@ mod tests {
         //
         assert!(ct_trimmed.len() >= 11);
 
-        let mut decrypted = vec![0u8; 100];
+        let mut decrypted = vec![0u8; 10];
         let dec_len = c.decrypt(&mut decrypted, ct_trimmed);
         
         let res = String::from_utf8_lossy(&decrypted[..dec_len]).to_string();

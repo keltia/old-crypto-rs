@@ -106,13 +106,12 @@ fn main() -> Result<()>{
         size: PLAIN.len() * 2,
     });
 
-    const PERSN: &str = "89";
     const INDN: &str = "741776";
     const PHRS: &str = "IDREAMOFJEANNIEWITHT";
     const RNDN: &str = "77651";
     allciphers.push(Cph {
-        name: format!("VIC ({}, {}, {}, {})", PERSN, INDN, PHRS, RNDN),
-        c: Box::new(VicCipher::<LatinSC, Horizontal, EnglishExt>::new(INDN, PHRS, RNDN)?),
+        name: format!("VIC ({}, {}, {})", INDN, PHRS, RNDN),
+        c: Box::new(VicCipher::<LatinSC, Horizontal, English>::new(INDN, PHRS, RNDN)?),
         size: PLAIN.len() * 2,
     });
 

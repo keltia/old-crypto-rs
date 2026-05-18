@@ -5,6 +5,7 @@ use old_crypto_rs::{
 };
 
 use divan::Bencher;
+use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
 
 const CHAOS_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const CHAOS_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -20,9 +21,11 @@ fn main() {
     divan::main();
 }
 
+type BenchVic = VicCipher<LatinSC, Horizontal, English>;
+
 #[divan::bench_group]
 mod b0_encryption {
-    use old_crypto_rs::helpers::{English, LatinSC, Latin36, Numeric6};
+    use old_crypto_rs::helpers::{English, LatinSC, Latin36, Numeric6, Horizontal};
     use super::*;
 
     #[divan::bench]
@@ -137,7 +140,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = VicCipher::<LatinSC, English>::new("741776", PASSPHRASE, "77651").unwrap();
+        let c = BenchVic::new("741776", PASSPHRASE, "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 3];
         bencher.bench_local(|| {
@@ -189,12 +192,12 @@ mod b0_encryption {
 
 #[divan::bench_group]
 mod b1_decryption {
-    use old_crypto_rs::helpers::{English, Latin36, LatinSC, Numeric6};
+    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
     use super::*;
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = VicCipher::<LatinSC, English>::new("741776", PASSPHRASE, "77651").unwrap();
+        let c = BenchVic::new("741776", PASSPHRASE, "77651").unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 3];
         c.encrypt(&mut ct, src);

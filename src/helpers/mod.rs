@@ -3,12 +3,13 @@
 
 mod alphabet;
 mod coord;
+mod derive;
 mod fill;
 mod lang;
-mod derive;
 
 pub use alphabet::*;
 pub use coord::*;
+pub use derive::*;
 pub use fill::*;
 pub use lang::*;
 

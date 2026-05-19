@@ -70,10 +70,12 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
     /// ```
     ///
     pub fn new(ind: &str, phrase: &str, imsg: &str) -> Result<Self> {
-        let imsg_int = str2int(imsg);
+        // Line-A
+        let iv = str2int(imsg);
+        // Line-B
         let ikey5 = str2int(&ind[..5]);
 
-        let expanded = expand_key(phrase, &imsg_int, &ikey5);
+        let expanded = expand_key(phrase, &iv, &ikey5);
 
         // First transposition is regular, using 'second' as key
         //

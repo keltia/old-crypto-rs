@@ -30,15 +30,28 @@ pub(crate) struct ExpandedKey {
 ///
 /// Returns an `ExpandedKey` structure containing all derived key material.
 ///
-pub(crate) fn expand_key(phrase: &str, imsg: &[u8], ikey5: &[u8]) -> ExpandedKey {
-    let ph1: Vec<u8> = to_numeric(&phrase[..10]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
-    let ph2: Vec<u8> = to_numeric(&phrase[10..20]).into_iter().map(|x| (x as u8 + 1) % 10).collect();
+pub(crate) fn expand_key(phrase: &str, line_b: &[u8], line_a: &[u8]) -> ExpandedKey {
+    // ikey5 = Line-A
+    // imsg = Line-B
+    // phrase = Line-D
+    // ph1 = Line-E.1
+    let line_e1: Vec<u8> = to_numeric_one(&phrase[..10]);
+    // ph2 = Line-E.2
+    let line_e2: Vec<u8> = to_numeric_one(&phrase[10..20]);
 
-    let mut first = submod10(imsg, ikey5);
-    first = chainadd_extend(&first, 5);
+    // Line-C
+    let mut line_c = submod10(line_b, line_a);
+    // Line-F.1
+    line_c = chainadd_extend(&line_c, 5);
 
-    addmod10_inplace(&mut first, &ph1);
-    let second = first_encode(&first, &ph2);
+    // Line-G =  Line-E1 + Line-F.1
+    addmod10_inplace(&mut line_c, &line_e1);
+    // Line-H: encode Line-G with Line-E.2
+    let line_h = first_encode(&line_c, &line_e2);
+    dbg!(&line_h.iter().map(|&b| (b + b'0') as char).collect::<String>());
+    // Line-J
+    let second = to_numeric(&line_h.iter().map(|&b| (b + b'0') as char).collect::<String>());
+    dbg!(&second.iter().map(|&b| (b + b'0') as char).collect::<String>());
 
     let mut r = second.clone();
     for _ in 0..5 {
@@ -297,9 +310,23 @@ mod tests {
 
     #[test]
     fn test_first_encode() {
+        // Line--G
         let r1 = vec![6, 5, 5, 1, 5, 1, 7, 8, 9, 1];
+        // Line-E.2
         let r2 = vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9];
+        // Line-H
         let r = vec![0, 2, 2, 1, 2, 1, 5, 8, 3, 1];
+        assert_eq!(first_encode(&r1, &r2), r);
+    }
+
+    #[test]
+    fn test_first_encode_wp() {
+        // Line--G
+        let r1 = vec![4, 9, 6, 6, 1, 9, 6, 0, 6, 0];
+        // Line-E.2
+        let r2 = vec![6, 0, 1, 3, 5, 8, 9, 4, 2, 7];
+        // Line-H
+        let r = vec![3, 2, 8, 8, 6, 2, 8, 7, 8, 7];
         assert_eq!(first_encode(&r1, &r2), r);
     }
 

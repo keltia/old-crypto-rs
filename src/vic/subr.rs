@@ -108,10 +108,10 @@ pub(crate) fn submod10(a: &[u8], b: &[u8]) -> Vec<u8> {
 pub(crate) fn chainadd_inplace(a: &mut [u8]) {
     let l = a.len();
     if l < 2 { return; }
-    let first = a[0];
     for i in 0..l - 1 {
         a[i] = (a[i] + a[i + 1]) % 10;
     }
+    let first = a[0];
     a[l - 1] = (a[l - 1] + first) % 10;
 }
 
@@ -237,8 +237,10 @@ mod tests {
     }
 
     #[rstest]
-    #[case(vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 2])]
-    #[case(vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 8])]
+    #[case(vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 8])]
+    #[case(vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 5])]
+    #[case(vec![3, 2, 8, 8, 6, 2, 8, 7, 8, 7], vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2])]
+    #[case(vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2], vec![5, 6, 0, 2, 8, 5, 0, 0, 7, 7])]
     fn test_chainadd_inplace(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>) {
         chainadd_inplace(&mut a);
         assert_eq!(a, b);

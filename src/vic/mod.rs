@@ -198,7 +198,8 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 mod tests {
     use super::*;
     use crate::helpers::{to_numeric, English, Horizontal, LatinSC};
-    use crate::vic::subr::{addmod10_inplace, chainadd_inplace, expand5to10, first_encode, submod10};
+    use crate::secom::addmod10;
+    use crate::vic::subr::{addmod10_inplace, chainadd, chainadd_inplace, expand5to10, first_encode, submod10, to_numeric_one};
 
     type TestVic = VicCipher::<LatinSC, Horizontal, English>;
 
@@ -234,131 +235,113 @@ mod tests {
     #[test]
     fn test_vic_wikipedia_example() {
         // From Wikipedia:
-        // Phrase: IDREAMOFJEANNIEWITHT
-        // Date: 13 Sept 1944 -> 1391944 (7 digits)
+        // Phrase: TWASTHENIGHTBEFORECH
+        // Date: 13 Sept 1959 -> 139195(9) (7 digits)
         // Personal Number: 6
-        // Indicator: 74177 (first 5 digits)
+        // Indicator: 72401 (first 5 digits)
         
         // Let's see how Wikipedia maps this to our New arguments.
-        // persn: "60" (Personal number 6, usually represented as 2 digits for SC)
-        // ind: "74177"
-        // phrase: "IDREAMOFJEANNIEWITHT"
-        // imsg: "1391944"
+        // persn: "6" (Personal number 6, usually represented as 2 digits for SC)
+        // ind: "72401"
+        // phrase: "TWASTHENIGHTBEFORECH"
+        // imsg: "1391959"
 
         // Step 1: Subtraction modulo 10
-        // G = 1 3 9 1 9 (first 5 of imsg)
-        // H = 7 4 1 7 7 (ikey5)
-        // J = 4 9 8 4 2 (G - H mod 10)
+        // Line-A = 7 2 4 0 1 (ikey5)
+        // Line-B = 1 3 9 1 9 (first 5 of imsg)
+        // Line-C = 6 9 5 9 2 (Line-A - Line-B mod 10)
         //
-        let imsg = str2int("1391944");
-        let ikey5 = str2int("74177");
-        let j = submod10(&imsg[..5], &ikey5);
-        assert_eq!(j, vec![4, 9, 8, 4, 2]);
+        let persn = 6;
+        let line_b = str2int("1391959");
+        let line_a = str2int("72401");
+        let line_c = submod10(&line_a, &line_b[..5]);
+        assert_eq!(line_c, vec![6, 9, 5, 9, 2]);
 
         // Step 2: Chain addition to 10 digits
-        // 4 9 8 4 2
-        // 3 7 2 6 5 (4+9=13, 9+8=17, 8+4=12, 4+2=6, 2+3=5)
-        // K = 4 9 8 4 2 3 7 2 6 5
+        // Line-C = 6 9 5 9 2
+        // 5 4 4 1 7 (6+9=(1)5, 9+5=(1)4, 9+5=(1)4, 9+1=(1)1, 5+2=7)
+        // Line-F.1 = 6 9 5 9 2 5 4 4 1 7
         //
-        let k = expand5to10(&j);
-        assert_eq!(k, vec![4, 9, 8, 4, 2, 3, 7, 2, 6, 5]);
+        let line_f1 = expand5to10(&line_c);
+        assert_eq!(line_f1, vec![6, 9, 5, 9, 2, 5, 4, 4, 1, 7]);
 
         // Step 3: Add to PH1
-        // Phrase: I D R E A M O F J E | A N N I E W I T H T
-        // PH1:    5 1 9 2 0 6 7 3 8 4
-        // A D E E F I J M O R
-        // 0 1 2 3 4 5 6 7 8 9
-        // A:0 D:1 E:2 E:3 F:4 I:5 J:6 M:7 O:8 R:9
-        // +1 mod 10:
-        // A:1 D:2 E:3 E:4 F:5 I:6 J:7 M:8 O:9 R:0
-        // IDREAMOFJE:
-        // I:6 D:2 R:0 E:3 A:1 M:8 O:9 F:5 J:7 E:4 -> 6 2 0 3 1 8 9 5 7 4?
-        //
-        // A: 0
-        // D: 1
-        // E: 2
-        // E: 3
-        // F: 4
-        // I: 5
-        // J: 6
-        // M: 7
-        // O: 8
-        // R: 9
-        // IDREAMOFJE:
-        // I: 5 -> 6
-        // D: 1 -> 2
-        // R: 9 -> 0
-        // E: 2 -> 3
-        // A: 0 -> 1
-        // M: 7 -> 8
-        // O: 8 -> 9
-        // F: 4 -> 5
-        // J: 6 -> 7
-        // E: 3 -> 4
-        // So ph1 should be [6, 2, 0, 3, 1, 8, 9, 5, 7, 4].
-        //
-        let ph1 = vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4];
+        // Line-D: T W A S T H E N I G | H T B E F O R E C H
+        // Line-E: 8 0 1 7 9 4 2 6 5 3 | 6 0 1 3 5 8 9 4 2 7
+        let line_e1 = to_numeric_one("TWASTHENIG");
+        assert_eq!(line_e1, vec![8, 0, 1, 7, 9, 4, 2, 6, 5, 3]);
 
-        // L = K + PH1 mod 10
-        // 4 9 8 4 2 3 7 2 6 5
-        // 6 2 0 3 1 8 9 5 7 4
-        // -------------------
-        // 0 1 8 7 3 1 6 7 3 9
-        //
-        let mut l = k.clone();
-        addmod10_inplace(&mut l, &ph1);
-        assert_eq!(l, vec![0, 1, 8, 7, 3, 1, 6, 7, 3, 9]);
+        let line_e2 = to_numeric_one("HTBEFORECH");
+        assert_eq!(line_e2, vec![6, 0, 1, 3, 5, 8, 9, 4, 2, 7]);
 
-        // Step 4: First Encoding
-        // PH2: 1 6 7 4 2 0 5 8 3 9 (ranks of ANNIEWITHT)
-        // M = encode L with PH2
-        // L: 0 1 8 7 3 1 6 7 3 9
-        // PH2: 1 2 3 4 5 6 7 8 9 0 (index 1..10)
-        //      1 6 7 4 2 0 5 8 3 9 (value)
-        //
-        // Note: Wikipedia says "replace each digit in L with the digit below it in the PH2 line"
-        // Digit 0 -> index 10 in PH2 (if 1-based)
-        // Digit 9 -> index 9 in PH2
-        //
-        let ph2 = vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9];
-        let m = first_encode(&l, &ph2);
+        // Line-E.1: 8 0 1 7 9 4 2 6 5 3
+        // Line-F.1: 6 9 5 9 2 5 4 4 1 7 (expand5to10)
+        // Line-G:   4 9 6 6 1 9 6 0 6 0
+        let line_g = addmod10(&line_e1, &line_f1);
+        assert_eq!(line_g, vec![4, 9, 6, 6, 1, 9, 6, 0, 6, 0]);
 
-        // Wikipedia result for M: 9 1 8 5 7 1 0 5 7 3
-        // L[0]=0 -> PH2[9]=9.
-        // L[1]=1 -> PH2[0]=1.
-        // L[2]=8 -> PH2[7]=8.
-        // L[3]=7 -> PH2[6]=5.
-        // L[4]=3 -> PH2[2]=7.
-        // L[5]=1 -> PH2[0]=1.
-        // L[6]=6 -> PH2[5]=0.
-        // L[7]=7 -> PH2[6]=5.
-        // L[8]=3 -> PH2[2]=7.
-        // L[9]=9 -> PH2[8]=3.
-        //
-        assert_eq!(m, vec![9, 1, 8, 5, 7, 1, 0, 5, 7, 3]);
+        // Line-G:   4 9 6 6 1 9 6 0 6 0
+        // Line-F.2: 1 2 3 4 5 6 7 8 9 0
+        // Line-E.2: 6 0 1 3 5 8 9 4 2 7
+        let line_h = first_encode(&line_g, &line_e2);
+        assert_eq!(line_h, vec![3, 2, 8, 8, 6, 2, 8, 7, 8, 7]);
+
+        // Line-H:   3 2 8 8 6 2 8 7 8 7
+        // Line-J:   3 1 7 8 4 2 9 5 0 6    (to_numeric_one)
+        let line_hs = line_h.iter().map(|&b| (b + b'0') as char).collect::<String>();
+        let line_j = to_numeric_one(&line_hs);
+        assert_eq!(line_j, vec![3, 1, 7, 8, 4, 2, 9, 5, 0, 6]);
 
         // Step 5: Chain addition 5 times
         //
-        let mut r = m.clone();
+        let mut r = line_h.clone();
+        let mut all_digits: Vec<u8> = vec![];
         for _ in 0..5 {
-            chainadd_inplace(&mut r);
+            let inter = chainadd(&r);
+            all_digits.extend(&inter);
+            r = inter;
         }
+        let line_p = r;
+        let all_digits = all_digits.iter().map(|b| (*b + b'0') as char).collect::<String>();
+        assert_eq!(all_digits, "50648055525602850077162035074878238571255051328370");
 
-        // Result should be used for second transposition and SC
-        // Wikipedia: 
-        // 1st: 0 9 3 2 8 1 5 2 0 2
-        // 2nd: 9 2 5 0 9 6 7 2 2 2
-        // 3rd: 1 7 5 9 5 3 9 4 4 1
-        // 4th: 8 2 4 4 8 2 3 8 5 2
-        // 5th: 0 6 8 2 0 5 1 3 7 0
+        // Line-H: 3 2 8 8 6 2 8 7 8 7
+        // Line-J: 3 1 7 8 4 2 9 5 0 6
         //
-        assert_eq!(r, vec![0, 6, 8, 2, 0, 5, 1, 3, 7, 0]);
+        // Line-K: 5 0 6 4 8 0 5 5 5 2
+        // Line-L: 5 6 0 2 8 5 0 0 7 7
+        // Line-M: 1 6 2 0 3 5 0 7 4 8
+        // Line-N: 7 8 2 3 8 5 7 1 2 5
+        // Line-P: 5 0 5 1 3 2 8 3 7 0
+        //
+        assert_eq!(line_p, vec![5, 0, 5, 1, 3, 2, 8, 3, 7, 0]);
+
+        // Find two different values inside Line-P starting at the end, and use them to calculate
+        // the size of the regular and disrupted keys.
+        //
+        let size_disrupted = persn + line_p[9] as usize;
+        let mut idx = 8;
+        while line_p[idx] == line_p[9] {
+            idx -= 1;
+        }
+        let size_regular = persn + line_p[idx] as usize;
+        assert_eq!(size_regular, 13);
+        assert_eq!(size_disrupted, 6);
+
+        // Line-P: 5 0 5 1 3 2 8 3 7 0
+        // Line-S: 5 9 6 1 3 2 8 4 7 0 (to_numeric_one)
+        //
+        let line_ps = line_p.iter().map(|&b| (b + b'0') as char).collect::<String>();
+        assert_eq!(line_ps, "5051328370");
+        let line_s = to_numeric_one(&line_ps);
+
+        assert_eq!(line_s, vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0]);
 
         // These digits are used for the second transposition key
         // And their numerical order for SC key.
         //
-        let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
-        let sckey = to_numeric(&r_str);
+        let r_str: String = line_p.iter().map(|&b| (b + b'0') as char).collect();
+        let sckey = to_numeric_one(&r_str);
 
         // 0 6 8 2 0 5 1 3 7 0
         // Ranks (0-based, stable sort):

@@ -48,9 +48,10 @@ pub(crate) fn expand_key(phrase: &str, line_b: &[u8], line_a: &[u8]) -> Expanded
     addmod10_inplace(&mut line_c, &line_e1);
     // Line-H: encode Line-G with Line-E.2
     let line_h = first_encode(&line_c, &line_e2);
-    dbg!(&line_h.iter().map(|&b| (b + b'0') as char).collect::<String>());
+    let line_hs = line_h.iter().map(|&b| (b + b'0') as char).collect::<String>();
+    dbg!(&line_hs);
     // Line-J
-    let second = to_numeric(&line_h.iter().map(|&b| (b + b'0') as char).collect::<String>());
+    let second = to_numeric_one(&line_hs);
     dbg!(&second.iter().map(|&b| (b + b'0') as char).collect::<String>());
 
     let mut r = second.clone();

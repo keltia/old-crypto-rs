@@ -115,6 +115,27 @@ pub(crate) fn chainadd_inplace(a: &mut [u8]) {
     a[l - 1] = (a[l - 1] + first) % 10;
 }
 
+/// Performs chain addition on a vector, and returns the result.
+///
+/// Chain addition adds each element to its right neighbor (wrapping around at the end)
+/// and stores the result modulo 10 in the original position.
+///
+/// # Arguments
+///
+/// * `a` - Slice to perform chain addition on
+///
+pub(crate) fn chainadd(a: &[u8]) -> Vec<u8> {
+    let l = a.len();
+    let mut r = Vec::with_capacity(l);
+
+    if l < 2 { return vec![]; }
+    for i in 0..l - 1 {
+        r.push((a[i] + a[i + 1]) % 10);
+    }
+    r.push((a[l - 1] + r[0]) % 10);
+    r.to_vec()
+}
+
 /// Extends a vector using chain addition.
 ///
 /// Each new element is the sum of the element at current index and its successor.
@@ -197,6 +218,12 @@ pub(crate) fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().map(|&v| b[((v as i32 + 9) % 10) as usize]).collect()
 }
 
+/// This is `to_numeric` but 1-based/
+///
+pub(crate) fn to_numeric_one(s: &str) -> Vec<u8> {
+    to_numeric(s).into_iter().map(|x| (x as u8 + 1) % 10).collect::<Vec<u8>>()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -216,8 +243,12 @@ mod tests {
     #[rstest]
     #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
     #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
+    #[case("TWASTHENIG", vec![8, 0, 1, 7, 9, 4, 2, 6, 5, 3])]
+    #[case("HTBEFORECH", vec![6, 0, 1 ,3, 5, 8, 9, 4, 2, 7])]
+    #[case("3288628787", vec![3 ,1 ,7, 8, 4, 2, 9, 5, 0, 6])]
+    #[case("5051328370", vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0])]
     fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
-        let res: Vec<u8> = to_numeric(s).into_iter().map(|x| (x as u8 + 1) % 10).collect();
+        let res: Vec<u8> = to_numeric_one(s);
         assert_eq!(res, r);
     }
 
@@ -244,6 +275,16 @@ mod tests {
     fn test_chainadd_inplace(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>) {
         chainadd_inplace(&mut a);
         assert_eq!(a, b);
+    }
+
+    #[rstest]
+    #[case(vec![8, 6, 1, 5, 4], vec![4, 7, 6, 9, 8])]
+    #[case(vec![7, 7, 6, 5, 1], vec![4, 3, 1, 6, 5])]
+    #[case(vec![3, 2, 8, 8, 6, 2, 8, 7, 8, 7], vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2])]
+    #[case(vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2], vec![5, 6, 0, 2, 8, 5, 0, 0, 7, 7])]
+    fn test_chainadd(#[case] mut a: Vec<u8>, #[case] b: Vec<u8>) {
+        let r = chainadd(&a);
+        assert_eq!(r, b);
     }
 
     #[rstest]

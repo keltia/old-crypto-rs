@@ -6,12 +6,14 @@ mod coord;
 mod derive;
 mod fill;
 mod lang;
+mod types;
 
 pub use alphabet::*;
 pub use coord::*;
 pub use derive::*;
 pub use fill::*;
 pub use lang::*;
+pub use types::*;
 
 use std::collections::HashSet;
 

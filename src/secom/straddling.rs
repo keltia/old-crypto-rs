@@ -12,7 +12,7 @@ use eyre::Result;
 
 use crate::Block;
 use crate::error::Error;
-use crate::helpers::Frequent;
+use crate::helpers::{EncEntry, Frequent};
 
 /// The positions of the three holes in the checkerboard.
 ///
@@ -23,16 +23,6 @@ const FREQ_BLANK_POS: [usize; 3] = [2, 5, 8]; // 3rd, 6th, 9th positions
 
 /// Our alphabet includes digits and 3 more caracters, because we have 3 digits.
 const BASE_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789/+";
-
-/// Internal encoding entry for a single character in the checkerboard.
-///
-#[derive(Copy, Clone, Debug, Default)]
-struct EncEntry {
-    /// Number of digits used for encoding (1 or 2).
-    len: u8,
-    /// The digit bytes (ASCII characters '0'-'9').
-    bytes: [u8; 2],
-}
 
 /// A SECOM-variant straddling checkerboard.
 ///
@@ -80,7 +70,7 @@ impl<F: Frequent> SecomCheckerboard<F> {
             }
             if let Some(&ch) = freq_iter.next() {
                 let digit = header[col];
-                enc[ch as usize] = EncEntry { len: 1, bytes: [b'0' + digit, 0] };
+                enc[ch as usize] = EncEntry::new(1, [b'0' + digit, 0]);
                 dec1[digit as usize] = ch;
             }
         }
@@ -117,7 +107,7 @@ impl<F: Frequent> SecomCheckerboard<F> {
                     None => return Err(Error::CheckerboardExhausted.into()),
                 };
                 let d1 = header[col];
-                enc[*ch as usize] = EncEntry { len: 2, bytes: [b'0' + row_digit, b'0' + d1] };
+                enc[*ch as usize] = EncEntry::new(2, [b'0' + row_digit, b'0' + d1]);
                 dec2[row_digit as usize][d1 as usize] = *ch;
             }
         }
@@ -152,17 +142,17 @@ impl<F: Frequent> Block for SecomCheckerboard<F> {
         let mut out = 0;
         for &ch in src {
             let entry = self.enc[ch as usize];
-            if entry.len == 0 {
+            if entry.len() == 0 {
                 continue;
             }
-            if out + entry.len as usize > dst.len() {
+            if out + entry.len() as usize > dst.len() {
                 break;
             }
-            dst[out] = entry.bytes[0];
-            if entry.len == 2 {
-                dst[out + 1] = entry.bytes[1];
+            dst[out] = entry.bytes(0);
+            if entry.len() == 2 {
+                dst[out + 1] = entry.bytes(1);
             }
-            out += entry.len as usize;
+            out += entry.len() as usize;
         }
         out
     }

@@ -32,17 +32,7 @@ use eyre::Result;
 use crate::Block;
 use crate::error::Error;
 use crate::helpers;
-use crate::helpers::{Alphabet, Coordinates, Latin25, Latin36, Numeric5};
-
-/// Compact encoding entry for a single plaintext byte.
-///
-/// `len` is 0 for unmapped bytes, or 2 for the bigram length.
-/// `bytes` stores the bigram bytes for the code.
-#[derive(Copy, Clone, Debug, Default)]
-struct EncEntry {
-    len: u8,
-    bytes: [u8; 2],
-}
+use crate::helpers::{Alphabet, Coordinates, EncEntry, Latin25, Latin36, Numeric5};
 
 /// A Square Cipher that implements fractionating substitution.
 ///
@@ -58,7 +48,7 @@ struct EncEntry {
 /// * `alpha` - The condensed alphabet used to populate the cipher square
 /// * `enc_table` - Fast encryption table from plaintext byte to bigram bytes
 /// * `dec_table` - Fast decryption table from bigram bytes to plaintext byte
-/// 
+///
 #[derive(Debug)]
 pub struct SquareCipher<C: Coordinates, A: Alphabet> {
     key: String,
@@ -105,7 +95,7 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
     /// # Errors
     ///
     /// Returns an error if either `key` or `chrs` is an empty string.
-    /// 
+    ///
     pub fn new(key: &str) -> Result<Self> {
         if key.is_empty() {
             return Err(Error::EmptyKeys.into());
@@ -175,7 +165,7 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
     /// - Position (0,1) → "AD"
     /// - Position (1,0) → "DA"
     /// - etc.
-    /// 
+    ///
     fn expand_key(&mut self) {
         let mut bigr = vec![0u8; 2];
         let klen = C::SYMBOLS.len();
@@ -195,10 +185,7 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
                 if ind < self.alpha.len() {
                     // Forward mapping: alphabet character → bigram
                     let pt = self.alpha[ind];
-                    let entry = EncEntry {
-                        len: 2,
-                        bytes: [bigr[0], bigr[1]],
-                    };
+                    let entry = EncEntry::new(2, [bigr[0], bigr[1]]);
                     self.enc_table[pt as usize] = entry;
                     // Reverse mapping: bigram → alphabet character
                     let idx = ((bigr[0] as usize) << 8) | (bigr[1] as usize);
@@ -218,7 +205,7 @@ impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
     /// # Returns
     ///
     /// The length of the cipher key in bytes.
-    /// 
+    ///
     fn block_size(&self) -> usize {
         self.key.len()
     }
@@ -241,14 +228,14 @@ impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
     /// # Note
     ///
     /// Characters not found in the encryption table are silently skipped.
-    /// 
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         for (i, &ch) in src.iter().enumerate() {
             let entry = self.enc_table[ch as usize];
-            if entry.len == 2 {
+            if entry.len() == 2 {
                 // Write the two-character bigram to destination
-                dst[i * 2] = entry.bytes[0];
-                dst[i * 2 + 1] = entry.bytes[1];
+                dst[i * 2] = entry.bytes(0);
+                dst[i * 2 + 1] = entry.bytes(1);
             }
         }
         src.len() * 2
@@ -271,7 +258,7 @@ impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
     /// # Note
     ///
     /// Bigrams not found in the decryption table are silently skipped.
-    /// 
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         // Process source in steps of 2 (each bigram)
         for i in (0..src.len()).step_by(2) {
@@ -288,8 +275,8 @@ impl<C: Coordinates, A: Alphabet> Block for SquareCipher<C, A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::{Latin36, Numeric6, ADFGVX};
     use super::*;
+    use crate::helpers::{ADFGVX, Latin36, Numeric6};
 
     #[test]
     fn test_expand_key_25() {
@@ -309,7 +296,12 @@ mod tests {
     fn test_new_cipher() {
         let c = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE");
         assert!(c.is_ok());
-        let alpha = c.unwrap().alpha.iter().map(|&x| x as char).collect::<String>();
+        let alpha = c
+            .unwrap()
+            .alpha
+            .iter()
+            .map(|&x| x as char)
+            .collect::<String>();
         dbg!(alpha);
     }
 
@@ -346,7 +338,10 @@ mod tests {
         let src3 = b"ATTACKAT1200AM";
         let mut dst3 = vec![0u8; src3.len() * 2];
         c3.encrypt(&mut dst3, src3);
-        assert_eq!(String::from_utf8(dst3).unwrap(), "ADDDDDADAGVGADDDAFDGVFVFADDX");
+        assert_eq!(
+            String::from_utf8(dst3).unwrap(),
+            "ADDDDDADAGVGADDDAFDGVFVFADDX"
+        );
     }
 
     #[test]

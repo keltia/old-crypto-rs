@@ -10,37 +10,10 @@
 use eyre::Result;
 
 use crate::Block;
-use crate::helpers::{Alphabet, Frequent, Derive};
 use crate::error::Error;
+use crate::helpers::{Alphabet, Derive, EncEntry, Frequent};
 
 use std::marker::PhantomData;
-
-/// Compact encoding entry for a single plaintext byte.
-///
-/// `len` is 0 for unmapped bytes, or 1/2 for the number of output digits.
-/// `bytes` stores the digit bytes for the code.
-#[derive(Copy, Clone, Default)]
-struct EncEntry {
-    len: u8,
-    bytes: [u8; 2],
-}
-
-impl std::fmt::Debug for EncEntry {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let b0 = if self.bytes[0] == 0 {
-            b'.'
-        } else {
-            self.bytes[0]
-        };
-        let b1 = if self.bytes[1] == 0 {
-            b'.'
-        } else {
-            self.bytes[1]
-        };
-        let code = [b0, b1];
-        f.write_str(std::str::from_utf8(&code).unwrap_or(".."))
-    }
-}
 
 /// All cipher digits from 0 to 9 used in the checkerboard.
 const ALL_CIPHER: &[u8] = b"0123456789";
@@ -64,7 +37,7 @@ const ALL_CIPHER: &[u8] = b"0123456789";
 /// ```
 ///
 #[derive(Debug)]
-pub struct VicStraddling<A: Alphabet, D: Derive<F>, F:Frequent> {
+pub struct VicStraddling<A: Alphabet, D: Derive<F>, F: Frequent> {
     /// The two digits used as prefixes for two-digit codes (typically 2 bytes).
     longc: Vec<u8>,
     /// The shuffled alphabet after applying the key.
@@ -209,10 +182,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
             if freq.contains(&ch) {
                 if i < shortc.len() {
                     let digit = shortc[i];
-                    self.enc_table[ch as usize] = EncEntry {
-                        len: 1,
-                        bytes: [digit, 0],
-                    };
+                    self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0]);
                     self.dec1[(digit - b'0') as usize] = ch;
                     i += 1;
                 }
@@ -222,10 +192,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
                     if bytes.len() == 2 {
                         let d0 = bytes[0];
                         let d1 = bytes[1];
-                        self.enc_table[ch as usize] = EncEntry {
-                            len: 2,
-                            bytes: [d0, d1],
-                        };
+                        self.enc_table[ch as usize] = EncEntry::new(2, [d0, d1]);
                         self.dec2[(d0 - b'0') as usize][(d1 - b'0') as usize] = ch;
                     }
                     j += 1;
@@ -270,31 +237,31 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
         let marker = self.enc_table[b'/' as usize];
         for &ch in src {
             if ch.is_ascii_digit() {
-                if marker.len != 0 {
-                    dst[offset] = marker.bytes[0];
-                    if marker.len == 2 {
-                        dst[offset + 1] = marker.bytes[1];
+                if marker.len() != 0 {
+                    dst[offset] = marker.bytes(0);
+                    if marker.len() == 2 {
+                        dst[offset + 1] = marker.bytes(1);
                     }
-                    offset += marker.len as usize;
+                    offset += marker.len() as usize;
 
                     dst[offset] = ch;
                     dst[offset + 1] = ch;
                     offset += 2;
 
-                    dst[offset] = marker.bytes[0];
-                    if marker.len == 2 {
-                        dst[offset + 1] = marker.bytes[1];
+                    dst[offset] = marker.bytes(0);
+                    if marker.len() == 2 {
+                        dst[offset + 1] = marker.bytes(1);
                     }
-                    offset += marker.len as usize;
+                    offset += marker.len() as usize;
                 }
             } else {
                 let entry = self.enc_table[ch as usize];
-                if entry.len != 0 {
-                    dst[offset] = entry.bytes[0];
-                    if entry.len == 2 {
-                        dst[offset + 1] = entry.bytes[1];
+                if entry.len() != 0 {
+                    dst[offset] = entry.bytes(0);
+                    if entry.len() == 2 {
+                        dst[offset + 1] = entry.bytes(1);
                     }
-                    offset += entry.len as usize;
+                    offset += entry.len() as usize;
                 }
             }
         }

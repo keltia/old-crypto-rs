@@ -142,7 +142,6 @@ pub(crate) fn rebuild_plaintext(pt: &[u8]) -> Vec<u8> {
 /// Returns a 10-element vector.
 ///
 #[inline]
-#[cfg(test)]
 pub(crate) fn expand5to10(a: &[u8]) -> Vec<u8> {
     chainadd_extend(a, 5)
 }

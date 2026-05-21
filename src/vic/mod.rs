@@ -281,12 +281,12 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::{English, Horizontal, LatinSC};
+    use crate::helpers::{Horizontal, LatinSC, VicEnglish};
     use crate::secom::addmod10;
     use crate::vic::VicStraddling;
     use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
 
-    type TestVic = VicCipher<LatinSC, Horizontal, English>;
+    type TestVic = VicCipher<LatinSC, Horizontal, VicEnglish>;
 
     #[test]
     fn test_new_cipher() {
@@ -315,13 +315,6 @@ mod tests {
 
         let res = String::from_utf8_lossy(&decrypted[..dec_len]).to_string();
         assert_eq!(res, pt);
-    }
-
-    #[derive(Debug)]
-    struct NewEnglish;
-
-    impl Frequent for NewEnglish {
-        const SYMBOLS: &'static [u8] = b"AT.ONE.SIR";
     }
 
     #[test]
@@ -460,7 +453,7 @@ mod tests {
 
         // Create the straddling checkerboard with Line-S
         //
-        let sc = VicStraddling::<LatinSC, Horizontal, NewEnglish>::new(&line_ss);
+        let sc = VicStraddling::<LatinSC, Horizontal, VicEnglish>::new(&line_ss);
         assert!(sc.is_ok());
         let sc = sc.unwrap();
         dbg!(&sc);

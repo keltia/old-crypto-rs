@@ -187,6 +187,7 @@ impl Frequent for DutchExt {
     const SYMBOLS: &'static [u8] = b"ENATIRO...";
 }
 
+#[derive(Debug)]
 pub struct EnglishAlt;
 
 impl Frequent for EnglishAlt {
@@ -196,6 +197,7 @@ impl Frequent for EnglishAlt {
 /// Represents the English language for frequency analysis, with holes put in different places.
 /// cf. example for the VIC Cipher
 ///
+#[derive(Debug)]
 pub struct VicEnglish;
 
 impl Frequent for VicEnglish {

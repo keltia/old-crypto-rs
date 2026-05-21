@@ -11,7 +11,10 @@ use crate::Block;
 use crate::helpers::{Alphabet, Derive, Frequent};
 use crate::transposition::{IrregularTransposition, Transposition};
 use crate::vic::straddling::VicStraddling;
-use crate::vic::subr::{expand_key, rebuild_plaintext, split_plaintext, str2int};
+use crate::vic::subr::{
+    addmod10_inplace, chainadd_extend, chainadd_inplace, first_encode,
+    rebuild_plaintext, split_plaintext, str2int, submod10, to_numeric_one,
+};
 
 use eyre::Result;
 
@@ -33,6 +36,21 @@ pub struct VicCipher<A: Alphabet, D: Derive<F>, F: Frequent> {
     secondtp: IrregularTransposition,
     // Straddling Checkerboard
     pub sc: VicStraddling<A, D, F>,
+}
+
+/// Intermediate structure holding expanded key material.
+///
+/// This structure contains the derived keys used for the two transpositions
+/// and the straddling checkerboard.
+///
+#[derive(Debug)]
+pub(crate) struct ExpandedKey {
+    /// Key for the first (regular) transposition
+    pub(crate) second: Vec<u8>,
+    /// Key for the second (irregular) transposition
+    pub(crate) third: Vec<u8>,
+    /// Key for the straddling checkerboard
+    pub(crate) sckey: Vec<u8>,
 }
 
 impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
@@ -96,7 +114,74 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
             sc,
         })
     }
+
 }
+
+/// Expands the key material into the three keys needed for the VIC cipher.
+///
+/// This function performs the complex key derivation process using chain addition
+/// and modular arithmetic to generate the transposition and checkerboard keys.
+///
+/// # Arguments
+///
+/// * `phrase` - Key phrase (at least 20 characters) split into two parts
+/// * `imsg` - Initial message number as byte array
+/// * `ikey5` - First 5 digits of indicator as byte array
+///
+/// # Returns
+///
+/// Returns an `ExpandedKey` structure containing all derived key material.
+///
+pub(crate) fn expand_key(phrase: &str, line_b: &[u8], line_a: &[u8]) -> ExpandedKey {
+    // ikey5 = Line-A
+    // imsg = Line-B
+    // phrase = Line-D
+    // ph1 = Line-E.1
+    let line_e1: Vec<u8> = to_numeric_one(&phrase[..10]);
+    // ph2 = Line-E.2
+    let line_e2: Vec<u8> = to_numeric_one(&phrase[10..20]);
+
+    // Line-C
+    let mut line_c = submod10(line_b, line_a);
+    // Line-F.1
+    line_c = chainadd_extend(&line_c, 5);
+
+    // Line-G =  Line-E1 + Line-F.1
+    addmod10_inplace(&mut line_c, &line_e1);
+    // Line-H: encode Line-G with Line-E.2
+    let line_h = first_encode(&line_c, &line_e2);
+    let line_hs = line_h
+        .iter()
+        .map(|&b| (b + b'0') as char)
+        .collect::<String>();
+    dbg!(&line_hs);
+    // Line-J
+    let second = to_numeric_one(&line_hs);
+    dbg!(
+        &second
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>()
+    );
+
+    let mut r = second.clone();
+    for _ in 0..5 {
+        chainadd_inplace(&mut r);
+    }
+    dbg!(&r);
+    // In VIC, the key for the second transposition and the SC is derived
+    // from the 5th iteration of chain addition.
+    let third = r.clone();
+    let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
+    let sckey = to_numeric_one(&r_str);
+
+    ExpandedKey {
+        second,
+        third,
+        sckey,
+    }
+}
+
 
 impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
     fn block_size(&self) -> usize {
@@ -196,7 +281,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::{English, Horizontal, LatinSC, to_numeric};
+    use crate::helpers::{English, Horizontal, LatinSC};
     use crate::secom::addmod10;
     use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
 

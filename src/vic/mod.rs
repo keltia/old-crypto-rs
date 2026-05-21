@@ -8,11 +8,11 @@
 //! ISBN: 978-0-02-560640-1
 //!
 use crate::Block;
-use crate::helpers::{Alphabet, Derive, Frequent};
+use crate::helpers::{addmod10, Alphabet, Derive, Frequent};
 use crate::transposition::{IrregularTransposition, Transposition};
 use crate::vic::straddling::VicStraddling;
 use crate::vic::subr::{
-    addmod10_inplace, chainadd_extend, chainadd_inplace, first_encode,
+    chainadd, expand5to10, first_encode,
     rebuild_plaintext, split_plaintext, str2int, submod10, to_numeric_one,
 };
 
@@ -282,7 +282,6 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 mod tests {
     use super::*;
     use crate::helpers::{Horizontal, LatinSC, VicEnglish};
-    use crate::secom::addmod10;
     use crate::vic::VicStraddling;
     use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
 

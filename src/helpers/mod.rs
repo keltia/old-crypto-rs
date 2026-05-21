@@ -756,6 +756,12 @@ pub fn find_holes(list: &[u8]) -> Vec<usize> {
     holes
 }
 
+/// Performs digit-wise addition modulo 10 for two slices.
+///
+pub fn addmod10(a: &[u8], b: &[u8]) -> Vec<u8> {
+    a.iter().zip(b).map(|(x, y)| (x + y) % 10).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -923,5 +929,18 @@ mod tests {
     #[case('X', "CETOOTEST", "CETOOTEST")] // OO is split across digrams
     fn test_fix_double_aligned(#[case] fill: char, #[case] in_str: &str, #[case] expected: &str) {
         assert_eq!(fix_double_aligned(in_str, fill), expected);
+    }
+    
+    #[test]
+    fn test_addmod10() {
+        let a = vec![1, 2, 3, 9];
+        let b = vec![5, 8, 2, 1];
+        assert_eq!(addmod10(&a, &b), vec![6, 0, 5, 0]);
+
+        // different lengths
+        //
+        let c = vec![1, 2];
+        let d = vec![3, 4, 5];
+        assert_eq!(addmod10(&c, &d), vec![4, 6]);
     }
 }

@@ -61,14 +61,14 @@ mod subr;
 pub(crate) use straddling::SecomCheckerboard;
 pub(crate) use disrupted::SecomDisruptedTransposition;
 pub(crate) use subr::{
-    addmod10, chain_add_row, letters_to_digits_1to0, normalize_key_phrase, rank_digits_1to0,
+    chain_add_row, letters_to_digits_1to0, normalize_key_phrase, rank_digits_1to0,
     read_out_columns, transposition_widths_from_last_row, vec_to_array_10,
 };
 pub use subr::column_order_from_digits;
 
 use crate::{Block, Transposition};
 use crate::error::Error;
-use crate::helpers::Frequent;
+use crate::helpers::{addmod10, Frequent};
 
 use eyre::Result;
 
@@ -247,8 +247,9 @@ impl<F: Frequent> Block for SecomCipher<F> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::helpers::addmod10;
     use crate::secom::subr::{
-        addmod10, chain_add_row, column_order_from_digits, letters_to_digits_1to0,
+        chain_add_row, column_order_from_digits, letters_to_digits_1to0,
         rank_digits_1to0, read_out_columns, transposition_widths_from_last_row, vec_to_array_10,
     };
 

@@ -28,12 +28,6 @@ pub(crate) fn letters_to_digits_1to0(s: &str) -> Vec<u8> {
     ranks.into_iter().map(|x| (x + 1) % 10).collect()
 }
 
-/// Performs digit-wise addition modulo 10 for two slices.
-///
-pub(crate) fn addmod10(a: &[u8], b: &[u8]) -> Vec<u8> {
-    a.iter().zip(b).map(|(x, y)| (x + y) % 10).collect()
-}
-
 /// Generates a new row by adding adjacent digits modulo 10 (Fibonacci-style).
 ///
 pub(crate) fn chain_add_row(row: &[u8]) -> Vec<u8> {
@@ -164,19 +158,6 @@ mod tests {
 
         let res = letters_to_digits_1to0("ANNIEWITHT");
         assert_eq!(res, vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9]);
-    }
-
-    #[test]
-    fn test_addmod10() {
-        let a = vec![1, 2, 3, 9];
-        let b = vec![5, 8, 2, 1];
-        assert_eq!(addmod10(&a, &b), vec![6, 0, 5, 0]);
-
-        // different lengths
-        //
-        let c = vec![1, 2];
-        let d = vec![3, 4, 5];
-        assert_eq!(addmod10(&c, &d), vec![4, 6]);
     }
 
     #[test]

@@ -87,13 +87,31 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
     /// ).unwrap();
     /// ```
     ///
-    pub fn new(ind: &str, phrase: &str, imsg: &str) -> Result<Self> {
+    pub fn new(ind: &str, phrase: &str, imsg: &str, persn: usize) -> Result<Self> {
         // Line-A
-        let iv = str2int(imsg);
+        let line_a = str2int(imsg);
         // Line-B
-        let ikey5 = str2int(&ind[..5]);
+        let line_b = str2int(&ind[..5]);
 
-        let expanded = expand_key(phrase, &iv, &ikey5);
+        let expanded = expand_key(phrase, &line_a, &line_b, persn)?;
+
+
+        // Create the straddling checkerboard with Line-S
+        //
+        let sckey = expanded.sckey.iter().map(|&b| (b + b'0') as char).collect::<String>();
+        let sc = VicStraddling::<A, D, F>::new(&sckey)?;
+
+        // Transform our keys into strings for the rest.
+        //
+        let regular_str = expanded.second
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
+
+        let disrupted_str = expanded.third
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
 
         // First transposition is regular, using 'second' as key
         //
@@ -126,54 +144,101 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
 ///
 /// Returns an `ExpandedKey` structure containing all derived key material.
 ///
-pub(crate) fn expand_key(phrase: &str, line_b: &[u8], line_a: &[u8]) -> ExpandedKey {
-    // ikey5 = Line-A
-    // imsg = Line-B
+pub(crate) fn expand_key(line_d: &str, line_b: &[u8], line_a: &[u8], persn: usize) -> Result<ExpandedKey> {
     // phrase = Line-D
-    // ph1 = Line-E.1
-    let line_e1: Vec<u8> = to_numeric_one(&phrase[..10]);
-    // ph2 = Line-E.2
-    let line_e2: Vec<u8> = to_numeric_one(&phrase[10..20]);
 
-    // Line-C
-    let mut line_c = submod10(line_b, line_a);
-    // Line-F.1
-    line_c = chainadd_extend(&line_c, 5);
+    // Step 1. Line-C = Line-A - Line-B[:5] (mod 10)
+    //
+    let line_c = submod10(&line_a, &line_b[..5]);
 
-    // Line-G =  Line-E1 + Line-F.1
-    addmod10_inplace(&mut line_c, &line_e1);
-    // Line-H: encode Line-G with Line-E.2
-    let line_h = first_encode(&line_c, &line_e2);
+    // Step 2: Chain addition to 10 digits
+    // Line-C = 6 9 5 9 2
+    // 5 4 4 1 7 (6+9=(1)5, 9+5=(1)4, 9+5=(1)4, 9+1=(1)1, 5+2=7)
+    // Line-F.1 = 6 9 5 9 2 5 4 4 1 7
+    //
+    let line_f1 = expand5to10(&line_c);
+
+    // Step 3: Add to PH1
+    //
+    let line_e1 = to_numeric_one(&line_d[..10]);
+    let line_e2 = to_numeric_one(&line_d[10..]);
+    let line_g = addmod10(&line_e1, &line_f1);
+    let line_h = first_encode(&line_g, &line_e2);
+
     let line_hs = line_h
         .iter()
         .map(|&b| (b + b'0') as char)
         .collect::<String>();
-    dbg!(&line_hs);
-    // Line-J
-    let second = to_numeric_one(&line_hs);
-    dbg!(
-        &second
-            .iter()
-            .map(|&b| (b + b'0') as char)
-            .collect::<String>()
-    );
 
-    let mut r = second.clone();
+    // Line-H:
+    // Line-J: sequencing of Line-H
+    //
+    let line_j = to_numeric_one(&line_hs);
+
+    // Step 5: Chain addition 5 times
+    //
+    // Line-K
+    // Line-L
+    // Line-M
+    // Line-N
+    // Line-P
+    //
+    let mut line_p = line_h.clone();
+    let mut raw_digits: Vec<u8> = vec![];
     for _ in 0..5 {
-        chainadd_inplace(&mut r);
+        let inter = chainadd(&line_p);
+        raw_digits.extend(&inter);
+        line_p = inter;
     }
-    dbg!(&r);
-    // In VIC, the key for the second transposition and the SC is derived
-    // from the 5th iteration of chain addition.
-    let third = r.clone();
-    let r_str: String = r.iter().map(|&b| (b + b'0') as char).collect();
-    let sckey = to_numeric_one(&r_str);
 
-    ExpandedKey {
-        second,
-        third,
-        sckey,
+    // Now that we have all the digits, we need to transpose them using line_j as the key.
+    //
+    let intermed = Transposition::new(&String::from_utf8(line_j)?)?;
+    let mut all_digits = vec![0; raw_digits.len()];
+    let n = intermed.encrypt(&mut all_digits, &raw_digits);
+    assert_eq!(n, raw_digits.len());
+
+    // Save all digits in a string for later use.
+    //
+    let all_digits_str = all_digits
+        .iter()
+        .map(|b| (*b + b'0') as char)
+        .collect::<String>();
+
+    // Find two different values inside Line-P starting at the end, and use them to calculate
+    // the size of the regular and disrupted keys.
+    //
+    let size_disrupted = persn + line_p[9] as usize;
+    let mut idx = 8;
+    while line_p[idx] == line_p[9] {
+        idx -= 1;
     }
+    let size_regular = persn + line_p[idx] as usize;
+
+    // These digits are used for the second transposition key
+    // And their numerical order for SC key.
+    //
+    let regular_key = &all_digits[..size_regular];
+    let disrupted_key = &all_digits[size_regular..(size_regular + size_disrupted)];
+
+    // Line-P: is the raww SC key
+    // Line-S: sequenced
+    //
+    let line_ps = line_p
+        .iter()
+        .map(|&b| (b + b'0') as char)
+        .collect::<String>();
+
+    // Final SC key is the sequencing of Line-P
+    // aka Line-S
+    //
+    let line_s = to_numeric_one(&line_ps);
+
+    Ok(ExpandedKey {
+        second: regular_key.to_vec(),
+        third: disrupted_key.to_vec(),
+        sckey: line_s,
+    })
 }
 
 
@@ -283,13 +348,13 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651");
+        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651", 6);
         assert!(c.is_ok());
     }
 
     #[test]
     fn test_vic_cipher_full() {
-        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
+        let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651", 6).unwrap();
 
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];
@@ -376,20 +441,27 @@ mod tests {
         // Step 5: Chain addition 5 times
         //
         let mut line_p = line_h.clone();
-        let mut all_digits: Vec<u8> = vec![];
+        let mut raw_digits: Vec<u8> = vec![];
         for _ in 0..5 {
             let inter = chainadd(&line_p);
-            all_digits.extend(&inter);
+            raw_digits.extend(&inter);
             line_p = inter;
         }
-        let all_digits_str = all_digits
+        let raw_digits_str = raw_digits
             .iter()
             .map(|b| (*b + b'0') as char)
             .collect::<String>();
         assert_eq!(
-            all_digits_str,
+            raw_digits_str,
             "50648055525602850077162035074878238571255051328370"
         );
+
+        // Now that we have all the digits, we need to transpose them using line_j as the key.
+        //
+        let intermed = Transposition::new(&String::from_utf8(line_j).unwrap()).unwrap();
+        let mut all_digits = vec![0; raw_digits.len()];
+        let n = intermed.encrypt(&mut all_digits, &raw_digits);
+        assert_eq!(n, raw_digits.len());
 
         // Line-H: 3 2 8 8 6 2 8 7 8 7
         // Line-J: 3 1 7 8 4 2 9 5 0 6
@@ -413,6 +485,9 @@ mod tests {
         let size_regular = persn + line_p[idx] as usize;
         assert_eq!(size_regular, 13);
         assert_eq!(size_disrupted, 6);
+        assert_eq!(all_digits[..13], vec![0, 6, 6, 8, 0, 0, 5, 5, 5, 2, 5, 5, 1]);
+        assert_eq!(all_digits[13..19], vec![7, 5, 8, 8, 3, 8]);
+
 
         // These digits are used for the second transposition key
         // And their numerical order for SC key.

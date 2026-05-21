@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_new_cipher() {
-        let c = OurVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651");
+        let c = OurVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651", 6);
         assert!(c.is_ok());
     }
 

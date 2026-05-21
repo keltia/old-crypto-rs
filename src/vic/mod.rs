@@ -31,11 +31,11 @@ pub(crate) mod subr;
 #[derive(Debug)]
 pub struct VicCipher<A: Alphabet, D: Derive<F>, F: Frequent> {
     // First transposition
-    firsttp: Transposition,
+    regular: Transposition,
     // Second transposition
-    secondtp: IrregularTransposition,
+    disrupted: IrregularTransposition,
     // Straddling Checkerboard
-    pub sc: VicStraddling<A, D, F>,
+    sc: VicStraddling<A, D, F>,
 }
 
 /// Intermediate structure holding expanded key material.
@@ -97,24 +97,18 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
 
         // First transposition is regular, using 'second' as key
         //
-        let firsttp = Transposition::new(&String::from_utf8_lossy(&expanded.second))?;
+        let first_tp = Transposition::new(&regular_str)?;
 
         // Second transposition is irregular, using 'third' as key
         //
-        let secondtp = IrregularTransposition::new(&String::from_utf8_lossy(&expanded.third))?;
+        let second_tp = IrregularTransposition::new(&disrupted_str)?;
 
-        // Straddling Checkerboard using 'sckey' (converted to letters) and 'persn'
-        //
-        let sc_key_str: String = expanded.sckey.iter().map(|&v| (b'0' + v) as char).collect();
-        dbg!(&sc_key_str);
-        let sc = VicStraddling::<A, D, F>::new(&sc_key_str)?;
         Ok(VicCipher {
-            firsttp,
-            secondtp,
+            regular: first_tp,
+            disrupted: second_tp,
             sc,
         })
     }
-
 }
 
 /// Expands the key material into the three keys needed for the VIC cipher.
@@ -232,9 +226,9 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
         let sc_len = self.sc.encrypt(&mut buf_sc, &split);
 
         let mut buf_tp1 = vec![0u8; sc_len];
-        let tp1_len = self.firsttp.encrypt(&mut buf_tp1, &buf_sc[..sc_len]);
+        let tp1_len = self.regular.encrypt(&mut buf_tp1, &buf_sc[..sc_len]);
 
-        self.secondtp.encrypt(dst, &buf_tp1[..tp1_len])
+        self.disrupted.encrypt(dst, &buf_tp1[..tp1_len])
     }
 
     /// Decrypts ciphertext using the VIC cipher.
@@ -261,10 +255,10 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
         // 4. Unsplit plaintext by removing marker and swapping halves back.
         //
         let mut buf_tp2 = vec![0u8; src.len()];
-        let tp2_len = self.secondtp.decrypt(&mut buf_tp2, src);
+        let tp2_len = self.disrupted.decrypt(&mut buf_tp2, src);
 
         let mut buf_tp1 = vec![0u8; tp2_len];
-        let tp1_len = self.firsttp.decrypt(&mut buf_tp1, &buf_tp2[..tp2_len]);
+        let tp1_len = self.regular.decrypt(&mut buf_tp1, &buf_tp2[..tp2_len]);
 
         let mut buf_sc = vec![0u8; tp1_len];
         let sc_len = self.sc.decrypt(&mut buf_sc, &buf_tp1[..tp1_len]);

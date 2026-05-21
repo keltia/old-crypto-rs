@@ -283,6 +283,7 @@ mod tests {
     use super::*;
     use crate::helpers::{English, Horizontal, LatinSC};
     use crate::secom::addmod10;
+    use crate::vic::VicStraddling;
     use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
 
     type TestVic = VicCipher<LatinSC, Horizontal, English>;
@@ -448,10 +449,50 @@ mod tests {
         // Final SC key is the sequencing of Line-P
         //
         let line_s = to_numeric_one(&line_ps);
+        let line_ss = line_s
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
 
         // This the key to the straddling checkerboard.
         //
         assert_eq!(line_s, vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0]);
+
+        // Create the straddling checkerboard with Line-S
+        //
+        let sc = VicStraddling::<LatinSC, Horizontal, NewEnglish>::new(&line_ss);
+        assert!(sc.is_ok());
+        let sc = sc.unwrap();
+        dbg!(&sc);
+
+        // Transform our keys into strings for the rest.
+        //
+        let regular_str = regular_key
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
+
+        let disrupted_str = disrupted_key
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
+
+        // First transposition is regular, using 'second' as key
+        //
+        let first_tp = Transposition::new(&regular_str);
+        assert!(first_tp.is_ok());
+
+        // Second transposition is irregular, using 'third' as key
+        //
+        let second_tp = IrregularTransposition::new(&disrupted_str);
+        assert!(second_tp.is_ok());
+
+        let pt = "MEAN0500.NOT0915LIKEYOUDIDLASTTIME./ATTACKATDAWN.BYDAWNI";
+        let mut ct = vec![0u8; pt.len() * 2];
+        let n = sc.encrypt(&mut ct, pt.as_bytes());
+
+        let expected = "60253 80000 55500 00008 08731 98000 09991 11555 80677 64288 18666 76667 54997 60287 59956 96459 66583 38765 88665 8337";
+        assert_eq!(ct, expected.as_bytes());
     }
 
     #[test]

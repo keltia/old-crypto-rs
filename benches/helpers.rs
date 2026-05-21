@@ -96,3 +96,55 @@ mod to_numeric {
         });
     }
 }
+
+#[divan::bench_group]
+mod chainadd {
+    use super::*;
+
+    fn chainadd_inplace(a: &mut [u8]) {
+        let l = a.len();
+        if l < 2 { return; }
+        for i in 0..l - 1 {
+            a[i] = (a[i] + a[i + 1]) % 10;
+        }
+        let first = a[0];
+        a[l - 1] = (a[l - 1] + first) % 10;
+    }
+
+    /// Performs chain addition on a vector, and returns the result.
+    ///
+    /// Chain addition adds each element to its right neighbor (wrapping around at the end)
+    /// and stores the result modulo 10 in the original position.
+    ///
+    /// # Arguments
+    ///
+    /// * `a` - Slice to perform chain addition on
+    ///
+    fn chainadd(a: &[u8]) -> Vec<u8> {
+        let l = a.len();
+        let mut r = Vec::with_capacity(l);
+
+        if l < 2 { return vec![]; }
+        for i in 0..l - 1 {
+            r.push((a[i] + a[i + 1]) % 10);
+        }
+        r.push((a[l - 1] + r[0]) % 10);
+        r.to_vec()
+    }
+
+    #[divan::bench]
+    fn test_chainadd_inplace(bencher: Bencher) {
+        let mut a = vec![1,2,3,4,5,6,7,8,9];
+        bencher.bench_local(|| {
+            black_box(chainadd_inplace(&mut a));
+        });
+    }
+
+    #[divan::bench]
+    fn test_chainadd(bencher: Bencher) {
+        let a = vec![1,2,3,4,5,6,7,8,9];
+        bencher.bench_local(|| {
+            black_box(chainadd(&a));
+        });
+    }
+}

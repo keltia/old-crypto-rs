@@ -192,3 +192,92 @@ pub struct EnglishAlt;
 impl Frequent for EnglishAlt {
     const SYMBOLS: &'static [u8] = b"ESTONIA...";
 }
+
+/// Represents the English language for frequency analysis, with holes put in different places.
+/// cf. example for the VIC Cipher
+///
+pub struct VicEnglish;
+
+impl Frequent for VicEnglish {
+    const SYMBOLS: &'static [u8] = b"AT.ONE.SIR";
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_frequent_pattern<F: Frequent>(
+        expected_symbols: &[u8],
+        expected_holes: &[usize],
+    ) {
+        assert_eq!(F::SYMBOLS, expected_symbols);
+        assert_eq!(F::SYMBOLS.len(), 10);
+        assert_eq!(F::holes(), expected_holes);
+
+        let hole_count = F::SYMBOLS
+            .iter()
+            .filter(|&&b| b == F::HOLE)
+            .count();
+
+        assert_eq!(hole_count, expected_holes.len());
+
+        let mut seen = [false; 256];
+
+        for &b in F::SYMBOLS {
+            if b == F::HOLE {
+                continue;
+            }
+
+            assert!(
+                b.is_ascii_uppercase(),
+                "non-hole symbol must be ASCII uppercase: {b:?}"
+            );
+
+            assert!(
+                !seen[b as usize],
+                "duplicate non-hole symbol: {}",
+                b as char
+            );
+
+            seen[b as usize] = true;
+        }
+    }
+
+    #[test]
+    fn test_base_language_patterns() {
+        assert_frequent_pattern::<French>(b"ESANTIRU..", &[8, 9]);
+        assert_frequent_pattern::<English>(b"ATONESIR..", &[8, 9]);
+        assert_frequent_pattern::<German>(b"ENSRIATD..", &[8, 9]);
+        assert_frequent_pattern::<Italian>(b"EAIONLRT..", &[8, 9]);
+        assert_frequent_pattern::<Spanish>(b"EAOSRNID..", &[8, 9]);
+        assert_frequent_pattern::<Dutch>(b"ENATIROD..", &[8, 9]);
+    }
+
+    #[test]
+    fn test_extended_language_patterns() {
+        assert_frequent_pattern::<FrenchExt>(b"ESANTIR...", &[7, 8, 9]);
+        assert_frequent_pattern::<EnglishExt>(b"ATONESI...", &[7, 8, 9]);
+        assert_frequent_pattern::<GermanExt>(b"ENSRIAT...", &[7, 8, 9]);
+        assert_frequent_pattern::<ItalianExt>(b"EAIONLR...", &[7, 8, 9]);
+        assert_frequent_pattern::<SpanishExt>(b"EAOSRNI...", &[7, 8, 9]);
+        assert_frequent_pattern::<DutchExt>(b"ENATIRO...", &[7, 8, 9]);
+    }
+
+    #[test]
+    fn test_alt_language_pattern() {
+        assert_frequent_pattern::<EnglishAlt>(b"ESTONIA...", &[7, 8, 9]);
+        assert_frequent_pattern::<VicEnglish>(b"AT.ONE.SIR", &[2, 6]);
+    }
+
+    #[test]
+    fn test_custom_hole_marker_is_respected() {
+        struct CustomHole;
+
+        impl Frequent for CustomHole {
+            const SYMBOLS: &'static [u8] = b"ATONESIR--";
+            const HOLE: u8 = b'-';
+        }
+
+        assert_eq!(CustomHole::holes(), vec![8, 9]);
+    }
+}

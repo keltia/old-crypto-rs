@@ -77,15 +77,18 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> std::fmt::Display for VicStraddling
 
 impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
     pub fn new(indexes: &str) -> Result<Self> {
+        dbg!(&indexes);
         // Default alphabet.
         //
         let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {
             Ok(a) => a,
             Err(_) => return Err(Error::InvalidAlphabet.into()),
         };
-
-        dbg!(&indexes);
-        let longc = vec![indexes.as_bytes()[8], indexes.as_bytes()[9]];
+        // It knows where the holes are.
+        //
+        let holes = F::holes();
+        let longc = vec![indexes.as_bytes()[holes[0]], indexes.as_bytes()[holes[1]]];
+        dbg!(&holes);
         dbg!(String::from_utf8(longc.to_vec())?);
 
         // Shake the alphabet a bit

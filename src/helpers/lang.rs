@@ -34,6 +34,19 @@ pub trait Frequent {
     /// The default is a period (.), but it can be overridden by a specific `impl`.
     ///
     const HOLE: u8 = b'.';
+
+    /// Returns the list of holes in `SYMBOLS`.
+    /// Given a 10-character string, find the indices where the "." character is present
+    ///
+    /// It is used to derive the characters that will be the bigrams in a straddling checkerboard.
+    ///
+    fn holes() -> Vec<usize> {
+        Self::SYMBOLS
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, x): (usize, &u8)| if *x == Self::HOLE { Some(idx )} else { None })
+            .collect::<Vec<usize>>()
+    }
 }
 
 // These are default implementations for the Frequent trait -----

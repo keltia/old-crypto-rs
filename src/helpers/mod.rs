@@ -743,10 +743,31 @@ pub fn fix_double_aligned(str: &str, fill: char) -> String {
     fixed
 }
 
+/// Given a 10-character string, find the indices where the "." character is present
+///
+/// It is used to derive the characters that will be the bigrams in a straddling checkerboard.
+///
+pub fn find_holes(list: &[u8]) -> Vec<usize> {
+    let holes = list
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, x): (usize, &u8)| if *x == b'.' { Some(idx )} else { None })
+        .collect::<Vec<usize>>();
+    holes
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use rstest::*;
+
+    #[rstest]
+    #[case("AT.ONE.SIR", vec![2, 6])]
+    #[case("ATONESIR..", vec![8, 9])]
+    #[case("SNEGOPA...", vec![7, 8, 9])]
+    fn test_find_holes(#[case] in_str: &str, #[case] expected: Vec<usize>) {
+        assert_eq!(find_holes(in_str.as_bytes()), expected);
+    }
 
     #[rstest]
     #[case("ABCDE", "ABCDE")]

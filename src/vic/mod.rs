@@ -316,6 +316,13 @@ mod tests {
         assert_eq!(res, pt);
     }
 
+    #[derive(Debug)]
+    struct NewEnglish;
+
+    impl Frequent for NewEnglish {
+        const SYMBOLS: &'static [u8] = b"AT.ONE.SIR";
+    }
+
     #[test]
     fn test_vic_wikipedia_example() {
         // From Wikipedia:

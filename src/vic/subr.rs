@@ -115,6 +115,12 @@ pub(crate) fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
     res
 }
 
+/// This is the reverse function to `split_plaintext`.  It finds the marker character and re-swap
+/// both parts.
+///
+/// Example:
+/// "EFGH-ABCD" becomes "ABCDEFGH" back.
+///
 pub(crate) fn rebuild_plaintext(pt: &[u8]) -> Vec<u8> {
     let idx = pt.split(|&c| c == b'-').collect::<Vec<&[u8]>>();
     let mut res = idx[1].to_vec();
@@ -209,6 +215,8 @@ mod tests {
     }
 
     #[rstest]
+    #[case("90210", vec![3, 4, 2, 1, 5])]
+    #[case("OCTOPUS", vec![2, 1, 6, 3, 4, 7, 5])]
     #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
     #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
     #[case("TWASTHENIG", vec![8, 0, 1, 7, 9, 4, 2, 6, 5, 3])]

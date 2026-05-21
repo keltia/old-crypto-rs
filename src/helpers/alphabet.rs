@@ -109,6 +109,35 @@ pub struct Latin36;
 #[derive(Debug)]
 pub struct LatinSC;
 
+/// Marker type representing an extended alphabet for the SECOM cipher (A-Z, 0-9, and 3 more symbols).
+///
+/// This type is used as a type parameter to specify that an operation should work
+/// with uppercase letters A through Z (indices 0-25) and digits 0 through 9 (indices 26-35).
+/// This is commonly used in ciphers that need to handle alphanumeric input.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{Alphabet, Latin36};
+///
+/// // Normalize letters
+/// assert_eq!(LatinSecom::normalize(b'A'), Some(0));
+/// assert_eq!(LatinSecom::normalize(b'Z'), Some(25));
+///
+/// // Normalize digits
+/// assert_eq!(LatinSecom::normalize(b'0'), Some(26));
+/// assert_eq!(LatinSecom::normalize(b'9'), Some(35));
+///
+/// // Denormalize back to characters
+/// assert_eq!(LatinSecom::denormalize(0), b'A');
+/// assert_eq!(LatinSecom::denormalize(25), b'Z');
+/// assert_eq!(LatinSecom::denormalize(26), b'0');
+/// assert_eq!(LatinSecom::denormalize(35), b'9');
+/// ```
+///
+#[derive(Debug)]
+pub struct LatinSecom;
+
 /// Trait defining operations for working with different alphabet encodings in classical ciphers.
 ///
 /// This trait provides a consistent interface for converting between characters and their
@@ -567,6 +596,63 @@ impl Alphabet for LatinSC {
             b'/' as u8
         } else {
             b'-' as u8
+        }
+    }
+}
+
+/// Implementation of the `Alphabet` trait for the extended 36-character alphanumeric alphabet.
+///
+/// This implementation provides character encoding/decoding operations for both uppercase
+/// English letters (A-Z) and decimal digits (0-9). It maps:
+/// - 'A' through 'Z' to indices 0-25
+/// - '*' as a word separator to index 26
+/// - '0' through '9' to indices 27-36
+/// - '/' to index 37
+/// - '+' to index 38
+///
+/// This encoding is useful for ciphers that need to handle both letters and numbers,
+/// such as some variants of substitution ciphers or alphanumeric codes.
+///
+/// # See Also
+///
+/// * [`Latin26`] - Standard 26-letter alphabet
+/// * [`LatinSC`] - Regular alphabet with uppercase letters and 2 characters for straddling checkerboards.
+/// * [`Alphabet`] - The trait definition
+///
+impl Alphabet for LatinSecom {
+    const SIZE: usize = 39;
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVXWYZ*0123456789/+";
+
+    fn normalize(ch: u8) -> Option<usize> {
+        let ch = ch.to_ascii_uppercase();
+        if ch.is_ascii_uppercase() {
+            Some((ch - b'A') as usize)
+        } else if ch.is_ascii_digit() {
+            Some(26 + (ch - b'0') as usize)
+        } else if ch == b'*'{
+            Some(26)
+        } else if ch == b'/' {
+            Some(37)
+        } else if ch == b'+' {
+            Some(38)
+        } else {
+            None
+        }
+    }
+
+    fn denormalize(idx: usize) -> u8 {
+        if idx < 26 {
+            b'A' + idx as u8
+        } else if idx == 26 {
+            b'*'
+        } else if idx < 37 {
+            b'0' + (idx - 37) as u8
+        } else if idx == 37 {
+            b'/' as u8
+        } else if idx == 38 {
+            b'+' as u8
+        } else {
+            40u8
         }
     }
 }

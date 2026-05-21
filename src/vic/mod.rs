@@ -287,22 +287,30 @@ mod tests {
 
         // Line-H:   3 2 8 8 6 2 8 7 8 7
         // Line-J:   3 1 7 8 4 2 9 5 0 6    (to_numeric_one)
-        let line_hs = line_h.iter().map(|&b| (b + b'0') as char).collect::<String>();
+        let line_hs = line_h
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
         let line_j = to_numeric_one(&line_hs);
         assert_eq!(line_j, vec![3, 1, 7, 8, 4, 2, 9, 5, 0, 6]);
 
         // Step 5: Chain addition 5 times
         //
-        let mut r = line_h.clone();
+        let mut line_p = line_h.clone();
         let mut all_digits: Vec<u8> = vec![];
         for _ in 0..5 {
-            let inter = chainadd(&r);
+            let inter = chainadd(&line_p);
             all_digits.extend(&inter);
-            r = inter;
+            line_p = inter;
         }
-        let line_p = r;
-        let all_digits = all_digits.iter().map(|b| (*b + b'0') as char).collect::<String>();
-        assert_eq!(all_digits, "50648055525602850077162035074878238571255051328370");
+        let all_digits_str = all_digits
+            .iter()
+            .map(|b| (*b + b'0') as char)
+            .collect::<String>();
+        assert_eq!(
+            all_digits_str,
+            "50648055525602850077162035074878238571255051328370"
+        );
 
         // Line-H: 3 2 8 8 6 2 8 7 8 7
         // Line-J: 3 1 7 8 4 2 9 5 0 6
@@ -327,36 +335,31 @@ mod tests {
         assert_eq!(size_regular, 13);
         assert_eq!(size_disrupted, 6);
 
-        // Line-P: 5 0 5 1 3 2 8 3 7 0
-        // Line-S: 5 9 6 1 3 2 8 4 7 0 (to_numeric_one)
-        //
-        let line_ps = line_p.iter().map(|&b| (b + b'0') as char).collect::<String>();
-        assert_eq!(line_ps, "5051328370");
-        let line_s = to_numeric_one(&line_ps);
-
-        assert_eq!(line_s, vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0]);
-
         // These digits are used for the second transposition key
         // And their numerical order for SC key.
         //
-        let r_str: String = line_p.iter().map(|&b| (b + b'0') as char).collect();
-        let sckey = to_numeric_one(&r_str);
+        let regular_key = &all_digits[..size_regular];
+        let disrupted_key = &all_digits[size_regular..(size_regular + size_disrupted)];
 
-        // 0 6 8 2 0 5 1 3 7 0
-        // Ranks (0-based, stable sort):
-        // Pos 0: digit 0 -> rank 0
-        // Pos 1: digit 6 -> rank 7
-        // Pos 2: digit 8 -> rank 9
-        // Pos 3: digit 2 -> rank 4
-        // Pos 4: digit 0 -> rank 1
-        // Pos 5: digit 5 -> rank 6
-        // Pos 6: digit 1 -> rank 3
-        // Pos 7: digit 3 -> rank 5
-        // Pos 8: digit 7 -> rank 8
-        // Pos 9: digit 0 -> rank 2
-        // Ranks: 0 7 9 4 1 6 3 5 8 2
+        assert_eq!(regular_key, vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2, 5, 6, 0]);
+        assert_eq!(disrupted_key, vec![2, 8, 5, 0, 0, 7]);
+
+        // Line-P: 5 0 5 1 3 2 8 3 7 0
+        // Line-S: 5 9 6 1 3 2 8 4 7 0 (to_numeric_one)
         //
-        assert_eq!(sckey, vec![0, 7, 9, 4, 1, 6, 3, 5, 8, 2]);
+        let line_ps = line_p
+            .iter()
+            .map(|&b| (b + b'0') as char)
+            .collect::<String>();
+        assert_eq!(line_ps, "5051328370");
+
+        // Final SC key is the sequencing of Line-P
+        //
+        let line_s = to_numeric_one(&line_ps);
+
+        // This the key to the straddling checkerboard.
+        //
+        assert_eq!(line_s, vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0]);
     }
 
     #[test]
@@ -366,7 +369,11 @@ mod tests {
         let out = split_plaintext(pt, ml);
         assert_eq!(out.len(), pt.len() + 1);
 
-        let dash_positions: Vec<usize> = out.iter().enumerate().filter_map(|(i, &b)| if b == b'-' { Some(i) } else { None }).collect();
+        let dash_positions: Vec<usize> = out
+            .iter()
+            .enumerate()
+            .filter_map(|(i, &b)| if b == b'-' { Some(i) } else { None })
+            .collect();
         assert_eq!(dash_positions.len(), 1);
 
         let dash_pos = dash_positions[0];
@@ -378,5 +385,4 @@ mod tests {
         expected.extend_from_slice(&pt[..ml]);
         assert_eq!(without_dash, expected);
     }
-
 }

@@ -848,8 +848,8 @@ mod tests {
     #[case("PJRJJJJJJS", vec![7, 0, 8, 1, 2, 3, 4, 5, 6, 9])]
     #[case("AAABRAACADAABRA", vec![0, 1, 2, 9, 13, 3, 4, 11, 5, 12, 6, 7, 10, 14, 8])]
     #[case("8238965327", vec![7, 0, 2, 8, 9, 5, 4, 3, 1, 6])]
-    #[case("1234567890", vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9])]
-    #[case("5051328370", vec![5, 9, 6, 1, 3, 2, 4, 8, 4, 0])]
+    #[case("1234567890", vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 0])]
+    #[case("5051328370", vec![6, 0, 7, 2, 4, 3, 9, 5, 8, 1])]
     fn test_to_numeric(#[case] key: &str, #[case] expected: Vec<u8>) {
         assert_eq!(to_numeric(key), expected);
     }

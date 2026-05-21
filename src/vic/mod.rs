@@ -80,10 +80,10 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
     /// ```
     /// # use old_crypto_rs::VicCipher;
     /// let cipher = VicCipher::new(
-    ///     "89",
-    ///     "741776",
-    ///     "IDREAMOFJEANNIEWITHT",
     ///     "77651"
+    ///     "IDREAMOFJEANNIEWITHT",
+    ///     "741776",
+    ///     "6",
     /// ).unwrap();
     /// ```
     ///

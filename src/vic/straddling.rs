@@ -128,17 +128,17 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
     ///
     fn times10(c: u8) -> Vec<String> {
         let mut tmp = Vec::with_capacity(10);
-        if c == b'0' {
-            for &b in ALL_CIPHER {
-                tmp.push((b as char).to_string());
-            }
-        } else {
+        // if c == b'0' {
+        //     for &b in ALL_CIPHER {
+        //         tmp.push((b as char).to_string());
+        //     }
+        // } else {
             for &b in ALL_CIPHER {
                 let mut s = (c as char).to_string();
                 s.push(b as char);
                 tmp.push(s);
             }
-        }
+        //}
         tmp
     }
 
@@ -256,6 +256,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
                 }
             } else {
                 let entry = self.enc_table[ch as usize];
+                dbg!(ch as char, &entry, offset);
                 if entry.len() != 0 {
                     dst[offset] = entry.bytes(0);
                     if entry.len() == 2 {

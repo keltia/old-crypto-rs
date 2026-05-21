@@ -109,9 +109,11 @@ fn main() -> Result<()>{
     const INDN: &str = "741776";
     const PHRS: &str = "IDREAMOFJEANNIEWITHT";
     const RNDN: &str = "77651";
+    const PERSN: usize = 6;
+
     allciphers.push(Cph {
         name: format!("VIC ({}, {}, {})", INDN, PHRS, RNDN),
-        c: Box::new(VicCipher::<LatinSC, Horizontal, English>::new(INDN, PHRS, RNDN)?),
+        c: Box::new(VicCipher::<LatinSC, Horizontal, English>::new(INDN, PHRS, RNDN, PERSN)?),
         size: PLAIN.len() * 2,
     });
 

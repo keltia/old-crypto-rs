@@ -159,17 +159,17 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
     ///
     fn times10(c: u8) -> Vec<String> {
         let mut tmp = Vec::with_capacity(10);
-        if c == b'0' {
-            for &b in ALL_CIPHER {
-                tmp.push((b as char).to_string());
-            }
-        } else {
+        // if c == b'0' {
+        //     for &b in ALL_CIPHER {
+        //         tmp.push((b as char).to_string());
+        //     }
+        // } else {
             for &b in ALL_CIPHER {
                 let mut s = (c as char).to_string();
                 s.push(b as char);
                 tmp.push(s);
             }
-        }
+        //}
         tmp
     }
 
@@ -468,6 +468,7 @@ mod tests {
     #[rstest]
     #[case(b'3', vec!["30", "31", "32", "33", "34", "35", "36", "37", "38", "39"])]
     #[case(b'1', vec!["10", "11", "12", "13", "14", "15", "16", "17", "18", "19"])]
+    #[case(b'0', vec!["00", "01", "02", "03", "04", "05", "06", "07", "08", "09"])]
     fn test_times10(#[case] c: u8, #[case] expected: Vec<&str>) {
         assert_eq!(Straddling::<LatinSC, English>::times10(c), expected);
     }

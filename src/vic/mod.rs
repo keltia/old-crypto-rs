@@ -8,8 +8,8 @@
 //! ISBN: 978-0-02-560640-1
 //!
 use crate::Block;
-use crate::transposition::{Transposition, IrregularTransposition};
 use crate::helpers::{Alphabet, Derive, Frequent};
+use crate::transposition::{IrregularTransposition, Transposition};
 use crate::vic::straddling::VicStraddling;
 use crate::vic::subr::{expand_key, rebuild_plaintext, split_plaintext, str2int};
 
@@ -24,7 +24,7 @@ pub(crate) mod subr;
 /// - A straddling checkerboard for initial encoding
 /// - A first regular transposition
 /// - A second irregular transposition
-/// 
+///
 #[derive(Debug)]
 pub struct VicCipher<A: Alphabet, D: Derive<F>, F: Frequent> {
     // First transposition
@@ -97,7 +97,6 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
         })
     }
 }
-
 
 impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
     fn block_size(&self) -> usize {
@@ -197,11 +196,11 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::{to_numeric, English, Horizontal, LatinSC};
+    use crate::helpers::{English, Horizontal, LatinSC, to_numeric};
     use crate::secom::addmod10;
-    use crate::vic::subr::{addmod10_inplace, chainadd, chainadd_inplace, expand5to10, first_encode, submod10, to_numeric_one};
+    use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
 
-    type TestVic = VicCipher::<LatinSC, Horizontal, English>;
+    type TestVic = VicCipher<LatinSC, Horizontal, English>;
 
     #[test]
     fn test_new_cipher() {
@@ -212,11 +211,11 @@ mod tests {
     #[test]
     fn test_vic_cipher_full() {
         let c = TestVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651").unwrap();
-        
+
         let pt = "HELLOWORLD";
         let mut ct = vec![0u8; 100];
         let ct_actual_len = c.encrypt(&mut ct, pt.as_bytes());
-        
+
         let ct_trimmed = &ct[..ct_actual_len];
 
         // Last digit of ind "741776" is 6.
@@ -227,7 +226,7 @@ mod tests {
 
         let mut decrypted = vec![0u8; 10];
         let dec_len = c.decrypt(&mut decrypted, ct_trimmed);
-        
+
         let res = String::from_utf8_lossy(&decrypted[..dec_len]).to_string();
         assert_eq!(res, pt);
     }
@@ -239,7 +238,7 @@ mod tests {
         // Date: 13 Sept 1959 -> 139195(9) (7 digits)
         // Personal Number: 6
         // Indicator: 72401 (first 5 digits)
-        
+
         // Let's see how Wikipedia maps this to our New arguments.
         // persn: "6" (Personal number 6, usually represented as 2 digits for SC)
         // ind: "72401"

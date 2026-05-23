@@ -475,7 +475,10 @@ mod tests {
     #[case(b"16", b"02345789")]
     #[case(b"42", b"01356789")]
     fn test_extract(#[case] two: &[u8], #[case] expected: &[u8]) {
-        assert_eq!(Straddling::<LatinSC, English>::extract(ALL_CIPHER, two), expected);
+        assert_eq!(
+            Straddling::<LatinSC, English>::extract(ALL_CIPHER, two),
+            expected
+        );
     }
 
     #[rstest]
@@ -485,7 +488,12 @@ mod tests {
     #[case("ARABESQUE", "89", "ATTACK", "07708081")]
     #[case("SUBWAY", "89", "TOLKIEN", "629388137")]
     #[case("PORTABLE", "89", "RETRIBUTION", "2732693923601")]
-    fn test_straddling_encrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
+    fn test_straddling_encrypt(
+        #[case] key: &str,
+        #[case] chrs: &str,
+        #[case] pt: &str,
+        #[case] ct: &str,
+    ) {
         let c = EnglishStraddling::new(key, chrs).unwrap();
         let mut dst = vec![0u8; 100];
         c.encrypt(&mut dst, pt.as_bytes());
@@ -500,7 +508,12 @@ mod tests {
     #[case("ARABESQUE", "89", "ATTACK", "07708081")]
     #[case("SUBWAY", "89", "TOLKIEN", "629388137")]
     #[case("PORTABLE", "89", "RETRIBUTION", "2732693923601")]
-    fn test_straddling_decrypt(#[case] key: &str, #[case] chrs: &str, #[case] pt: &str, #[case] ct: &str) {
+    fn test_straddling_decrypt(
+        #[case] key: &str,
+        #[case] chrs: &str,
+        #[case] pt: &str,
+        #[case] ct: &str,
+    ) {
         let c = EnglishStraddling::new(key, chrs).unwrap();
         let mut dst = vec![0u8; 100];
         c.decrypt(&mut dst, ct.as_bytes());

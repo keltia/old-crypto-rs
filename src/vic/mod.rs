@@ -333,9 +333,9 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::{Horizontal, LatinSC, VicEnglish};
+    use crate::helpers::{Horizontal, LatinSC, VicEnglish, to_numeric_one};
     use crate::vic::VicStraddling;
-    use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10, to_numeric_one};
+    use crate::vic::subr::{chainadd, expand5to10, first_encode, submod10};
 
     type TestVic = VicCipher<LatinSC, Horizontal, VicEnglish>;
 

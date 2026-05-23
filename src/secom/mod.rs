@@ -173,7 +173,7 @@ impl<F: Frequent> SecomCipher<F> {
             } else {
                 ch.to_ascii_uppercase()
             };
-            if (b'A'..=b'Z').contains(&c) || (b'0'..=b'9').contains(&c) || c == b'*' {
+            if c.is_ascii_uppercase() || c.is_ascii_digit() || c == b'*' {
                 out.push(c);
             }
         }

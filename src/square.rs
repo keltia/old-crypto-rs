@@ -167,7 +167,7 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
     /// - etc.
     ///
     fn expand_key(&mut self) {
-        let mut bigr = vec![0u8; 2];
+        let mut bigr = [0u8; 2];
         let klen = C::SYMBOLS.len();
         let chrs_bytes = C::SYMBOLS;
 

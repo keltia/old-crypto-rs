@@ -71,7 +71,7 @@ impl SecomDisruptedTransposition {
     ///
     fn internal_encrypt(&self, src: &[u8], dst: &mut [u8]) -> usize {
         let width = self.width;
-        let rows = (src.len() + width - 1) / width;
+        let rows = src.len().div_ceil(width);
         let mask = Self::disrupted_mask(width, rows, &self.order);
 
         let mut grid = vec![0u8; rows * width];
@@ -123,7 +123,7 @@ impl SecomDisruptedTransposition {
     ///
     fn internal_decrypt(&self, src: &[u8], dst: &mut [u8]) -> usize {
         let width = self.width;
-        let rows = (src.len() + width - 1) / width;
+        let rows = src.len().div_ceil(width);
         let mask = Self::disrupted_mask(width, rows, &self.order);
 
         // Fill in the columns

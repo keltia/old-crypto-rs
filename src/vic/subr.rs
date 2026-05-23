@@ -113,7 +113,7 @@ pub(crate) fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
 pub(crate) fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
     let mut beg = pt[0..ml].to_vec();
     let mut res = pt[ml..].to_vec();
-    res.append(&mut vec![b'-' as u8]);
+    res.append(&mut vec![b'-']);
     res.append(&mut beg);
     res
 }

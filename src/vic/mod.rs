@@ -149,7 +149,7 @@ pub(crate) fn expand_key(line_d: &str, line_b: &[u8], line_a: &[u8], persn: usiz
 
     // Step 1. Line-C = Line-A - Line-B[:5] (mod 10)
     //
-    let line_c = submod10(&line_a, &line_b[..5]);
+    let line_c = submod10(line_a, &line_b[..5]);
 
     // Step 2: Chain addition to 10 digits
     // Line-C = 6 9 5 9 2
@@ -543,7 +543,7 @@ mod tests {
 
         let pt = "MEAN0500.NOT0915LIKEYOUDIDLASTTIME./ATTACKATDAWN.BYDAWNI";
         let mut ct = vec![0u8; pt.len() * 2];
-        let n = sc.encrypt(&mut ct, pt.as_bytes());
+        let _n = sc.encrypt(&mut ct, pt.as_bytes());
 
         let expected = "60253 80000 55500 00008 08731 98000 09991 11555 80677 64288 18666 76667 54997 60287 59956 96459 66583 38765 88665 8337";
         assert_eq!(ct, expected.as_bytes());

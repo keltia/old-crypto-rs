@@ -142,7 +142,7 @@ impl<F: Frequent> Block for SecomCheckerboard<F> {
         let mut out = 0;
         for &ch in src {
             let entry = self.enc[ch as usize];
-            if entry.len() == 0 {
+            if entry.is_empty() {
                 continue;
             }
             if out + entry.len() as usize > dst.len() {

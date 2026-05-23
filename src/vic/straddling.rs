@@ -136,11 +136,11 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
         //         tmp.push((b as char).to_string());
         //     }
         // } else {
-            for &b in ALL_CIPHER {
-                let mut s = (c as char).to_string();
-                s.push(b as char);
-                tmp.push(s);
-            }
+        for &b in ALL_CIPHER {
+            let mut s = (c as char).to_string();
+            s.push(b as char);
+            tmp.push(s);
+        }
         //}
         tmp
     }
@@ -240,7 +240,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
         let marker = self.enc_table[b'/' as usize];
         for &ch in src {
             if ch.is_ascii_digit() {
-                if marker.len() != 0 {
+                if !marker.is_empty() {
                     dst[offset] = marker.bytes(0);
                     if marker.len() == 2 {
                         dst[offset + 1] = marker.bytes(1);
@@ -260,7 +260,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
             } else {
                 let entry = self.enc_table[ch as usize];
                 dbg!(ch as char, &entry, offset);
-                if entry.len() != 0 {
+                if !entry.is_empty() {
                     dst[offset] = entry.bytes(0);
                     if entry.len() == 2 {
                         dst[offset + 1] = entry.bytes(1);
@@ -324,34 +324,30 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
             }
             i += db_len;
 
-            if ptc == b'/' {
-                if i + 4 <= src.len() && src[i] == src[i + 1] {
-                    let row0 = src[i + 2];
-                    let row1 = src[i + 3];
-                    if row0.is_ascii_digit() && row1.is_ascii_digit() {
-                        let rd0 = (row0 - b'0') as usize;
-                        let rd1 = (row1 - b'0') as usize;
-                        let mut is_match = false;
-                        if db_len == 2 {
-                            is_match = row0 == src[i - 2] && row1 == src[i - 1];
-                        }
+            if ptc == b'/' && i + 4 <= src.len() && src[i] == src[i + 1] {
+                let row0 = src[i + 2];
+                let row1 = src[i + 3];
+                if row0.is_ascii_digit() && row1.is_ascii_digit() {
+                    let rd0 = (row0 - b'0') as usize;
+                    let rd1 = (row1 - b'0') as usize;
+                    let mut is_match = false;
+                    if db_len == 2 {
+                        is_match = row0 == src[i - 2] && row1 == src[i - 1];
+                    }
 
-                        if is_match || self.dec2[rd0][rd1] == b'/' {
-                            if pt_offset < dst.len() {
-                                dst[pt_offset] = src[i];
-                                pt_offset += 1;
-                            }
-                            i += 4;
-                            continue;
+                    if is_match || self.dec2[rd0][rd1] == b'/' {
+                        if pt_offset < dst.len() {
+                            dst[pt_offset] = src[i];
+                            pt_offset += 1;
                         }
+                        i += 4;
+                        continue;
                     }
                 }
             }
-            if ptc != 0 {
-                if pt_offset < dst.len() {
-                    dst[pt_offset] = ptc;
-                    pt_offset += 1;
-                }
+            if ptc != 0 && pt_offset < dst.len() {
+                dst[pt_offset] = ptc;
+                pt_offset += 1;
             }
         }
         pt_offset

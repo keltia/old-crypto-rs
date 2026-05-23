@@ -1,5 +1,5 @@
 use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
-use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, EnglishExt, French, Horizontal, LatinSC, REGULAR_ALPHABET};
+use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET};
 
 use eyre::Result;
 

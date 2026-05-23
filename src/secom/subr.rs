@@ -38,9 +38,9 @@ pub(crate) fn chain_add_row(row: &[u8]) -> Vec<u8> {
     let mut a = row[0];
     let mut b = row[1];
     out.push((a + b) % 10);
-    for i in 2..row.len() {
+    for item in row.iter().skip(2) {
         a = b;
-        b = row[i];
+        b = *item;
         out.push((a + b) % 10);
     }
     // Now we need to continue adding the newly generated digits

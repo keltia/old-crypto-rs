@@ -391,9 +391,9 @@ impl Block for Solitaire {
     /// # Arguments
     ///
     /// * `dst` - A mutable byte slice where the encrypted output will be written.
-    ///           Must be at least as long as `src`.
+    ///   Must be at least as long as `src`.
     /// * `src` - A byte slice containing the plaintext to encrypt.
-    ///           Only ASCII alphabetic characters are encrypted; all others pass through unchanged.
+    ///   Only ASCII alphabetic characters are encrypted; all others pass through unchanged.
     ///
     /// # Returns
     ///
@@ -436,7 +436,7 @@ impl Block for Solitaire {
         for (i, &ch) in src.iter().enumerate() {
             if ch.is_ascii_alphabetic() {
                 // Convert plaintext character to number (A=1, B=2, ..., Z=26)
-                let p = (ch.to_ascii_uppercase() - b'A' + 1) as u8;
+                let p = ch.to_ascii_uppercase() - b'A' + 1;
 
                 // Generate next keystream value (1-26)
                 let k = Self::step(&mut self.deck.borrow_mut());
@@ -464,9 +464,9 @@ impl Block for Solitaire {
     /// # Arguments
     ///
     /// * `dst` - A mutable byte slice where the decrypted output will be written.
-    ///           Must be at least as long as `src`.
+    ///   Must be at least as long as `src`.
     /// * `src` - A byte slice containing the ciphertext to decrypt.
-    ///           Only ASCII alphabetic characters are decrypted; all others pass through unchanged.
+    ///   Only ASCII alphabetic characters are decrypted; all others pass through unchanged.
     ///
     /// # Returns
     ///
@@ -512,7 +512,7 @@ impl Block for Solitaire {
         for (i, &ch) in src.iter().enumerate() {
             if ch.is_ascii_alphabetic() {
                 // Convert ciphertext character to number (A=1, B=2, ..., Z=26)
-                let c = (ch.to_ascii_uppercase() - b'A' + 1) as u8;
+                let c = ch.to_ascii_uppercase() - b'A' + 1;
 
                 // Generate next keystream value (1-26) - must match encryption
                 let k = Self::step(&mut self.deck.borrow_mut());

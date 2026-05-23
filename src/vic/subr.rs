@@ -167,39 +167,6 @@ pub(crate) fn first_encode(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().map(|&v| b[((v as i32 + 9) % 10) as usize]).collect()
 }
 
-/// This is `to_numeric`, but 1-based for digits:
-/// '1' ranks first, ..., '9' ranks ninth, and '0' ranks tenth.
-///
-/// Duplicate digits are ranked left-to-right because `sort_by_key` is stable.
-///
-pub(crate) fn to_numeric_one(s: &str) -> Vec<u8> {
-    fn digit_rank(b: u8) -> u8 {
-        match b {
-            b'1'..=b'9' => b - b'0', // 1..=9
-            b'0' => 10,
-            _ => b, // fallback for non-digits, useful for phrase text
-        }
-    }
-
-    let s = s.as_bytes();
-
-    let mut indexed: Vec<(usize, u8)> = s
-        .iter()
-        .enumerate()
-        .map(|(i, &b)| (i, b))
-        .collect();
-
-    indexed.sort_by_key(|&(_, b)| digit_rank(b));
-
-    let mut ar = vec![0u8; s.len()];
-
-    for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
-        ar[original_idx] = ((rank + 1) % 10) as u8;
-    }
-
-    ar
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,22 +181,6 @@ mod tests {
     fn test_new_cipher() {
         let c = OurVic::new("741776", "IDREAMOFJEANNIEWITHT", "77651", 6);
         assert!(c.is_ok());
-    }
-
-    #[rstest]
-    #[case("90210", vec![3, 4, 2, 1, 5])]
-    #[case("OCTOPUS", vec![2, 1, 6, 3, 4, 7, 5])]
-    #[case("IDREAMOFJE", vec![6, 2, 0, 3, 1, 8, 9, 5, 7, 4])]
-    #[case("ANNIEWITHT", vec![1, 6, 7, 4, 2, 0, 5, 8, 3, 9])]
-    #[case("TWASTHENIG", vec![8, 0, 1, 7, 9, 4, 2, 6, 5, 3])]
-    #[case("HTBEFORECH", vec![6, 0, 1 ,3, 5, 8, 9, 4, 2, 7])]
-    #[case("ARABESQUE",  vec![1, 7, 2, 3, 4, 8, 6, 9, 5])]
-    #[case("PJRJJJJJJS", vec![8, 1, 9, 2, 3, 4, 5, 6, 7, 0])]
-    #[case("3288628787", vec![3 ,1 ,7, 8, 4, 2, 9, 5, 0, 6])]
-    #[case("8238965327", vec![8, 1, 3, 9, 0, 6, 5, 4, 2, 7])]
-    #[case("5051328370", vec![5, 9, 6, 1, 3, 2, 8, 4, 7, 0])]
-    fn test_to_numeric_one(#[case] s: &str, #[case] r: Vec<u8>) {
-        assert_eq!(to_numeric_one(s), r);
     }
 
     #[rstest]

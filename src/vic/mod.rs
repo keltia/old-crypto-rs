@@ -8,12 +8,12 @@
 //! ISBN: 978-0-02-560640-1
 //!
 use crate::Block;
-use crate::helpers::{addmod10, Alphabet, Derive, Frequent};
+use crate::helpers::{addmod10, to_numeric_one, Alphabet, Derive, Frequent};
 use crate::transposition::{IrregularTransposition, Transposition};
 use crate::vic::straddling::VicStraddling;
 use crate::vic::subr::{
     chainadd, expand5to10, first_encode,
-    rebuild_plaintext, split_plaintext, str2int, submod10, to_numeric_one,
+    rebuild_plaintext, split_plaintext, str2int, submod10,
 };
 
 use eyre::Result;

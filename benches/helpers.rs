@@ -2,8 +2,11 @@ use std::hint::black_box;
 
 use divan::Bencher;
 
-use old_crypto_rs::helpers::{SC_ALPHABET, shuffle, transp_shuffle, condense, condense_str, fix_double_aligned, expand, fix_double, to_numeric};
 use old_crypto_rs::column_order_from_digits;
+use old_crypto_rs::helpers::{
+    SC_ALPHABET, condense, condense_str, expand, fix_double, fix_double_aligned, shuffle,
+    to_numeric, to_numeric_old, to_numeric_one, to_numeric_one_old, transp_shuffle,
+};
 
 const PLAIN: &str = "CETOOTESTCHIFFREAVECADFGVXETLESCLESMASTODONETSOCIAL";
 
@@ -69,7 +72,6 @@ mod fix_double {
         });
     }
 
-
     #[divan::bench]
     fn bench_double_aligned(bencher: Bencher) {
         bencher.bench_local(|| {
@@ -90,9 +92,30 @@ mod to_numeric {
     }
 
     #[divan::bench]
+    fn bench_to_numeric_old(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(to_numeric_old("8238965327"));
+        })
+    }
+
+    #[divan::bench]
+    fn bench_to_numeric_one(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(to_numeric_one("8238965327"));
+        })
+    }
+
+    #[divan::bench]
+    fn bench_to_numeric_one_old(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(to_numeric_one_old("8238965327"));
+        })
+    }
+
+    #[divan::bench]
     fn bench_column_order_from_digits(bencher: Bencher) {
         bencher.bench_local(|| {
-            black_box(column_order_from_digits(&[8,2,3,8,9,6,5,3,2,7]));
+            black_box(column_order_from_digits(&[8, 2, 3, 8, 9, 6, 5, 3, 2, 7]));
         });
     }
 }
@@ -103,7 +126,9 @@ mod chainadd {
 
     fn chainadd_inplace(a: &mut [u8]) {
         let l = a.len();
-        if l < 2 { return; }
+        if l < 2 {
+            return;
+        }
         for i in 0..l - 1 {
             a[i] = (a[i] + a[i + 1]) % 10;
         }
@@ -124,7 +149,9 @@ mod chainadd {
         let l = a.len();
         let mut r = Vec::with_capacity(l);
 
-        if l < 2 { return vec![]; }
+        if l < 2 {
+            return vec![];
+        }
         for i in 0..l - 1 {
             r.push((a[i] + a[i + 1]) % 10);
         }
@@ -134,7 +161,7 @@ mod chainadd {
 
     #[divan::bench]
     fn test_chainadd_inplace(bencher: Bencher) {
-        let mut a = vec![1,2,3,4,5,6,7,8,9];
+        let mut a = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
         bencher.bench_local(|| {
             black_box(chainadd_inplace(&mut a));
         });
@@ -142,7 +169,7 @@ mod chainadd {
 
     #[divan::bench]
     fn test_chainadd(bencher: Bencher) {
-        let a = vec![1,2,3,4,5,6,7,8,9];
+        let a = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
         bencher.bench_local(|| {
             black_box(chainadd(&a));
         });
@@ -151,59 +178,17 @@ mod chainadd {
 
 #[divan::bench_group]
 mod smallv {
-    use smallvec::SmallVec;
     use super::*;
+    use smallvec::SmallVec;
 
     type Digits10 = SmallVec<[u8; 10]>;
-    type Digits16 = SmallVec<[u8;16]>;
+    type Digits16 = SmallVec<[u8; 16]>;
     type Order16 = SmallVec<[usize; 16]>;
-
-    fn rank_key(b: u8) -> u8 {
-        match b {
-            b'1'..=b'9' => b - b'0',
-            b'0' => 10,
-            _ => b,
-        }
-    }
-
-    /// Benchmark-local SmallVec equivalent of the VIC-style to_numeric_one.
-    /// It keeps up to 10 output digits inline and up to 16 `(index, byte)`
-    /// pairs inline, which covers the normal VIC 10-character phrases/digit lines.
-    fn to_numeric_one_smallvec(s: &str) -> Digits10 {
-        let mut indexed: SmallVec<[(usize, u8); 16]> = s.bytes().enumerate().collect();
-        indexed.sort_by_key(|&(_, b)| rank_key(b));
-
-        let mut out = Digits10::from_elem(0, s.len());
-        for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
-            out[original_idx] = ((rank + 1) % 10) as u8;
-        }
-        out
-    }
-
-    /// Benchmark-local SmallVec variant of helpers::to_numeric.
-    fn to_numeric_smallvec(s: &str) -> Digits16 {
-        let letters = s.as_bytes();
-        let mut indexed: SmallVec<[(usize, u8); 16]> = letters
-            .iter()
-            .enumerate()
-            .map(|(i, &b)| (i, b))
-            .collect();
-        indexed.sort_by_key(|&(_, b)| b);
-
-        let mut out = Digits16::from_elem(0, letters.len());
-        for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
-            out[original_idx] = rank as u8;
-        }
-        out
-    }
 
     /// Benchmark-local SmallVec variant of column_order_from_digits.
     fn column_order_from_digits_smallvec(key: &[u8]) -> Order16 {
-        let mut indexed: SmallVec<[(usize, u8); 16]> = key
-            .iter()
-            .enumerate()
-            .map(|(i, &b)| (i, b))
-            .collect();
+        let mut indexed: SmallVec<[(usize, u8); 16]> =
+            key.iter().enumerate().map(|(i, &b)| (i, b)).collect();
         indexed.sort_by_key(|&(i, b)| (b, i));
 
         indexed.into_iter().map(|(i, _)| i).collect()
@@ -225,23 +210,11 @@ mod smallv {
     }
 
     #[divan::bench]
-    fn bench_to_numeric_one_smallvec(bencher: Bencher) {
-        bencher.bench_local(|| {
-            black_box(to_numeric_one_smallvec("8238965327"));
-        });
-    }
-
-    #[divan::bench]
-    fn bench_to_numeric_smallvec(bencher: Bencher) {
-        bencher.bench_local(|| {
-            black_box(to_numeric_smallvec("8238965327"));
-        });
-    }
-
-    #[divan::bench]
     fn bench_column_order_from_digits_smallvec(bencher: Bencher) {
         bencher.bench_local(|| {
-            black_box(column_order_from_digits_smallvec(&[8, 2, 3, 8, 9, 6, 5, 3, 2, 7]));
+            black_box(column_order_from_digits_smallvec(&[
+                8, 2, 3, 8, 9, 6, 5, 3, 2, 7,
+            ]));
         });
     }
 

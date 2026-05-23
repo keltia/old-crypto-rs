@@ -925,6 +925,7 @@ dependencies = [
  "rand 0.10.0",
  "ratatui",
  "rstest",
+ "smallvec",
  "thiserror 2.0.18",
 ]
 

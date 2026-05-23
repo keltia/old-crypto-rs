@@ -1,6 +1,7 @@
 use std::hint::black_box;
 
 use divan::Bencher;
+use smallvec::SmallVec; // smallvec 2.x: SmallVec<T, const N: usize>
 
 use old_crypto_rs::helpers::{SC_ALPHABET, shuffle, transp_shuffle, condense, condense_str, fix_double_aligned, expand, fix_double, to_numeric};
 use old_crypto_rs::column_order_from_digits;
@@ -151,12 +152,11 @@ mod chainadd {
 
 #[divan::bench_group]
 mod smallv {
-    use smallvec::SmallVec;
     use super::*;
 
-    type Digits10 = SmallVec<[u8; 10]>;
-    type Digits16 = SmallVec<[u8;16]>;
-    type Order16 = SmallVec<[usize; 16]>;
+    type Digits10 = SmallVec<u8, 10>;
+    type Digits16 = SmallVec<u8, 16>;
+    type Order16 = SmallVec<usize, 16>;
 
     fn rank_key(b: u8) -> u8 {
         match b {
@@ -170,10 +170,11 @@ mod smallv {
     /// It keeps up to 10 output digits inline and up to 16 `(index, byte)`
     /// pairs inline, which covers the normal VIC 10-character phrases/digit lines.
     fn to_numeric_one_smallvec(s: &str) -> Digits10 {
-        let mut indexed: SmallVec<[(usize, u8); 16]> = s.bytes().enumerate().collect();
+        let mut indexed: SmallVec<(usize, u8), 16> = s.bytes().enumerate().collect();
         indexed.sort_by_key(|&(_, b)| rank_key(b));
 
-        let mut out = Digits10::from_elem(0, s.len());
+        let mut out = Digits10::new();
+        out.extend(core::iter::repeat(0).take(s.len()));
         for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
             out[original_idx] = ((rank + 1) % 10) as u8;
         }
@@ -183,14 +184,15 @@ mod smallv {
     /// Benchmark-local SmallVec variant of helpers::to_numeric.
     fn to_numeric_smallvec(s: &str) -> Digits16 {
         let letters = s.as_bytes();
-        let mut indexed: SmallVec<[(usize, u8); 16]> = letters
+        let mut indexed: SmallVec<(usize, u8), 16> = letters
             .iter()
             .enumerate()
             .map(|(i, &b)| (i, b))
             .collect();
         indexed.sort_by_key(|&(_, b)| b);
 
-        let mut out = Digits16::from_elem(0, letters.len());
+        let mut out = Digits16::new();
+        out.extend(core::iter::repeat(0).take(letters.len()));
         for (rank, (original_idx, _)) in indexed.into_iter().enumerate() {
             out[original_idx] = rank as u8;
         }
@@ -199,7 +201,7 @@ mod smallv {
 
     /// Benchmark-local SmallVec variant of column_order_from_digits.
     fn column_order_from_digits_smallvec(key: &[u8]) -> Order16 {
-        let mut indexed: SmallVec<[(usize, u8); 16]> = key
+        let mut indexed: SmallVec<(usize, u8), 16> = key
             .iter()
             .enumerate()
             .map(|(i, &b)| (i, b))

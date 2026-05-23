@@ -23,7 +23,7 @@ pub use caesar::{Caesar, CaesarCipher};
 pub use playfair::{Playfair, PlayfairCipher};
 pub use chaocipher::{ChaoBasic, Chaocipher};
 pub use square::{SquareCipher, PolybiusCipher};
-pub use transposition::{Transposition, IrregularTransposition};
+pub use transposition::{Transposition, IrregularTransposition, Disrupted};
 pub use adfgvx::{ADFGVXCipher, ADFGXSquare, ADFGVXSquare};
 pub use straddling::{EnglishStraddling, FrenchStraddling, GermanStraddling, Straddling};
 pub use nihilist::Nihilist;

@@ -198,13 +198,6 @@ pub(crate) fn expand_key(line_d: &str, line_b: &[u8], line_a: &[u8], persn: usiz
     let n = intermed.encrypt(&mut all_digits, &raw_digits);
     assert_eq!(n, raw_digits.len());
 
-    // Save all digits in a string for later use.
-    //
-    let all_digits_str = all_digits
-        .iter()
-        .map(|b| (*b + b'0') as char)
-        .collect::<String>();
-
     // Find two different values inside Line-P starting at the end, and use them to calculate
     // the size of the regular and disrupted keys.
     //

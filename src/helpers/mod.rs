@@ -175,7 +175,7 @@ pub fn insert(src: &[u8], obj: u8, ind: usize) -> Vec<u8> {
 /// # Type Parameters
 ///
 /// * `F` - A type implementing the [`FillWith`] trait that specifies which filler
-///         character to insert between duplicates (typically [`FillX`] or [`FillQ`])
+///   character to insert between duplicates (typically [`FillX`] or [`FillQ`])
 ///
 /// # Algorithm
 ///
@@ -464,7 +464,7 @@ pub fn shuffle(key: &str, alphabet: &str) -> String {
     }
 
     let mut height = alphabet.len() / length;
-    if alphabet.len() % length != 0 {
+    if !alphabet.len().is_multiple_of(length) {
         height += 1;
     }
 
@@ -539,8 +539,8 @@ pub fn transp_shuffle(key: &str, alphabet: &str) -> Result<String> {
     // Precompute column positions to avoid repeated searches
     //
     let mut col_positions = vec![0usize; klen];
-    for i in 0..klen {
-        col_positions[i] = tkey.iter().position(|&x| x == i as u8).unwrap();
+    for (i, item) in col_positions.iter_mut().enumerate().take(klen) {
+        *item = tkey.iter().position(|&x| x == i as u8).unwrap();
     }
 
     // Perform transposition directly into String
@@ -625,13 +625,11 @@ pub fn to_numeric(key: &str) -> Vec<u8> {
 ///
 pub fn by_n(ct: &str, n: usize) -> String {
     let mut out = String::new();
-    let mut count = 0;
-    for ch in ct.chars() {
+    for (count, ch) in ct.chars().enumerate() {
         if count > 0 && count % n == 0 {
             out.push(' ');
         }
         out.push(ch);
-        count += 1;
     }
     out
 }
@@ -658,8 +656,8 @@ pub fn output_as_block(input: &str) -> String {
 /// in classical ciphers to handle double letters.
 ///
 /// >NOTE: this function works regardless of alignment; that is, it does not check if the double
-/// letters are on a 2-character boundary.  Therefore, it is useless for `Playfair`, or any
-/// bi-grammatic ciphers.
+/// > letters are on a 2-character boundary.  Therefore, it is useless for `Playfair`, or any
+/// > bi-grammatic ciphers.
 ///
 /// e.g.
 /// HELLOWORLD -> HE LX LO WO RL DX
@@ -748,12 +746,11 @@ pub fn fix_double_aligned(str: &str, fill: char) -> String {
 /// It is used to derive the characters that will be the bigrams in a straddling checkerboard.
 ///
 pub fn find_holes(list: &[u8]) -> Vec<usize> {
-    let holes = list
+    list
         .iter()
         .enumerate()
         .filter_map(|(idx, x): (usize, &u8)| if *x == b'.' { Some(idx )} else { None })
-        .collect::<Vec<usize>>();
-    holes
+        .collect::<Vec<usize>>()
 }
 
 /// Performs digit-wise addition modulo 10 for two slices.

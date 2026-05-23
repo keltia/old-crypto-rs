@@ -10,6 +10,12 @@ impl NullCipher {
     }
 }
 
+impl Default for NullCipher {
+    fn default() -> Self {
+        NullCipher::new()
+    }
+}
+
 impl Block for NullCipher {
     /// BlockSize is part of the interface
     fn block_size(&self) -> usize {

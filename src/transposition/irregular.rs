@@ -70,8 +70,8 @@ impl IrregularTransposition {
         
         let klen = tkey.len();
         let mut tkey_order = vec![0; klen];
-        for i in 0..klen {
-            tkey_order[i] = tkey.iter().position(|&x| x == i as u8).unwrap();
+        for (i, item) in tkey_order.iter_mut().enumerate().take(klen) {
+            *item = tkey.iter().position(|&x| x == i as u8).unwrap();
         }
 
         Ok(IrregularTransposition {
@@ -153,10 +153,10 @@ impl Block for IrregularTransposition {
         if klen == 0 || len == 0 {
             return 0;
         }
-        let rows = (len + klen - 1) / klen;
+        let rows = len.div_ceil(klen);
 
         let mut grid = vec![0u8; rows * klen];
-        let mut active = vec![0u8; (rows * klen + 7) / 8];
+        let mut active = vec![0u8; (rows * klen).div_ceil(8)];
         let mut src_idx = 0;
 
         // Phase 1: Fill non-triangular areas row by row
@@ -214,8 +214,8 @@ impl Block for IrregularTransposition {
     ///
     /// 3. **Read in two phases**: The plaintext is recovered by reading the grid in two phases:
     ///    - First phase: Read row by row from non-triangular areas
-    ///    - Second phase: Read row by row from triangular areas
-    ///    This reverses the two-phase filling done during encryption.
+    ///    - Second phase: Read row by row from triangular areas.  This reverses the two-phase
+    ///      filling done during encryption.
     ///
     /// # Arguments
     ///
@@ -244,10 +244,10 @@ impl Block for IrregularTransposition {
         if klen == 0 || len == 0 {
             return 0;
         }
-        let rows = (len + klen - 1) / klen;
+        let rows = len.div_ceil(klen);
 
         // Determine active cells
-        let mut active = vec![0u8; (rows * klen + 7) / 8];
+        let mut active = vec![0u8; (rows * klen).div_ceil(8)];
         let mut count = 0;
         for r in 0..rows {
             let row_off = r * klen;

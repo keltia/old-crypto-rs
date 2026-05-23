@@ -8,45 +8,56 @@
 //!
 //! Algorithms:
 //! - Horizontal
-//!       You take the base alphabet, extract the most frequet letters according to the `Frequent`
-//!       trait, and put them in a new vector.
-//!       e.g. given the alphabet "ABCDEFGHIJKLMNOPQRSTUVWXYZ-/", and the `Frequent` trait for English,
-//!       the most frequent letters are ATONESIR
-//!       The permutation is ATONESIRBCDFGHJKLMPQUVWXYZ-/.
-//!       giving us the checkerboard layout:
+//!   You take the base alphabet, extract the most frequet letters according to the `Frequent`
+//!   trait, and put them in a new vector.
+//!   e.g. given the alphabet "ABCDEFGHIJKLMNOPQRSTUVWXYZ-/", and the `Frequent` trait for English,
+//!   the most frequent letters are ATONESIR, sometimes written as ESTONIAN
 //!
-//!       A T O N E S I R . .
-//!       B C D F G H J K L M
-//!       P Q U V W X Y Z - /
+//!   The permutation is ATONESIRBCDFGHJKLMPQUVWXYZ-/.
+//!   giving us the checkerboard layout:
 //!
-//! it can also be written as
+//!   ```text
+//!   A T O N E S I R . .
+//!   B C D F G H J K L M
+//!   P Q U V W X Y Z - /
+//!   ```
 //!
-//!       A T . O N E . S I R
-//!       B C D F G H J K L M
-//!       P Q U V W X Y Z - /
+//!   It can also be written as
 //!
-//!       with a 10x3:
+//!   ```text
+//!    A T . O N E . S I R
+//!    B C D F G H J K L M
+//!    P Q U V W X Y Z - /
+//!   ```
 //!
-//!       A T O N E S I . . .
-//!       B C D F G H J K L M
-//!       P Q R U V W X Y Z -
-//!       0 1 2 3 4 5 6 7 8 9
+//!   with a 10x3:
+//!
+//!   ```text
+//!    A T O N E S I . . .
+//!    B C D F G H J K L M
+//!    P Q R U V W X Y Z -
+//!    0 1 2 3 4 5 6 7 8 9
+//!   ```
 //!
 //! - Vertical
-//!       The idea is the same as Horizontal, but the letters are put in a new vector, vertically.
+//!   The idea is the same as Horizontal, but the letters are put in a new vector, vertically.
 //!
-//!       A T O N E S I R . .
-//!       B D G J L P U W Y -
-//!       C F H K M Q V X Z /
+//!   ```text
+//!    A T O N E S I R . .
+//!    B D G J L P U W Y -
+//!    C F H K M Q V X Z /
+//!   ```
 //!
 //! Using a 10x3 checkerboard to include numbers, it would give:
 //!
-//!       A T O N E S I . . .
-//!       B F J M R W Z 2 5 8
-//!       C G K P U X 0 3 6 9
-//!       D H L Q V Y 1 4 7 -
+//!   ```text
+//!    A T O N E S I . . .
+//!    B F J M R W Z 2 5 8
+//!    C G K P U X 0 3 6 9
+//!    D H L Q V Y 1 4 7 -
+//!   ```
 //!
-//!       (it omits the / which was used before to switch between letters and numbers).
+//!   (it omits the / which was used before to switch between letters and numbers).
 //!
 
 use crate::helpers::Frequent;

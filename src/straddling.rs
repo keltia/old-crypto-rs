@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 
 use crate::Block;
 use crate::error::Error;
-use crate::helpers::{shuffle, Alphabet, EncEntry, English, French, Frequent, German, LatinSC};
+use crate::helpers::{Alphabet, EncEntry, English, French, Frequent, German, LatinSC, shuffle};
 
 use eyre::Result;
 
@@ -164,11 +164,11 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
         //         tmp.push((b as char).to_string());
         //     }
         // } else {
-            for &b in ALL_CIPHER {
-                let mut s = (c as char).to_string();
-                s.push(b as char);
-                tmp.push(s);
-            }
+        for &b in ALL_CIPHER {
+            let mut s = (c as char).to_string();
+            s.push(b as char);
+            tmp.push(s);
+        }
         //}
         tmp
     }
@@ -212,7 +212,7 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
             if freq.contains(&ch) {
                 if i < shortc.len() {
                     let digit = shortc[i];
-                    self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0] );
+                    self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0]);
                     self.dec1[(digit - b'0') as usize] = ch;
                     i += 1;
                 }
@@ -222,7 +222,7 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
                     if bytes.len() == 2 {
                         let d0 = bytes[0];
                         let d1 = bytes[1];
-                        self.enc_table[ch as usize] = EncEntry::new(2, [d0, d1] );
+                        self.enc_table[ch as usize] = EncEntry::new(2, [d0, d1]);
                         self.dec2[(d0 - b'0') as usize][(d1 - b'0') as usize] = ch;
                     }
                     j += 1;
@@ -261,7 +261,7 @@ pub type GermanStraddling = Straddling<LatinSC, German>;
 
 // -----
 
-impl<A: Alphabet, F: Frequent> Block for Straddling<A,  F> {
+impl<A: Alphabet, F: Frequent> Block for Straddling<A, F> {
     /// Returns the block size, which equals the key length.
     ///
     /// # Returns
@@ -296,7 +296,7 @@ impl<A: Alphabet, F: Frequent> Block for Straddling<A,  F> {
         let marker = self.enc_table[b'/' as usize];
         for &ch in src {
             if ch.is_ascii_digit() {
-                if marker.len() != 0 {
+                if !marker.is_empty() {
                     dst[offset] = marker.bytes(0);
                     if marker.len() == 2 {
                         dst[offset + 1] = marker.bytes(1);
@@ -315,7 +315,7 @@ impl<A: Alphabet, F: Frequent> Block for Straddling<A,  F> {
                 }
             } else {
                 let entry = self.enc_table[ch as usize];
-                if entry.len() != 0 {
+                if !entry.is_empty() {
                     dst[offset] = entry.bytes(0);
                     if entry.len() == 2 {
                         dst[offset + 1] = entry.bytes(1);
@@ -379,34 +379,31 @@ impl<A: Alphabet, F: Frequent> Block for Straddling<A,  F> {
             }
             i += db_len;
 
-            if ptc == b'/' {
-                if i + 4 <= src.len() && src[i] == src[i + 1] {
-                    let row0 = src[i + 2];
-                    let row1 = src[i + 3];
-                    if row0.is_ascii_digit() && row1.is_ascii_digit() {
-                        let rd0 = (row0 - b'0') as usize;
-                        let rd1 = (row1 - b'0') as usize;
-                        let mut is_match = false;
-                        if db_len == 2 {
-                            is_match = row0 == src[i - 2] && row1 == src[i - 1];
-                        }
+            if ptc == b'/' && i + 4 <= src.len() && src[i] == src[i + 1] {
+                let row0 = src[i + 2];
+                let row1 = src[i + 3];
+                if row0.is_ascii_digit() && row1.is_ascii_digit() {
+                    let rd0 = (row0 - b'0') as usize;
+                    let rd1 = (row1 - b'0') as usize;
+                    let mut is_match = false;
+                    if db_len == 2 {
+                        is_match = row0 == src[i - 2] && row1 == src[i - 1];
+                    }
 
-                        if is_match || self.dec2[rd0][rd1] == b'/' {
-                            if pt_offset < dst.len() {
-                                dst[pt_offset] = src[i];
-                                pt_offset += 1;
-                            }
-                            i += 4;
-                            continue;
+                    if is_match || self.dec2[rd0][rd1] == b'/' {
+                        if pt_offset < dst.len() {
+                            dst[pt_offset] = src[i];
+                            pt_offset += 1;
                         }
+                        i += 4;
+                        continue;
                     }
                 }
             }
-            if ptc != 0 {
-                if pt_offset < dst.len() {
-                    dst[pt_offset] = ptc;
-                    pt_offset += 1;
-                }
+
+            if ptc != 0 && pt_offset < dst.len() {
+                dst[pt_offset] = ptc;
+                pt_offset += 1;
             }
         }
         pt_offset
@@ -421,13 +418,13 @@ mod tests {
 
     #[test]
     fn test_encentry_debug_formats_two_chars() {
-        let entry = EncEntry::new(2, *b"82" );
+        let entry = EncEntry::new(2, *b"82");
         assert_eq!(format!("{entry:?}"), "82");
     }
 
     #[test]
     fn test_encentry_debug_formats_empty_as_dots() {
-        let entry = EncEntry::new(0, [0, 0] );
+        let entry = EncEntry::new(0, [0, 0]);
         assert_eq!(format!("{entry:?}"), "..");
     }
 

@@ -4,7 +4,7 @@
 //! VIC-based checkerboard, because it uses an alphabet with digits, plus "*" as space.
 //!
 //! >NOTE: no need to add the Alphabet trait there, only the `Frequent` one for the checkerboard
-//! variations.
+//! > variations.
 //!
 use std::marker::PhantomData;
 
@@ -39,7 +39,7 @@ pub(crate) struct SecomCheckerboard<F: Frequent> {
     dec1: [u8; 10],
     /// Fast decoding table for two-digit codes.
     dec2: [[u8; 10]; 10],
-    ///
+    #[doc(hidden)]
     _marker: PhantomData<F>,
 }
 
@@ -64,12 +64,12 @@ impl<F: Frequent> SecomCheckerboard<F> {
         // Place frequent letters on the top row.
         //
         let mut freq_iter = F::SYMBOLS.iter();
-        for col in 0..10 {
+        for (col, &item) in header.iter().enumerate() {
             if FREQ_BLANK_POS.contains(&col) {
                 continue;
             }
             if let Some(&ch) = freq_iter.next() {
-                let digit = header[col];
+                let digit = item;
                 enc[ch as usize] = EncEntry::new(1, [b'0' + digit, 0]);
                 dec1[digit as usize] = ch;
             }

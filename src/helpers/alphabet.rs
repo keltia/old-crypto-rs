@@ -441,13 +441,11 @@ impl Alphabet for Latin25 {
     }
 
     fn denormalize(idx: usize) -> u8 {
-        let ch = if idx > 8 {
+        if idx > 8 {
             b'A' + idx as u8 + 1
         } else {
             b'A' + idx as u8
-        };
-
-        ch
+        }
     }
 }
 
@@ -593,9 +591,9 @@ impl Alphabet for LatinSC {
         if idx < 26 {
             b'A' + idx as u8
         } else if idx == 26 {
-            b'/' as u8
+            b'/'
         } else {
-            b'-' as u8
+            b'-'
         }
     }
 }
@@ -648,9 +646,9 @@ impl Alphabet for LatinSecom {
         } else if idx < 37 {
             b'0' + (idx - 37) as u8
         } else if idx == 37 {
-            b'/' as u8
+            b'/'
         } else if idx == 38 {
-            b'+' as u8
+            b'+'
         } else {
             40u8
         }

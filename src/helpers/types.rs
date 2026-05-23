@@ -25,6 +25,11 @@ impl EncEntry {
     }
 
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+    
+    #[inline]
     pub fn bytes(&self, idx: u8) -> u8 {
         self.bytes[idx as usize]
     }

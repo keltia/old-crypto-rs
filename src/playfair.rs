@@ -89,15 +89,15 @@ impl<A: Alphabet, F: FillWith> Playfair<A, F> {
     /// * `opt` - Operation mode: `OP_ENCRYPT` (1) for encryption, `OP_DECRYPT` (4) for decryption
     ///
     /// # Returns⏎
-    /// ⏎
+    ///
     /// A `Couple` containing the transformed character pair⏎
-    /// ⏎
+    ///
     /// # Transformation Rules⏎
-    /// ⏎
+    ///
     /// 1. **Same row**: Shift each character by `opt` positions to the right (modulo 5)⏎
     /// 2. **Same column**: Shift each character by `opt` positions down (modulo 5)⏎
     /// 3. **Rectangle**: Swap the columns of the two characters⏎
-    /// ⏎
+    ///
     fn transform(&self, pt: Couple, opt: u8) -> Couple {
         let d = self.dim as u8;
         let bg1 = self.lookup(pt.r);
@@ -195,10 +195,10 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
     /// # Arguments
     ///
     /// * `dst` - Destination buffer where the ciphertext will be written. Must be large enough
-    ///           to hold the expanded plaintext (considering double letters and padding).
-    ///           A safe size is at least 2x the source length.
+    ///   to hold the expanded plaintext (considering double letters and padding).
+    ///   A safe size is at least 2x the source length.
     /// * `src` - Source plaintext bytes to encrypt. Each byte should represent an uppercase
-    ///           letter from the Playfair alphabet.
+    ///   letter from the Playfair alphabet.
     ///
     /// # Returns
     ///
@@ -262,9 +262,9 @@ impl<A: Alphabet, F: FillWith> Block for Playfair<A, F> {
     /// # Arguments
     ///
     /// * `dst` - Destination buffer where the plaintext will be written. Must be at least as
-    ///           large as the source length.
+    ///   large as the source length.
     /// * `src` - Source ciphertext bytes to decrypt. Must have an even length, as Playfair
-    ///           operates on character pairs.
+    ///   operates on character pairs.
     ///
     /// # Returns
     ///

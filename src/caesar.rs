@@ -73,9 +73,9 @@ impl<A: Alphabet> Caesar<A> {
         let mut enc = vec![0u8; n];
         let mut dec = vec![0u8; n];
         let shift = (key % n as i32 + n as i32) % n as i32;
-        for i in 0..n {
+        for (i, item) in enc.iter_mut().enumerate().take(n) {
             let e = (i as i32 + shift) % n as i32;
-            enc[i] = A::denormalize(e as usize);
+            *item = A::denormalize(e as usize);
             dec[e as usize] = A::denormalize(i);
         }
         Caesar { enc, dec, _phantom: PhantomData }

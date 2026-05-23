@@ -6,6 +6,7 @@ mod coord;
 mod derive;
 mod fill;
 mod lang;
+mod mask;
 mod types;
 
 pub use alphabet::*;
@@ -13,6 +14,7 @@ pub use coord::*;
 pub use derive::*;
 pub use fill::*;
 pub use lang::*;
+pub use mask::*;
 pub use types::*;
 
 use std::collections::HashSet;
@@ -927,7 +929,7 @@ mod tests {
     fn test_fix_double_aligned(#[case] fill: char, #[case] in_str: &str, #[case] expected: &str) {
         assert_eq!(fix_double_aligned(in_str, fill), expected);
     }
-    
+
     #[test]
     fn test_addmod10() {
         let a = vec![1, 2, 3, 9];

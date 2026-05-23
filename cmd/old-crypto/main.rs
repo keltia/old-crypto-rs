@@ -3,13 +3,17 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::{ADFGVXCipher, Block as CipherBlock, CaesarCipher, Chaocipher, Nihilist, NullCipher, PlayfairCipher, SecomCipher, Solitaire, EnglishStraddling, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers, AutocryptCipher, AutokeyCipher, PolybiusCipher};
+use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
+use old_crypto_rs::{
+    ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
+    EnglishStraddling, Nihilist, NullCipher, PlayfairCipher, PolybiusCipher, SecomCipher,
+    Solitaire, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
+};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 use std::io::{self, stdout};
-use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
 
 enum InputMode {
     Normal,
@@ -175,15 +179,22 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {}", e),
             },
-            "Nihilist" => match Nihilist::<LatinSC, English>::new(&self.key1, &self.key2, &self.key3) {
-                Ok(cipher) => {
-                    let mut d = vec![0u8; src.len() * 3];
-                    let n = cipher.encrypt(&mut d, src);
-                    self.result = String::from_utf8_lossy(&d[..n]).to_string();
+            "Nihilist" => {
+                match Nihilist::<LatinSC, English>::new(&self.key1, &self.key2, &self.key3) {
+                    Ok(cipher) => {
+                        let mut d = vec![0u8; src.len() * 3];
+                        let n = cipher.encrypt(&mut d, src);
+                        self.result = String::from_utf8_lossy(&d[..n]).to_string();
+                    }
+                    Err(e) => self.result = format!("Error: {}", e),
                 }
-                Err(e) => self.result = format!("Error: {}", e),
-            },
-            "VIC" => match VicCipher::<LatinSC, Horizontal, EnglishExt>::new(&self.key1, &self.key2, &self.key3, (&self.key4).parse().unwrap()) {
+            }
+            "VIC" => match VicCipher::<LatinSC, Horizontal, EnglishExt>::new(
+                &self.key1,
+                &self.key2,
+                &self.key3,
+                self.key4.parse().unwrap(),
+            ) {
                 Ok(cipher) => {
                     let mut d = vec![0u8; src.len() * 4];
                     let n = cipher.encrypt(&mut d, src);
@@ -245,102 +256,102 @@ where
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                match app.input_mode {
-                    InputMode::Normal => match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char('e') => {
-                            app.input_mode = InputMode::Editing;
-                        }
-                        KeyCode::Char('c') => {
-                            app.input_mode = InputMode::SelectingCipher;
-                        }
-                        KeyCode::Tab => {
-                            app.focused_field = match app.focused_field {
-                                FocusedField::Cleartext => FocusedField::Key1,
-                                FocusedField::Key1 => FocusedField::Key2,
-                                FocusedField::Key2 => FocusedField::Key3,
-                                FocusedField::Key3 => FocusedField::Key4,
-                                FocusedField::Key4 => FocusedField::Cleartext,
-                            };
-                        }
-                        KeyCode::Enter => {
-                            app.run_cipher();
-                        }
-                        _ => {}
-                    },
-                    InputMode::SelectingCipher => match key.code {
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
-                        }
-                        KeyCode::Up => {
-                            let i = match app.cipher_list_state.selected() {
-                                Some(i) => {
-                                    if i == 0 {
-                                        app.ciphers.len() - 1
-                                    } else {
-                                        i - 1
-                                    }
+        if let Event::Key(key) = event::read()?
+            && key.kind == KeyEventKind::Press
+        {
+            match app.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Char('e') => {
+                        app.input_mode = InputMode::Editing;
+                    }
+                    KeyCode::Char('c') => {
+                        app.input_mode = InputMode::SelectingCipher;
+                    }
+                    KeyCode::Tab => {
+                        app.focused_field = match app.focused_field {
+                            FocusedField::Cleartext => FocusedField::Key1,
+                            FocusedField::Key1 => FocusedField::Key2,
+                            FocusedField::Key2 => FocusedField::Key3,
+                            FocusedField::Key3 => FocusedField::Key4,
+                            FocusedField::Key4 => FocusedField::Cleartext,
+                        };
+                    }
+                    KeyCode::Enter => {
+                        app.run_cipher();
+                    }
+                    _ => {}
+                },
+                InputMode::SelectingCipher => match key.code {
+                    KeyCode::Esc => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    KeyCode::Up => {
+                        let i = match app.cipher_list_state.selected() {
+                            Some(i) => {
+                                if i == 0 {
+                                    app.ciphers.len() - 1
+                                } else {
+                                    i - 1
                                 }
-                                None => 0,
-                            };
-                            app.cipher_list_state.select(Some(i));
-                            app.selected_cipher_index = i;
-                        }
-                        KeyCode::Down => {
-                            let i = match app.cipher_list_state.selected() {
-                                Some(i) => {
-                                    if i >= app.ciphers.len() - 1 {
-                                        0
-                                    } else {
-                                        i + 1
-                                    }
+                            }
+                            None => 0,
+                        };
+                        app.cipher_list_state.select(Some(i));
+                        app.selected_cipher_index = i;
+                    }
+                    KeyCode::Down => {
+                        let i = match app.cipher_list_state.selected() {
+                            Some(i) => {
+                                if i >= app.ciphers.len() - 1 {
+                                    0
+                                } else {
+                                    i + 1
                                 }
-                                None => 0,
-                            };
-                            app.cipher_list_state.select(Some(i));
-                            app.selected_cipher_index = i;
-                        }
-                        KeyCode::Enter => {
-                            app.input_mode = InputMode::Normal;
-                        }
-                        _ => {}
+                            }
+                            None => 0,
+                        };
+                        app.cipher_list_state.select(Some(i));
+                        app.selected_cipher_index = i;
+                    }
+                    KeyCode::Enter => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    _ => {}
+                },
+                InputMode::Editing => match key.code {
+                    KeyCode::Esc => {
+                        app.input_mode = InputMode::Normal;
+                    }
+                    KeyCode::Char(c) => match app.focused_field {
+                        FocusedField::Cleartext => app.cleartext.push(c),
+                        FocusedField::Key1 => app.key1.push(c),
+                        FocusedField::Key2 => app.key2.push(c),
+                        FocusedField::Key3 => app.key3.push(c),
+                        FocusedField::Key4 => app.key4.push(c),
                     },
-                    InputMode::Editing => match key.code {
-                        KeyCode::Esc => {
-                            app.input_mode = InputMode::Normal;
+                    KeyCode::Backspace => match app.focused_field {
+                        FocusedField::Cleartext => {
+                            app.cleartext.pop();
                         }
-                        KeyCode::Char(c) => match app.focused_field {
-                            FocusedField::Cleartext => app.cleartext.push(c),
-                            FocusedField::Key1 => app.key1.push(c),
-                            FocusedField::Key2 => app.key2.push(c),
-                            FocusedField::Key3 => app.key3.push(c),
-                            FocusedField::Key4 => app.key4.push(c),
-                        },
-                        KeyCode::Backspace => match app.focused_field {
-                            FocusedField::Cleartext => {
-                                app.cleartext.pop();
-                            }
-                            FocusedField::Key1 => {
-                                app.key1.pop();
-                            }
-                            FocusedField::Key2 => {
-                                app.key2.pop();
-                            }
-                            FocusedField::Key3 => {
-                                app.key3.pop();
-                            }
-                            FocusedField::Key4 => {
-                                app.key4.pop();
-                            }
-                        },
-                        KeyCode::Enter => {
-                            app.run_cipher();
+                        FocusedField::Key1 => {
+                            app.key1.pop();
                         }
-                        _ => {}
+                        FocusedField::Key2 => {
+                            app.key2.pop();
+                        }
+                        FocusedField::Key3 => {
+                            app.key3.pop();
+                        }
+                        FocusedField::Key4 => {
+                            app.key4.pop();
+                        }
                     },
-                }
+                    KeyCode::Enter => {
+                        app.run_cipher();
+                    }
+                    _ => {}
+                },
             }
         }
     }

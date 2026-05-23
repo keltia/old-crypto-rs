@@ -88,7 +88,7 @@ pub fn to_numeric_one_old(s: &str) -> Vec<u8> {
 /// # Parameters
 /// - `s`: A string slice (`&str`) to be processed.
 /// - `key`: A closure or function (`Fn(u8) -> u8`) that takes a character byte and returns a numeric key
-///          to determine the sort order.
+///   to determine the sort order.
 /// - `one_based_mod10`: A boolean flag that determines the numeric ranking method:
 ///   - If `true`, the rankings are one-based and take modulo 10 (e.g., `1, 2, ..., 9, 0, 1, ...`).
 ///   - If `false`, the rankings are zero-based (e.g., `0, 1, 2, ...`).

@@ -140,7 +140,7 @@ mod b0_encryption {
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = BenchVic::new("741776", PASSPHRASE, "77651").unwrap();
+        let c = BenchVic::new("741776", PASSPHRASE, "77651", 6).unwrap();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len() * 3];
         bencher.bench_local(|| {
@@ -197,7 +197,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
-        let c = BenchVic::new("741776", PASSPHRASE, "77651").unwrap();
+        let c = BenchVic::new("741776", PASSPHRASE, "77651", 6).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 3];
         c.encrypt(&mut ct, src);

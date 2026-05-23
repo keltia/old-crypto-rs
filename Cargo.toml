@@ -19,6 +19,10 @@ harness = false
 name = "ciphers"
 harness = false
 
+[[bench]]
+name = "transposition"
+harness = false
+
 [[bin]]
 name = "old-crypto"
 path = "cmd/old-crypto/main.rs"

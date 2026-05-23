@@ -1,8 +1,8 @@
+//! Trait to implement masking algorithms for disrupted transposition ciphers.
 //!
 
-/// Trait to implement masking algorithms for transposition ciphers.
-///
 pub trait TranspositionMask {
     fn mask(width: usize, rows: usize, order: &[usize]) -> Vec<bool>;
 }
+
 

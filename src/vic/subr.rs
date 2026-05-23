@@ -29,6 +29,7 @@ pub(crate) fn str2int(str: &str) -> Vec<u8> {
 /// * `b` - Slice to add to `a`
 ///
 #[inline]
+#[allow(dead_code)]
 pub(crate) fn addmod10_inplace(a: &mut [u8], b: &[u8]) {
     for (x, y) in a.iter_mut().zip(b) {
         *x = (*x + *y) % 10;
@@ -49,6 +50,8 @@ pub(crate) fn submod10(a: &[u8], b: &[u8]) -> Vec<u8> {
 ///
 /// * `a` - Mutable slice to perform chain addition on
 ///
+#[inline]
+#[allow(dead_code)]
 pub(crate) fn chainadd_inplace(a: &mut [u8]) {
     let l = a.len();
     if l < 2 { return; }

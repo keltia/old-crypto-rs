@@ -3,7 +3,7 @@
 //! This example shows how to use the Disrupted transposition cipher with different
 //! masking policies (NoMask, VIC-style, and SECOM-style).
 
-use old_crypto_rs::{Block, Disrupted};
+use old_crypto_rs::{Block, Disrupted, Transposition};
 use old_crypto_rs::helpers::TranspositionMask;
 
 /// A simple no-mask policy (behaves like regular transposition).
@@ -97,12 +97,38 @@ fn demonstrate_cipher<P: TranspositionMask>(name: &str, plaintext: &[u8], key: &
     }
 }
 
+fn old_transposition(name: &str, plaintext: &[u8], key: &str) {
+    println!("\n==> {} Regular Transposition", name);
+    println!("Key: {}", key);
+    println!("Plaintext: {}", String::from_utf8_lossy(plaintext));
+
+    let cipher = Transposition::new(key).expect("Failed to create cipher");
+
+    let mut ciphertext = vec![0u8; plaintext.len()];
+    let ct_len = cipher.encrypt(&mut ciphertext, plaintext);
+    println!("Ciphertext: {}", String::from_utf8_lossy(&ciphertext[..ct_len]));
+
+    let mut decrypted = vec![0u8; ct_len];
+    let pt_len = cipher.decrypt(&mut decrypted, &ciphertext[..ct_len]);
+    println!("Decrypted: {}", String::from_utf8_lossy(&decrypted[..pt_len]));
+
+    if &decrypted[..pt_len] == plaintext {
+        println!("✓ Decryption successful!");
+    } else {
+        println!("✗ Decryption failed!");
+    }
+
+}
+
 fn main() {
     println!("Generic Disrupted Transposition Cipher Examples");
     println!("================================================");
 
     let plaintext = b"ATTACKATDAWN";
     let key = "SUBWAY";
+
+    // Example 0: Old transposition
+    old_transposition("Old (Reference)", plaintext, key);
 
     // Example 1: No mask (regular transposition)
     demonstrate_cipher::<NoMask>("NoMask (Regular)", plaintext, key);

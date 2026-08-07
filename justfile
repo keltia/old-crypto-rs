@@ -16,3 +16,7 @@ push: push-github push-codeberg
 # Move changes to develop
 move:
     jj b move -t '@-' develop
+
+# Remove compilatiopn artifacts from previous
+tidy:
+    cargo sweep --installed

@@ -100,6 +100,8 @@ pub fn to_numeric_one_old(s: &str) -> Vec<u8> {
 ///
 /// # Example
 /// ```
+/// use old_crypto_rs::helpers::numeric_by_key;
+///
 /// let input = "dcba";
 /// // Sorts characters by their ASCII values
 /// let result = numeric_by_key(input, |b| b, true);
@@ -119,7 +121,7 @@ pub fn to_numeric_one_old(s: &str) -> Vec<u8> {
 /// - `Digits16`: A type alias for a collection (initially allocated but resized)
 ///   that stores numeric rankings.
 ///
-fn numeric_by_key<F>(s: &str, key: F, one_based_mod10: bool) -> Vec<u8>
+pub fn numeric_by_key<F>(s: &str, key: F, one_based_mod10: bool) -> Vec<u8>
 where
     F: Fn(u8) -> u8,
 {
@@ -157,8 +159,10 @@ where
 /// # Example
 ///
 /// ```
+/// use old_crypto_rs::helpers::to_numeric;
+///
 /// let result = to_numeric("hello");
-/// // `result` might depend on the implementation of `numeric_by_key`
+/// assert_eq!(result, vec![1, 0, 2, 3, 4]);
 /// ```
 ///
 /// # Notes
@@ -191,9 +195,14 @@ pub fn to_numeric(s: &str) -> Vec<u8> {
 ///
 /// # Examples
 /// ```
+/// use old_crypto_rs::helpers::to_numeric_one;
+///
 /// let input = "123045";
 /// let result = to_numeric_one(input);
-/// assert_eq!(result, vec![1, 2, 3, 10, 4, 5]);
+/// // Rankings (one-based mod 10):
+/// // '1' (rank 0 -> 1), '2' (rank 1 -> 2), '3' (rank 2 -> 3),
+/// // '0' (rank 5 -> 6), '4' (rank 3 -> 4), '5' (rank 4 -> 5)
+/// assert_eq!(result, vec![1, 2, 3, 6, 4, 5]);
 /// ```
 ///
 /// # Notes

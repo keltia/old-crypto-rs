@@ -92,8 +92,6 @@ impl<F: Frequent> SecomCheckerboard<F> {
                 checker_extra.push(c);
             }
         }
-        dbg!(&freq);
-        dbg!(&checker_extra);
         // Fill the three rows under long digits, starting at their column.
         //
         let mut symbols = checker_extra.as_bytes().iter();

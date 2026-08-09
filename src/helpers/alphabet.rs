@@ -118,21 +118,21 @@ pub struct LatinSC;
 /// # Examples
 ///
 /// ```
-/// use old_crypto_rs::helpers::{Alphabet, Latin36};
+/// use old_crypto_rs::helpers::{Alphabet, LatinSecom};
 ///
 /// // Normalize letters
 /// assert_eq!(LatinSecom::normalize(b'A'), Some(0));
 /// assert_eq!(LatinSecom::normalize(b'Z'), Some(25));
 ///
 /// // Normalize digits
-/// assert_eq!(LatinSecom::normalize(b'0'), Some(26));
-/// assert_eq!(LatinSecom::normalize(b'9'), Some(35));
+/// assert_eq!(LatinSecom::normalize(b'0'), Some(27));
+/// assert_eq!(LatinSecom::normalize(b'9'), Some(36));
 ///
 /// // Denormalize back to characters
 /// assert_eq!(LatinSecom::denormalize(0), b'A');
 /// assert_eq!(LatinSecom::denormalize(25), b'Z');
-/// assert_eq!(LatinSecom::denormalize(26), b'0');
-/// assert_eq!(LatinSecom::denormalize(35), b'9');
+/// assert_eq!(LatinSecom::denormalize(27), b'0');
+/// assert_eq!(LatinSecom::denormalize(36), b'9');
 /// ```
 ///
 #[derive(Debug)]
@@ -534,8 +534,8 @@ impl Alphabet for Latin36 {
 /// - 'B' to index 1
 /// - ...
 /// - 'Z' to index 25
-/// - '-' to index 26
-/// - '/' to index 27
+/// - '/' to index 26
+/// - '.' to index 27
 ///
 /// Any characters outside the A-Z range (including lowercase letters, digits, and
 /// special characters) are not supported and will return `None` from `normalize`.
@@ -546,21 +546,23 @@ impl Alphabet for Latin36 {
 /// use old_crypto_rs::helpers::{Alphabet, LatinSC};
 ///
 /// // Normalize uppercase letters
-/// assert_eq!(Latin26::normalize(b'A'), Some(0));
-/// assert_eq!(Latin26::normalize(b'M'), Some(12));
-/// assert_eq!(Latin26::normalize(b'Z'), Some(25));
-/// assert_eq!(Latin26::normalize(b'-'), Some(26));
+/// assert_eq!(LatinSC::normalize(b'A'), Some(0));
+/// assert_eq!(LatinSC::normalize(b'M'), Some(12));
+/// assert_eq!(LatinSC::normalize(b'Z'), Some(25));
+/// assert_eq!(LatinSC::normalize(b'/'), Some(26));
+/// assert_eq!(LatinSC::normalize(b'.'), Some(27));
 ///
 /// // Lowercase letters are converted to uppercase
-/// assert_eq!(Latin26::normalize(b'a'), Some(0));
-/// assert_eq!(Latin26::normalize(b'0'), None);
-/// assert_eq!(Latin26::normalize(b' '), None);
+/// assert_eq!(LatinSC::normalize(b'a'), Some(0));
+/// assert_eq!(LatinSC::normalize(b'0'), None);
+/// assert_eq!(LatinSC::normalize(b' '), None);
 ///
 /// // Denormalize indices back to letters
-/// assert_eq!(Latin26::denormalize(0), b'A');
-/// assert_eq!(Latin26::denormalize(12), b'M');
-/// assert_eq!(Latin26::denormalize(25), b'Z');
-/// assert_eq!(Latin26::denormalize(27), b'/';
+/// assert_eq!(LatinSC::denormalize(0), b'A');
+/// assert_eq!(LatinSC::denormalize(12), b'M');
+/// assert_eq!(LatinSC::denormalize(25), b'Z');
+/// assert_eq!(LatinSC::denormalize(26), b'/');
+/// assert_eq!(LatinSC::denormalize(27), b'.');
 /// ```
 ///
 /// # See Also
@@ -619,7 +621,7 @@ impl Alphabet for LatinSC {
 ///
 impl Alphabet for LatinSecom {
     const SIZE: usize = 39;
-    const ALPHABET: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVXWYZ*0123456789/+";
+    const ALPHABET: &'static [u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ*0123456789/+";
 
     fn normalize(ch: u8) -> Option<usize> {
         let ch = ch.to_ascii_uppercase();

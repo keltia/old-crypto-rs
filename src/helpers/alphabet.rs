@@ -580,7 +580,7 @@ impl Alphabet for LatinSC {
             Some((ch - b'A') as usize)
         } else if ch == b'/' {
             Some(26)
-        } else if ch == b'-' {
+        } else if ch == b'.' {
             Some(27)
         } else {
             None
@@ -593,7 +593,7 @@ impl Alphabet for LatinSC {
         } else if idx == 26 {
             b'/'
         } else {
-            b'-'
+            b'.'
         }
     }
 }
@@ -625,10 +625,10 @@ impl Alphabet for LatinSecom {
         let ch = ch.to_ascii_uppercase();
         if ch.is_ascii_uppercase() {
             Some((ch - b'A') as usize)
-        } else if ch.is_ascii_digit() {
-            Some(26 + (ch - b'0') as usize)
         } else if ch == b'*'{
             Some(26)
+        } else if ch.is_ascii_digit() {
+            Some(27 + (ch - b'0') as usize)
         } else if ch == b'/' {
             Some(37)
         } else if ch == b'+' {
@@ -644,13 +644,11 @@ impl Alphabet for LatinSecom {
         } else if idx == 26 {
             b'*'
         } else if idx < 37 {
-            b'0' + (idx - 37) as u8
+            b'0' + (idx - 27) as u8
         } else if idx == 37 {
             b'/'
-        } else if idx == 38 {
-            b'+'
         } else {
-            40u8
+            b'+'
         }
     }
 }

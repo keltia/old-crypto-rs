@@ -63,7 +63,7 @@ impl<F: Frequent> SecomCheckerboard<F> {
 
         // Place frequent letters on the top row.
         //
-        let mut freq_iter = F::SYMBOLS.iter();
+        let mut freq_iter = F::SYMBOLS.iter().filter(|&&c| c != F::HOLE);
         for (col, &item) in header.iter().enumerate() {
             if FREQ_BLANK_POS.contains(&col) {
                 continue;
@@ -86,10 +86,9 @@ impl<F: Frequent> SecomCheckerboard<F> {
         // The SECOM alphabet consists of A-Z, 0-9, and '*' for space.
         //
         let base_alphabet = BASE_ALPHABET;
-        let freq = String::from_utf8(F::SYMBOLS.to_vec())?;
         let mut checker_extra = String::with_capacity(30);
         for c in base_alphabet.chars() {
-            if !freq.contains(c) {
+            if enc[c as usize].is_empty() {
                 checker_extra.push(c);
             }
         }

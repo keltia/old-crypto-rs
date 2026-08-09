@@ -212,7 +212,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
         // 2. Remaining rows: use the alphabet (full) minus frequent letters
         let mut j = 0;
         for &ch in self.full.as_bytes() {
-            if freq.contains(&ch) {
+            if !self.enc_table[ch as usize].is_empty() {
                 continue;
             }
             if j < longc_codes.len() {

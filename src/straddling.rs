@@ -209,13 +209,11 @@ impl<A: Alphabet, F: Frequent> Straddling<A, F> {
         let mut i = 0;
         let mut j = 0;
         for &ch in self.full.as_bytes() {
-            if freq.contains(&ch) {
-                if i < shortc.len() {
-                    let digit = shortc[i];
-                    self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0]);
-                    self.dec1[(digit - b'0') as usize] = ch;
-                    i += 1;
-                }
+            if freq.contains(&ch) && i < shortc.len() {
+                let digit = shortc[i];
+                self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0]);
+                self.dec1[(digit - b'0') as usize] = ch;
+                i += 1;
             } else {
                 if j < longc.len() {
                     let bytes = longc[j].as_bytes();

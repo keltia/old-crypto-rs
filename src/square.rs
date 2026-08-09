@@ -282,14 +282,14 @@ mod tests {
     fn test_expand_key_25() {
         let c2 = PolybiusCipher::new("ARABESQUE").unwrap();
         let alpha = c2.alpha.iter().map(|&x| x as char).collect::<String>();
-        dbg!(alpha);
+        assert_eq!("ARBESQUCDFGHIKLMNOPTVXWYZ", alpha);
     }
 
     #[test]
     fn test_expand_key_36() {
         let c1 = SquareCipher::<ADFGVX, Latin36>::new("PORTABLE").unwrap();
         let alpha = c1.alpha.iter().map(|&x| x as char).collect::<String>();
-        dbg!(alpha);
+        assert_eq!("PORTA1B2LE5C3D4F6G7H8I9J0KMNQSUVXWYZ", alpha);
     }
 
     #[test]
@@ -302,7 +302,7 @@ mod tests {
             .iter()
             .map(|&x| x as char)
             .collect::<String>();
-        dbg!(alpha);
+        assert_eq!("PORTA1B2LE5C3D4F6G7H8I9J0KMNQSUVXWYZ", alpha);
     }
 
     #[test]

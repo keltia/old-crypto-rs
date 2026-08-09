@@ -75,7 +75,6 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> std::fmt::Display for VicStraddling
 
 impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
     pub fn new(indexes: &str) -> Result<Self> {
-        dbg!(&indexes);
         // Default alphabet.
         //
         let alphabet = match String::from_utf8(A::ALPHABET.to_vec()) {

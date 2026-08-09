@@ -157,7 +157,6 @@ mod tests {
     #[test]
     fn test_nihilist_encrypt() {
         let c = Nihilist::<LatinSC, English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
-        dbg!(&c);
         let pt = "IFYOUCANREADTHIS";
         let ct = "1037308871737227035649";
         let mut dst = vec![0u8; ct.len()];

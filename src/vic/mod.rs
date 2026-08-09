@@ -21,6 +21,8 @@ use eyre::Result;
 pub(crate) mod straddling;
 pub(crate) mod subr;
 
+pub type EnglishVic = VicCipher<crate::helpers::Latin26, crate::helpers::Horizontal, crate::helpers::VicEnglish>;
+
 /// VIC cipher implementation combining straddling checkerboard and transposition ciphers.
 ///
 /// The VIC cipher uses a complex key derivation system and three main components:
@@ -78,12 +80,13 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
     /// # Examples
     ///
     /// ```
-    /// # use old_crypto_rs::VicCipher;
-    /// let cipher = VicCipher::new(
-    ///     "77651"
+    /// use old_crypto_rs::EnglishVic;
+    ///
+    /// let cipher = EnglishVic::new(
+    ///     "77651",
     ///     "IDREAMOFJEANNIEWITHT",
     ///     "741776",
-    ///     "6",
+    ///     6,
     /// ).unwrap();
     /// ```
     ///
@@ -102,16 +105,10 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicCipher<A, D, F> {
         let sc = VicStraddling::<A, D, F>::new(&sckey)?;
 
         // Transform our keys into strings for the rest.
+        // In VIC, '0' is treated as 10 (the highest rank).
         //
-        let regular_str = expanded.second
-            .iter()
-            .map(|&b| (b + b'0') as char)
-            .collect::<String>();
-
-        let disrupted_str = expanded.third
-            .iter()
-            .map(|&b| (b + b'0') as char)
-            .collect::<String>();
+        let regular_str = vic_key_to_str(&expanded.second);
+        let disrupted_str = vic_key_to_str(&expanded.third);
 
         // First transposition is regular, using 'second' as key
         //
@@ -192,8 +189,10 @@ pub(crate) fn expand_key(line_d: &str, line_b: &[u8], line_a: &[u8], persn: usiz
     }
 
     // Now that we have all the digits, we need to transpose them using line_j as the key.
+    // In VIC, '0' is treated as 10 (the highest rank).
     //
-    let intermed = Transposition::new(&String::from_utf8(line_j)?)?;
+    let line_js = vic_key_to_str(&line_j);
+    let intermed = Transposition::new(&line_js)?;
     let mut all_digits = vec![0; raw_digits.len()];
     let n = intermed.encrypt(&mut all_digits, &raw_digits);
     assert_eq!(n, raw_digits.len());
@@ -277,7 +276,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
             } else {
                 rand::rng().random_range(min_ml..=max_ml)
             };
-            split_plaintext(src, ml)
+            split_plaintext(src, ml, F::MARKER)
         };
 
         let mut buf_sc = vec![0u8; split.len() * 3]; // Straddling can expand
@@ -322,12 +321,21 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicCipher<A, D, F> {
         let sc_len = self.sc.decrypt(&mut buf_sc, &buf_tp1[..tp1_len]);
         let sc_plain = &buf_sc[..sc_len];
 
-        let res = rebuild_plaintext(sc_plain);
+        let res = rebuild_plaintext(sc_plain, F::MARKER);
+        assert!(sc_len >= 1);
         assert_eq!(res.len(), sc_len - 1);
         assert_eq!(res.len(), dst.len());
         dst.copy_from_slice(res.as_slice());
         res.len()
     }
+}
+
+/// Helper function to convert a VIC numeric key to a string that ranks correctly.
+/// In VIC, '1'-'9' are ranked 1-9, and '0' is ranked 10.
+fn vic_key_to_str(key: &[u8]) -> String {
+    key.iter()
+        .map(|&b| if b == 0 { ':' } else { (b + b'0') as char })
+        .collect()
 }
 
 #[cfg(test)]
@@ -450,8 +458,10 @@ mod tests {
         );
 
         // Now that we have all the digits, we need to transpose them using line_j as the key.
+        // In VIC, '0' is treated as 10 (the highest rank).
         //
-        let intermed = Transposition::new(&String::from_utf8(line_j).unwrap()).unwrap();
+        let line_js = vic_key_to_str(&line_j);
+        let intermed = Transposition::new(&line_js).unwrap();
         let mut all_digits = vec![0; raw_digits.len()];
         let n = intermed.encrypt(&mut all_digits, &raw_digits);
         assert_eq!(n, raw_digits.len());
@@ -488,8 +498,8 @@ mod tests {
         let regular_key = &all_digits[..size_regular];
         let disrupted_key = &all_digits[size_regular..(size_regular + size_disrupted)];
 
-        assert_eq!(regular_key, vec![5, 0, 6, 4, 8, 0, 5, 5, 5, 2, 5, 6, 0]);
-        assert_eq!(disrupted_key, vec![2, 8, 5, 0, 0, 7]);
+        assert_eq!(regular_key, vec![0, 6, 6, 8, 0, 0, 5, 5, 5, 2, 5, 5, 1]);
+        assert_eq!(disrupted_key, vec![7, 5, 8, 8, 3, 8]);
 
         // Line-P: 5 0 5 1 3 2 8 3 7 0
         // Line-S: 5 9 6 1 3 2 8 4 7 0 (to_numeric_one)
@@ -520,16 +530,10 @@ mod tests {
         dbg!(&sc);
 
         // Transform our keys into strings for the rest.
+        // In VIC, '0' is treated as 10 (the highest rank).
         //
-        let regular_str = regular_key
-            .iter()
-            .map(|&b| (b + b'0') as char)
-            .collect::<String>();
-
-        let disrupted_str = disrupted_key
-            .iter()
-            .map(|&b| (b + b'0') as char)
-            .collect::<String>();
+        let regular_str = vic_key_to_str(regular_key);
+        let disrupted_str = vic_key_to_str(disrupted_key);
 
         // First transposition is regular, using 'second' as key
         //
@@ -541,19 +545,19 @@ mod tests {
         let second_tp = IrregularTransposition::new(&disrupted_str);
         assert!(second_tp.is_ok());
 
-        let pt = "MEAN0500.NOT0915LIKEYOUDIDLASTTIME./ATTACKATDAWN.BYDAWNI";
-        let mut ct = vec![0u8; pt.len() * 2];
-        let _n = sc.encrypt(&mut ct, pt.as_bytes());
+        let pt = "MEAN0500/NOT0915LIKEYOUDIDLASTTIME/ATTACKATDAWN/BYDAWNI";
+        let mut ct = vec![0u8; pt.len() * 3];
+        let n = sc.encrypt(&mut ct, pt.as_bytes());
 
         let expected = "60253 80000 55500 00008 08731 98000 09991 11555 80677 64288 18666 76667 54997 60287 59956 96459 66583 38765 88665 8337";
-        assert_eq!(ct, expected.as_bytes());
+        assert_eq!(&ct[..n], expected.replace(" ", "").as_bytes());
     }
 
     #[test]
     fn test_split_plaintext_invariants() {
         let pt = b"ABCDEFGHIJKLMNOP";
         let ml = 6;
-        let out = split_plaintext(pt, ml);
+        let out = split_plaintext(pt, ml, b'-');
         assert_eq!(out.len(), pt.len() + 1);
 
         let dash_positions: Vec<usize> = out

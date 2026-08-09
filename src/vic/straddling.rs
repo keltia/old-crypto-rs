@@ -15,8 +15,6 @@ use crate::helpers::{Alphabet, Derive, EncEntry, Frequent};
 
 use std::marker::PhantomData;
 
-/// All cipher digits from 0 to 9 used in the checkerboard.
-const ALL_CIPHER: &[u8] = b"0123456789";
 
 /// A straddling checkerboard cipher implementation.
 ///
@@ -87,16 +85,28 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
         // It knows where the holes are.
         //
         let holes = F::holes();
-        let longc = vec![indexes.as_bytes()[holes[0]], indexes.as_bytes()[holes[1]]];
-        dbg!(&holes);
-        dbg!(String::from_utf8(longc.to_vec())?);
+        let mut longc = Vec::with_capacity(holes.len());
+        for &h in &holes {
+            longc.push(indexes.as_bytes()[h]);
+        }
 
         // Shake the alphabet a bit
         //
         let full = String::from_utf8(D::derive(alphabet.as_bytes()))?;
-        dbg!(&full);
-        let shortc = indexes.as_bytes()[0..=7].to_vec();
-        dbg!(String::from_utf8(shortc.to_vec())?);
+
+        let mut shortc = Vec::with_capacity(10 - holes.len());
+        let idx_bytes = indexes.as_bytes();
+        let mut holes_mask = [false; 10];
+        for &h in &holes {
+            if h < 10 {
+                holes_mask[h] = true;
+            }
+        }
+        for i in 0..idx_bytes.len() {
+            if !holes_mask[i] {
+                shortc.push(idx_bytes[i]);
+            }
+        }
 
         let mut c = VicStraddling {
             full,
@@ -112,56 +122,54 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
                 c.longc_mask[(c_digit - b'0') as usize] = true;
             }
         }
-        c.expand_key(shortc, F::SYMBOLS);
+        c.expand_key(indexes, F::SYMBOLS);
         Ok(c)
     }
 
     /// Generates all two-digit combinations for a given prefix digit.
     ///
-    /// Creates strings like "30", "31", ..., "39" for prefix '3'.
-    /// Special case: if prefix is '0', returns single digits "0" through "9".
+    /// The second digit follows either sequential order or label order.
     ///
     /// # Arguments
     ///
     /// * `c` - The prefix digit
+    /// * `indexes` - The 10-digit label string
     ///
     /// # Returns
     ///
     /// A vector of 10 strings representing all combinations with this prefix.
     ///
-    fn times10(c: u8) -> Vec<String> {
+    fn times10(c: u8, indexes: &str) -> Vec<String> {
         let mut tmp = Vec::with_capacity(10);
-        // if c == b'0' {
-        //     for &b in ALL_CIPHER {
-        //         tmp.push((b as char).to_string());
-        //     }
-        // } else {
-        for &b in ALL_CIPHER {
+        let digits: &[u8] = if F::SEQUENTIAL_CODES {
+            b"0123456789"
+        } else {
+            indexes.as_bytes()
+        };
+        for &b in digits {
             let mut s = (c as char).to_string();
             s.push(b as char);
             tmp.push(s);
         }
-        //}
         tmp
     }
 
-    /// Generates all two-digit combinations for both long cipher digits.
-    ///
-    /// Combines the results of `times10()` for both long cipher digits,
-    /// producing 20 total two-digit codes.
+    /// Generates all two-digit combinations for multiple long cipher digits.
     ///
     /// # Arguments
     ///
-    /// * `set` - A slice containing the two long cipher digits
+    /// * `set` - A slice containing the long cipher digits
+    /// * `indexes` - The 10-digit label string
     ///
     /// # Returns
     ///
-    /// A vector of 20 strings representing all two-digit codes.
+    /// A vector of strings representing all two-digit codes.
     ///
-    fn set_times10(set: &[u8]) -> Vec<String> {
-        let mut longc = Vec::with_capacity(20);
-        longc.extend(Self::times10(set[0]));
-        longc.extend(Self::times10(set[1]));
+    fn set_times10(set: &[u8], indexes: &str) -> Vec<String> {
+        let mut longc = Vec::with_capacity(set.len() * 10);
+        for &prefix in set {
+            longc.extend(Self::times10(prefix, indexes));
+        }
         longc
     }
 
@@ -172,34 +180,51 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> VicStraddling<A, D, F> {
     ///
     /// # Arguments
     ///
-    /// * `shortc` - The digits available for single-digit encoding
-    /// * `freq` - The high-frequency letters that should get single-digit codes
+    /// * `indexes` - The full 10-digit key string
+    /// * `freq` - The frequency string (e.g. "AT.ONE.SIR")
     ///
-    fn expand_key(&mut self, shortc: Vec<u8>, freq: &[u8]) {
-        let longc = Self::set_times10(&self.longc);
-        dbg!(longc.join(","));
+    fn expand_key(&mut self, indexes: &str, freq: &[u8]) {
+        let holes = F::holes();
+        let mut longc_prefixes = Vec::with_capacity(holes.len());
+        for &h in &holes {
+            longc_prefixes.push(indexes.as_bytes()[h]);
+        }
+        let longc_codes = Self::set_times10(&longc_prefixes, indexes);
 
-        let mut i = 0;
+        let mut holes_mask = [false; 10];
+        for &h in &holes {
+            if h < 10 {
+                holes_mask[h] = true;
+            }
+        }
+
+        // 1. First row: use the freq string positions, mapped to labels in indexes
+        for (i, &ch) in freq.iter().enumerate() {
+            if i < holes_mask.len() && holes_mask[i] {
+                continue;
+            }
+            if i < indexes.len() {
+                let label = indexes.as_bytes()[i];
+                self.enc_table[ch as usize] = EncEntry::new(1, [label, 0]);
+                self.dec1[(label - b'0') as usize] = ch;
+            }
+        }
+
+        // 2. Remaining rows: use the alphabet (full) minus frequent letters
         let mut j = 0;
         for &ch in self.full.as_bytes() {
             if freq.contains(&ch) {
-                if i < shortc.len() {
-                    let digit = shortc[i];
-                    self.enc_table[ch as usize] = EncEntry::new(1, [digit, 0]);
-                    self.dec1[(digit - b'0') as usize] = ch;
-                    i += 1;
+                continue;
+            }
+            if j < longc_codes.len() {
+                let bytes = longc_codes[j].as_bytes();
+                if bytes.len() == 2 {
+                    let d0 = bytes[0];
+                    let d1 = bytes[1];
+                    self.enc_table[ch as usize] = EncEntry::new(2, [d0, d1]);
+                    self.dec2[(d0 - b'0') as usize][(d1 - b'0') as usize] = ch;
                 }
-            } else {
-                if j < longc.len() {
-                    let bytes = longc[j].as_bytes();
-                    if bytes.len() == 2 {
-                        let d0 = bytes[0];
-                        let d1 = bytes[1];
-                        self.enc_table[ch as usize] = EncEntry::new(2, [d0, d1]);
-                        self.dec2[(d0 - b'0') as usize][(d1 - b'0') as usize] = ch;
-                    }
-                    j += 1;
-                }
+                j += 1;
             }
         }
     }
@@ -237,29 +262,44 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
     ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let mut offset = 0;
-        let marker = self.enc_table[b'/' as usize];
-        for &ch in src {
+        let marker = self.enc_table[F::MARKER as usize];
+        let mut i = 0;
+        while i < src.len() {
+            let ch = src[i];
             if ch.is_ascii_digit() {
                 if !marker.is_empty() {
+                    // Start marker
                     dst[offset] = marker.bytes(0);
                     if marker.len() == 2 {
                         dst[offset + 1] = marker.bytes(1);
                     }
                     offset += marker.len() as usize;
 
-                    dst[offset] = ch;
-                    dst[offset + 1] = ch;
-                    offset += 2;
+                    // Digits
+                    while i < src.len() && src[i].is_ascii_digit() {
+                        let d = src[i];
+                        dst[offset] = d;
+                        dst[offset + 1] = d;
+                        if F::TRIPLE_DIGITS {
+                            dst[offset + 2] = d;
+                            offset += 3;
+                        } else {
+                            offset += 2;
+                        }
+                        i += 1;
+                    }
 
+                    // End marker
                     dst[offset] = marker.bytes(0);
                     if marker.len() == 2 {
                         dst[offset + 1] = marker.bytes(1);
                     }
                     offset += marker.len() as usize;
+                } else {
+                    i += 1; // Skip if no marker
                 }
             } else {
                 let entry = self.enc_table[ch as usize];
-                dbg!(ch as char, &entry, offset);
                 if !entry.is_empty() {
                     dst[offset] = entry.bytes(0);
                     if entry.len() == 2 {
@@ -267,6 +307,7 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
                     }
                     offset += entry.len() as usize;
                 }
+                i += 1;
             }
         }
         offset
@@ -324,25 +365,54 @@ impl<A: Alphabet, D: Derive<F>, F: Frequent> Block for VicStraddling<A, D, F> {
             }
             i += db_len;
 
-            if ptc == b'/' && i + 4 <= src.len() && src[i] == src[i + 1] {
-                let row0 = src[i + 2];
-                let row1 = src[i + 3];
-                if row0.is_ascii_digit() && row1.is_ascii_digit() {
-                    let rd0 = (row0 - b'0') as usize;
-                    let rd1 = (row1 - b'0') as usize;
-                    let mut is_match = false;
-                    if db_len == 2 {
-                        is_match = row0 == src[i - 2] && row1 == src[i - 1];
+            if ptc == F::MARKER {
+                let skip = if F::TRIPLE_DIGITS { 3 } else { 2 };
+                // A digit escape sequence MUST be followed by repeated digits.
+                let mut is_actual_escape = i + skip <= src.len() && src[i].is_ascii_digit();
+                if is_actual_escape {
+                    for k in 1..skip {
+                        if src[i + k] != src[i] {
+                            is_actual_escape = false;
+                            break;
+                        }
+                    }
+                }
+
+                if is_actual_escape {
+                    let mut marker_code = vec![0u8; db_len];
+                    for k in 0..db_len {
+                        marker_code[k] = src[i - db_len + k];
                     }
 
-                    if is_match || self.dec2[rd0][rd1] == b'/' {
-                        if pt_offset < dst.len() {
-                            dst[pt_offset] = src[i];
-                            pt_offset += 1;
+                    while i < src.len() {
+                        // Check if trailing marker starts here
+                        let mut is_trailing = i + db_len <= src.len();
+                        if is_trailing {
+                            for k in 0..db_len {
+                                if src[i + k] != marker_code[k] {
+                                    is_trailing = false;
+                                    break;
+                                }
+                            }
                         }
-                        i += 4;
-                        continue;
+
+                        if is_trailing {
+                            i += db_len;
+                            break; // End of digit block
+                        }
+
+                        // Not a marker, should be a repeated digit
+                        if i + skip <= src.len() {
+                            if pt_offset < dst.len() {
+                                dst[pt_offset] = src[i];
+                                pt_offset += 1;
+                            }
+                            i += skip;
+                        } else {
+                            break;
+                        }
                     }
+                    continue;
                 }
             }
             if ptc != 0 && pt_offset < dst.len() {

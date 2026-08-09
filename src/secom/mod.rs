@@ -66,6 +66,9 @@ pub(crate) use subr::{
 };
 pub use subr::column_order_from_digits;
 
+pub type EnglishSecom = SecomCipher<crate::helpers::EnglishAlt>;
+pub type FrenchSecom = SecomCipher<crate::helpers::FrenchExt>;
+
 use crate::{Block, Transposition};
 use crate::error::Error;
 use crate::helpers::{addmod10, Frequent};

@@ -79,7 +79,7 @@ use eyre::Result;
 ///
 pub fn condense(str: &str) -> String {
     let mut seen = HashSet::new();
-    let mut condensed = String::new();
+    let mut condensed = String::with_capacity(str.len());
 
     for ch in str.chars() {
         if seen.insert(ch) {

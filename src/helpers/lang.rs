@@ -31,9 +31,9 @@ pub trait Frequent {
     const SYMBOLS: &'static [u8];
 
     /// This is the character we use to mark a potential hole in a checkerboard.
-    /// The default is a period (.), but it can be overridden by a specific `impl`.
+    /// The default is an asterisk (*), but it can be overridden by a specific `impl`.
     ///
-    const HOLE: u8 = b'.';
+    const HOLE: u8 = b'*';
 
     /// Returns the list of holes in `SYMBOLS`.
     /// Given a 10-character string, find the indices where the "." character is present
@@ -47,6 +47,20 @@ pub trait Frequent {
             .filter_map(|(idx, x): (usize, &u8)| if *x == Self::HOLE { Some(idx )} else { None })
             .collect::<Vec<usize>>()
     }
+
+    /// This is the character we use to mark numeric sequences in a checkerboard.
+    /// The default is a slash (/), but it can be overridden by a specific `impl`.
+    ///
+    const MARKER: u8 = b'/';
+
+    /// Whether digits should be tripled when escaped. Default is false (doubled).
+    ///
+    const TRIPLE_DIGITS: bool = false;
+
+    /// Whether two-digit codes should use sequential digits (0-9) or follow labels.
+    /// Default is true (sequential).
+    ///
+    const SEQUENTIAL_CODES: bool = true;
 }
 
 // These are default implementations for the Frequent trait -----
@@ -95,27 +109,27 @@ pub struct Spanish;
 pub struct Dutch;
 
 impl Frequent for French {
-    const SYMBOLS: &'static [u8] = b"ESANTIRU..";
+    const SYMBOLS: &'static [u8] = b"ESANTIRU**";
 }
 
 impl Frequent for English {
-    const SYMBOLS: &'static [u8] = b"ATONESIR..";
+    const SYMBOLS: &'static [u8] = b"ATONESIR**";
 }
 
 impl Frequent for German {
-    const SYMBOLS: &'static [u8] = b"ENSRIATD..";
+    const SYMBOLS: &'static [u8] = b"ENSRIATD**";
 }
 
 impl Frequent for Italian {
-    const SYMBOLS: &'static [u8] = b"EAIONLRT..";
+    const SYMBOLS: &'static [u8] = b"EAIONLRT**";
 }
 
 impl Frequent for Spanish {
-    const SYMBOLS: &'static [u8] = b"EAOSRNID..";
+    const SYMBOLS: &'static [u8] = b"EAOSRNID**";
 }
 
 impl Frequent for Dutch {
-    const SYMBOLS: &'static [u8] = b"ENATIROD..";
+    const SYMBOLS: &'static [u8] = b"ENATIROD**";
 }
 
 // These are default implementations for the Frequent trait -----
@@ -164,34 +178,34 @@ pub struct SpanishExt;
 pub struct DutchExt;
 
 impl Frequent for FrenchExt {
-    const SYMBOLS: &'static [u8] = b"ESANTIR...";
+    const SYMBOLS: &'static [u8] = b"ESANTIR***";
 }
 
 impl Frequent for EnglishExt {
-    const SYMBOLS: &'static [u8] = b"ATONESI...";
+    const SYMBOLS: &'static [u8] = b"ATONESI***";
 }
 
 impl Frequent for GermanExt {
-    const SYMBOLS: &'static [u8] = b"ENSRIAT...";
+    const SYMBOLS: &'static [u8] = b"ENSRIAT***";
 }
 
 impl Frequent for ItalianExt {
-    const SYMBOLS: &'static [u8] = b"EAIONLR...";
+    const SYMBOLS: &'static [u8] = b"EAIONLR***";
 }
 
 impl Frequent for SpanishExt {
-    const SYMBOLS: &'static [u8] = b"EAOSRNI...";
+    const SYMBOLS: &'static [u8] = b"EAOSRNI***";
 }
 
 impl Frequent for DutchExt {
-    const SYMBOLS: &'static [u8] = b"ENATIRO...";
+    const SYMBOLS: &'static [u8] = b"ENATIRO***";
 }
 
 #[derive(Debug)]
 pub struct EnglishAlt;
 
 impl Frequent for EnglishAlt {
-    const SYMBOLS: &'static [u8] = b"ESTONIA...";
+    const SYMBOLS: &'static [u8] = b"ESTONIA***";
 }
 
 /// Represents the English language for frequency analysis, with holes put in different places.
@@ -201,7 +215,10 @@ impl Frequent for EnglishAlt {
 pub struct VicEnglish;
 
 impl Frequent for VicEnglish {
-    const SYMBOLS: &'static [u8] = b"AT.ONE.SIR";
+    const SYMBOLS: &'static [u8] = b"AT*ONE*SIR";
+    const MARKER: u8 = b'.';
+    const TRIPLE_DIGITS: bool = true;
+    const SEQUENTIAL_CODES: bool = false;
 }
 
 #[cfg(test)]
@@ -247,28 +264,28 @@ mod tests {
 
     #[test]
     fn test_base_language_patterns() {
-        assert_frequent_pattern::<French>(b"ESANTIRU..", &[8, 9]);
-        assert_frequent_pattern::<English>(b"ATONESIR..", &[8, 9]);
-        assert_frequent_pattern::<German>(b"ENSRIATD..", &[8, 9]);
-        assert_frequent_pattern::<Italian>(b"EAIONLRT..", &[8, 9]);
-        assert_frequent_pattern::<Spanish>(b"EAOSRNID..", &[8, 9]);
-        assert_frequent_pattern::<Dutch>(b"ENATIROD..", &[8, 9]);
+        assert_frequent_pattern::<French>(b"ESANTIRU**", &[8, 9]);
+        assert_frequent_pattern::<English>(b"ATONESIR**", &[8, 9]);
+        assert_frequent_pattern::<German>(b"ENSRIATD**", &[8, 9]);
+        assert_frequent_pattern::<Italian>(b"EAIONLRT**", &[8, 9]);
+        assert_frequent_pattern::<Spanish>(b"EAOSRNID**", &[8, 9]);
+        assert_frequent_pattern::<Dutch>(b"ENATIROD**", &[8, 9]);
     }
 
     #[test]
     fn test_extended_language_patterns() {
-        assert_frequent_pattern::<FrenchExt>(b"ESANTIR...", &[7, 8, 9]);
-        assert_frequent_pattern::<EnglishExt>(b"ATONESI...", &[7, 8, 9]);
-        assert_frequent_pattern::<GermanExt>(b"ENSRIAT...", &[7, 8, 9]);
-        assert_frequent_pattern::<ItalianExt>(b"EAIONLR...", &[7, 8, 9]);
-        assert_frequent_pattern::<SpanishExt>(b"EAOSRNI...", &[7, 8, 9]);
-        assert_frequent_pattern::<DutchExt>(b"ENATIRO...", &[7, 8, 9]);
+        assert_frequent_pattern::<FrenchExt>(b"ESANTIR***", &[7, 8, 9]);
+        assert_frequent_pattern::<EnglishExt>(b"ATONESI***", &[7, 8, 9]);
+        assert_frequent_pattern::<GermanExt>(b"ENSRIAT***", &[7, 8, 9]);
+        assert_frequent_pattern::<ItalianExt>(b"EAIONLR***", &[7, 8, 9]);
+        assert_frequent_pattern::<SpanishExt>(b"EAOSRNI***", &[7, 8, 9]);
+        assert_frequent_pattern::<DutchExt>(b"ENATIRO***", &[7, 8, 9]);
     }
 
     #[test]
     fn test_alt_language_pattern() {
-        assert_frequent_pattern::<EnglishAlt>(b"ESTONIA...", &[7, 8, 9]);
-        assert_frequent_pattern::<VicEnglish>(b"AT.ONE.SIR", &[2, 6]);
+        assert_frequent_pattern::<EnglishAlt>(b"ESTONIA***", &[7, 8, 9]);
+        assert_frequent_pattern::<VicEnglish>(b"AT*ONE*SIR", &[2, 6]);
     }
 
     #[test]

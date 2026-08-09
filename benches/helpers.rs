@@ -37,6 +37,8 @@ mod shuffle {
 
 #[divan::bench_group]
 mod condense {
+    use std::collections::HashSet;
+    use ahash::AHashSet;
     use super::*;
 
     #[divan::bench]
@@ -47,11 +49,31 @@ mod condense {
     }
 
     #[divan::bench]
+    fn bench_condense_ahash(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(condense_ahash(PLAIN));
+        });
+    }
+
+    #[divan::bench]
     fn bench_condense_str(bencher: Bencher) {
         bencher.bench_local(|| {
             black_box(condense_str(PLAIN));
         });
     }
+
+    pub fn condense_ahash(str: &str) -> String {
+    let mut seen = AHashSet::with_capacity(str.len());
+    let mut condensed = String::with_capacity(str.len());
+
+    for ch in str.chars() {
+        if seen.insert(ch) {
+            condensed.push(ch);
+        }
+    }
+    condensed
+}
+
 }
 
 #[divan::bench_group]

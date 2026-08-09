@@ -44,6 +44,7 @@ dhat-heap = []
 dhat-ad-hoc = []
 
 [dependencies]
+ahash = "0.8"
 crossterm = "0.29"
 dhat = "0.3"
 eyre = "0.6.12"

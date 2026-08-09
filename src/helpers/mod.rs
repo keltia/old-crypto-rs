@@ -20,7 +20,7 @@ pub use numeric::*;
 pub use types::*;
 
 use std::collections::HashSet;
-
+use ahash::AHashSet;
 use eyre::Result;
 
 /// Removes all duplicate characters from a string, preserving the first occurrence of each.
@@ -77,8 +77,39 @@ use eyre::Result;
 ///
 /// * [`condense_str`] - An optimized version using a bitset for ASCII characters
 ///
-pub fn condense(str: &str) -> String {
+pub fn condense_std(str: &str) -> String {
     let mut seen = HashSet::new();
+    let mut condensed = String::with_capacity(str.len());
+
+    for ch in str.chars() {
+        if seen.insert(ch) {
+            condensed.push(ch);
+        }
+    }
+    condensed
+}
+
+/// Removes all duplicate characters from a string, preserving the first occurrence of each.
+///
+/// This function iterates through the input string and builds a new string containing only
+/// the first occurrence of each character, maintaining the original order. It uses a `HashSet`
+/// to track which characters have already been encountered.
+///
+/// # NOTE
+///
+/// This is an alternate version using the `ahash` crate abd its `AHashSet` instead of the std one.
+///
+/// # Performance
+///
+/// Time complexity: O(n) where n is the length of the input string
+/// Space complexity: O(k) where k is the number of unique characters
+///
+/// # See Also
+///
+/// * [`condense_str`] - An optimized version using a bitset for ASCII characters
+///
+pub fn condense(str: &str) -> String {
+    let mut seen = AHashSet::with_capacity(str.len());
     let mut condensed = String::with_capacity(str.len());
 
     for ch in str.chars() {
@@ -757,6 +788,17 @@ mod tests {
     #[case("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ")]
     fn test_condense_str(#[case] in_str: &str, #[case] expected: &str) {
         assert_eq!(condense_str(in_str), expected);
+    }
+
+    #[rstest]
+    #[case("ABCDE", "ABCDE")]
+    #[case("AAAAA", "A")]
+    #[case("ARABESQUE", "ARBESQU")]
+    #[case("ARABESQUEABCDEFGHIKLMNOPQRSTUVWXYZ", "ARBESQUCDFGHIKLMNOPTVWXYZ")]
+    #[case("PLAYFAIRABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIRBCDEGHKMNOQSTUVWXZ")]
+    #[case("PLAYFAIREXMABCDEFGHIKLMNOPQRSTUVWXYZ", "PLAYFIREXMBCDGHKNOQSTUVWZ")]
+    fn test_condense_std(#[case] in_str: &str, #[case] expected: &str) {
+        assert_eq!(condense_std(in_str), expected);
     }
 
     #[rstest]

@@ -8,8 +8,9 @@
 //!
 //! ```
 //! use old_crypto_rs::{Block, Nihilist};
+//! use old_crypto_rs::helpers::{LatinSC, English};
 //!
-//! let cipher = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+//! let cipher = Nihilist::<LatinSC, English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
 //! let plaintext = b"IFYOUCANREADTHIS";
 //! let mut ciphertext = vec![0u8; 22];
 //!
@@ -56,8 +57,9 @@ impl<A: Alphabet, F: Frequent> Nihilist<A, F> {
     ///
     /// ```
     /// use old_crypto_rs::Nihilist;
+    /// use old_crypto_rs::helpers::{LatinSC, English};
     ///
-    /// let cipher = Nihilist::new("ARABESQUE", "SUBWAY", "37").unwrap();
+    /// let cipher = Nihilist::<LatinSC, English>::new("ARABESQUE", "SUBWAY", "37").unwrap();
     /// ```
     ///
     /// # Errors

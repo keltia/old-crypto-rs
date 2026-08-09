@@ -39,13 +39,13 @@ impl<P: TranspositionMask> Disrupted<P> {
     /// # Examples
     ///
     /// ```
-    /// use old_crypto_rs::transposition::Disrupted;
+    /// use old_crypto_rs::Disrupted;
     /// use old_crypto_rs::helpers::TranspositionMask;
     ///
     /// // Define a simple mask policy
     /// struct MyMask;
     /// impl TranspositionMask for MyMask {
-    ///     fn mask(width: usize, rows: usize, order: &[usize]) -> Vec<bool> {
+    ///     fn mask(width: usize, rows: usize, _order: &[usize]) -> Vec<bool> {
     ///         vec![false; width * rows]
     ///     }
     /// }

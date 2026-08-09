@@ -15,15 +15,15 @@
 //! # Example
 //!
 //! ```rust
-//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
-//! use old_crypto_rs::SecomCipher;
+//! # use eyre::Result;
+//! # fn main() -> Result<()> {
+//! use old_crypto_rs::EnglishSecom;
 //! use old_crypto_rs::Block;
 //!
 //! let key_phrase = "MAKE NEW FRIENDS BUT KEEP THE OLD";
-//! let freq = "ESTONIA";
 //!
-//! let cipher = SecomCipher::new(key_phrase, freq)?;
-//! let pt = b"HELLO WORLD";
+//! let cipher = EnglishSecom::new(key_phrase)?;
+//! let pt = b"HELLOWORLD";
 //!
 //! let mut ct = vec![0u8; 128];
 //! let ct_len = cipher.encrypt(&mut ct, pt);

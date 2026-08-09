@@ -110,7 +110,7 @@ impl<C: Coordinates, A: Alphabet> SquareCipher<C, A> {
         // Step 1: Condense key + alphabet (letters only)
         //
         let alpha = String::from_utf8(A::ALPHABET.to_vec())?;
-        let condensed_letters = helpers::condense(&format!("{}{}", key, alpha));
+        let condensed_letters = helpers::condense_str(&format!("{}{}", key, alpha));
 
         let mut alpha = Vec::new();
         if A::SIZE == Latin36::SIZE {

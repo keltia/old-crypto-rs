@@ -159,7 +159,7 @@ impl<A: Alphabet, F: FillWith> Playfair<A, F> {
             .filter_map(|&b| A::normalize(b).map(|idx| A::denormalize(idx) as char))
             .collect();
 
-        let condensed_key = helpers::condense(&format!("{}{}", normalized_key, full_alpha));
+        let condensed_key = helpers::condense_str(&format!("{}{}", normalized_key, full_alpha));
 
         let mut i2c = [INVALID_COUPLE; 256];
         let mut c2i = vec![0u8; A::SIZE];

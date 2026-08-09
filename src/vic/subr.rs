@@ -110,10 +110,10 @@ pub(crate) fn chainadd_extend(a: &[u8], n: usize) -> Vec<u8> {
 /// Example:
 /// "ABCDEFGH" is split around the middle and becomes "EFGH-ABCD".
 ///
-pub(crate) fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
+pub(crate) fn split_plaintext(pt: &[u8], ml: usize, marker: u8) -> Vec<u8> {
     let mut beg = pt[0..ml].to_vec();
     let mut res = pt[ml..].to_vec();
-    res.append(&mut vec![b'-']);
+    res.append(&mut vec![marker]);
     res.append(&mut beg);
     res
 }
@@ -124,8 +124,11 @@ pub(crate) fn split_plaintext(pt: &[u8], ml: usize) -> Vec<u8> {
 /// Example:
 /// "EFGH-ABCD" becomes "ABCDEFGH" back.
 ///
-pub(crate) fn rebuild_plaintext(pt: &[u8]) -> Vec<u8> {
-    let idx = pt.split(|&c| c == b'-').collect::<Vec<&[u8]>>();
+pub(crate) fn rebuild_plaintext(pt: &[u8], marker: u8) -> Vec<u8> {
+    let idx = pt.split(|&c| c == marker).collect::<Vec<&[u8]>>();
+    if idx.len() < 2 {
+        return pt.to_vec();
+    }
     let mut res = idx[1].to_vec();
     res.append(&mut idx[0].to_vec());
     res
@@ -253,7 +256,7 @@ mod tests {
     #[case(b"ABCDEFGH", 4, b"EFGH-ABCD")]
     #[case(b"ABCDEFGH", 7, b"H-ABCDEFG")]
     fn test_split_plaintext_cases(#[case] pt: &[u8], #[case] ml: usize, #[case] expected: &[u8]) {
-        let out = split_plaintext(pt, ml);
+        let out = split_plaintext(pt, ml, b'-');
         assert_eq!(out, expected);
     }
 
@@ -262,7 +265,7 @@ mod tests {
     #[case(b"ABCDEFGH", b"EFGH-ABCD")]
     #[case(b"ABCDEFGH", b"H-ABCDEFG")]
     fn test_rebuild_plaintext_cases(#[case] expected: &[u8], #[case] pt: &[u8]) {
-        let out = rebuild_plaintext(pt);
+        let out = rebuild_plaintext(pt, b'-');
         assert_eq!(out, expected);
     }
 }

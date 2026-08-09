@@ -431,7 +431,7 @@ mod tests {
     #[test]
     fn test_new_cipher() {
         let c = EnglishStraddling::new("ARABESQUE", "89").unwrap();
-        assert_eq!(c.full, "ACKVRDLWBFMXEGNYSHOZQIP/UJT-");
+        assert_eq!(c.full, "ACKVRDLWBFMXEGNYSHOZQIP/UJT.");
         assert_eq!(c.longc, b"89");
     }
 

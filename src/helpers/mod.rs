@@ -386,9 +386,9 @@ pub fn expand(src: &[u8]) -> Vec<u8> {
 /// The 26-letter alphabet we know and love in the Western part of the world
 pub const REGULAR_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/// Default alphabet containing A-Z plus special characters '/' and '-'.
+/// Default alphabet containing A-Z plus special characters '/' and '.'.
 /// The '/' character is used as a digit escape marker in encryption.
-pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/-";
+pub const SC_ALPHABET: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ/.";
 
 /*
   # Form an alphabet formed with a keyword, re-shuffle everything to
@@ -857,16 +857,16 @@ mod tests {
     }
 
     #[rstest]
-    #[case("ARABESQUE", "ACKVRDLWBFMXEGNYSHOZQIP/UJT-")]
-    #[case("SUBWAY", "SCIOXUDJPZBEKQ/WFLR-AGMTYHNV")]
+    #[case("ARABESQUE", "ACKVRDLWBFMXEGNYSHOZQIP/UJT.")]
+    #[case("SUBWAY", "SCIOXUDJPZBEKQ/WFLR.AGMTYHNV")]
     fn test_shuffle(#[case] key: &str, #[case] expected: &str) {
         let res = shuffle(key, SC_ALPHABET);
         assert_eq!(res, expected);
     }
 
     #[rstest]
-    #[case("ARABESQUE", "AHOVCJQXDKRYFMT/BIPWELSZGNU-")]
-    #[case("SUBWAY", "EKQWCIOU/AGMSYBHNTZDJPV-FLRX")]
+    #[case("ARABESQUE", "AHOVCJQXDKRYFMT/BIPWELSZGNU.")]
+    #[case("SUBWAY", "EKQWCIOU/AGMSYBHNTZDJPV.FLRX")]
     fn test_transp_shuffle(#[case] key: &str, #[case] expected: &str) {
         let res = transp_shuffle(key, SC_ALPHABET);
         assert!(res.is_ok());

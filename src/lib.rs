@@ -26,10 +26,10 @@ pub use square::{SquareCipher, PolybiusCipher};
 pub use transposition::{Transposition, IrregularTransposition, Disrupted};
 pub use adfgvx::{ADFGVXCipher, ADFGXSquare, ADFGVXSquare};
 pub use straddling::{EnglishStraddling, FrenchStraddling, GermanStraddling, Straddling};
-pub use nihilist::Nihilist;
+pub use nihilist::{EnglishNihilist, Nihilist};
 pub use solitaire::Solitaire;
-pub use secom::{SecomCipher, column_order_from_digits};
-pub use vic::VicCipher;
+pub use secom::{EnglishSecom, FrenchSecom, SecomCipher, column_order_from_digits};
+pub use vic::{EnglishVic, VicCipher};
 pub use wheatstone::{WheatstoneBasic, Wheatstone};
 #[cfg(feature = "sigaba")]
 pub use sigaba::Sigaba;

@@ -79,6 +79,8 @@ impl<A: Alphabet, F: Frequent> Nihilist<A, F> {
     }
 }
 
+pub type EnglishNihilist = Nihilist<crate::helpers::LatinSC, crate::helpers::English>;
+
 impl<A: Alphabet, F: Frequent> Block for Nihilist<A, F> {
     /// Returns the block size of the cipher.
     ///

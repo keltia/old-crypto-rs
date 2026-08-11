@@ -13,6 +13,7 @@
 //! * [The SIGABA (ECM Mark II) Cipher Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 
 mod alphabet_rotor;
+mod cipher_bank;
 mod contact;
 mod control;
 mod control_bank;

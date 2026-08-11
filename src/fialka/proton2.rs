@@ -21,7 +21,9 @@
 //! index mark.  If `R(x) = -x (mod 30)`, the mirrored right-to-left mapping is
 //! `R * P^-1 * R`; its return mapping is `R * P * R`.
 
-use super::{Contact, CoreSetting, RingSetting, RotorCore, RotorId, RotorPosition};
+use super::{
+    Contact, CoreSetting, RingSetting, RotorBody, RotorBodyId, RotorCore, RotorId, RotorPosition,
+};
 
 /// Which face of a removable PROTON-2 wiring core is visible from the left
 /// (flat-contact) side of the assembled wheel.
@@ -33,40 +35,18 @@ pub(crate) enum CoreSide {
     Two,
 }
 
-/// Identity of the mechanical PROTON-2 wheel body.
+/// One fully configured adjustable PROTON-2 wheel.
 ///
-/// This is deliberately distinct from [`RotorCore::id`]: PROTON-2 keying can
-/// install the wiring core from one rotor inside the body of another rotor.
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct RotorBodyId(RotorId);
-
-impl RotorBodyId {
-    #[must_use]
-    pub(crate) const fn new(id: RotorId) -> Self {
-        Self(id)
-    }
-
-    #[must_use]
-    pub(crate) const fn rotor_id(self) -> RotorId {
-        self.0
-    }
-}
-
-impl From<RotorId> for RotorBodyId {
-    fn from(id: RotorId) -> Self {
-        Self::new(id)
-    }
-}
-
-/// One fully configured adjustable PROTON-2 wheel, excluding stepping pins.
+/// The wheel body carries the mechanical advance-blocking pins, while the
+/// removable core carries only the electrical permutation.  The actual
+/// stepping/propagation algorithm remains outside this type until Step 7.
 ///
-/// The body identity is already represented because the wiring core may be
-/// mixed between wheels.  Advance-blocking pin data and slot-dependent motion
-/// are added in the next mechanical implementation steps.
+/// The body identity is distinct because the wiring core may be mixed between
+/// wheels.  Step 6 attaches the historical advance-blocking pin pattern to the
+/// body; slot-dependent motion and propagation remain Step 7 concerns.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Proton2Rotor {
-    body_id: RotorBodyId,
+    body: RotorBody,
     core: RotorCore,
     core_side: CoreSide,
     core_setting: CoreSetting,
@@ -78,7 +58,7 @@ impl Proton2Rotor {
     /// Assemble a PROTON-2 wheel from its independent keyed settings.
     #[must_use]
     pub(crate) fn new(
-        body_id: RotorBodyId,
+        body: RotorBody,
         core: RotorCore,
         core_side: CoreSide,
         core_setting: CoreSetting,
@@ -86,7 +66,7 @@ impl Proton2Rotor {
         position: RotorPosition,
     ) -> Self {
         Self {
-            body_id,
+            body,
             core,
             core_side,
             core_setting,
@@ -95,10 +75,22 @@ impl Proton2Rotor {
         }
     }
 
-    /// Mechanical wheel-body identity (the future owner of blocking pins).
+    /// Mechanical wheel-body identity (the owner of the blocking-pin pattern).
     #[must_use]
     pub(crate) const fn body_id(&self) -> RotorBodyId {
-        self.body_id
+        self.body.id()
+    }
+
+    /// Mechanical wheel body, including its advance-blocking pin pattern.
+    #[must_use]
+    pub(crate) const fn body(&self) -> RotorBody {
+        self.body
+    }
+
+    /// Physical advance-blocking pin pattern of the body in base coordinates.
+    #[must_use]
+    pub(crate) const fn blocking_pins(&self) -> super::BlockingPins {
+        self.body.blocking_pins()
     }
 
     /// Identity of the electrical wiring core currently installed in the body.
@@ -187,7 +179,7 @@ mod tests {
 
     fn basic(id: RotorId, position: u8) -> Proton2Rotor {
         Proton2Rotor::new(
-            RotorBodyId::new(id),
+            polish::body(id),
             polish::rotor(id),
             CoreSide::One,
             CoreSetting::A,
@@ -225,7 +217,7 @@ mod tests {
         for id in RotorId::ALL {
             for setting in 0..CONTACT_COUNT as u8 {
                 let proton = Proton2Rotor::new(
-                    RotorBodyId::new(id),
+                    polish::body(id),
                     polish::rotor(id),
                     CoreSide::One,
                     core_setting(setting),
@@ -249,7 +241,7 @@ mod tests {
         // position 7, ring 3, core 5 is electrically the same displacement as
         // a fixed rotor at position 5.
         let proton = Proton2Rotor::new(
-            RotorBodyId::new(RotorId::A),
+            polish::body(RotorId::A),
             polish::rotor(RotorId::A),
             CoreSide::One,
             core_setting(5),
@@ -272,7 +264,7 @@ mod tests {
                 // Non-basic offsets exercise the coordinate transform at the
                 // same time as the mirrored core transform.
                 let rotor = Proton2Rotor::new(
-                    RotorBodyId::new(id),
+                    polish::body(id),
                     polish::rotor(id),
                     CoreSide::Two,
                     core_setting((p + 11) % 30),
@@ -292,7 +284,7 @@ mod tests {
     #[test]
     fn core_mixing_keeps_body_and_electrical_identity_separate() {
         let rotor = Proton2Rotor::new(
-            RotorBodyId::new(RotorId::K),
+            polish::body(RotorId::K),
             polish::rotor(RotorId::A),
             CoreSide::One,
             CoreSetting::A,

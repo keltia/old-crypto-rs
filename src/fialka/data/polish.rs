@@ -12,7 +12,7 @@
 //! against the published table.  Conversion to our zero-based `Contact`
 //! coordinate system occurs only in `wiring()`.
 
-use super::super::{RotorCore, RotorId};
+use super::super::{BlockingPins, RotorBody, RotorBodyId, RotorCore, RotorId};
 
 /// Published 3K table, preserving its original one-based values and layout.
 ///
@@ -50,6 +50,31 @@ const WIRING_3K_ONE_BASED: [[u8; 10]; 30] = [
     [19, 16, 25, 13, 28, 26, 20, 20, 14, 13],
 ];
 
+/// Published 3K advance-blocking-pin positions, in the source's original
+/// one-based physical wheel coordinates.
+///
+/// The outer array follows wheel identities А, Б, В, Г, Д, Е, Ж, З, И, К.
+/// These positions belong to the mechanical wheel body, not the removable
+/// PROTON-2 wiring core.
+const BLOCKING_PINS_3K_ONE_BASED: [&[u8]; 10] = [
+    &[2, 5, 10, 11, 13, 15, 17, 18, 21, 22, 25, 27, 29],
+    &[3, 5, 7, 11, 13, 15, 16, 17, 18, 19, 20, 22, 23, 25, 28, 29, 30],
+    &[1, 9, 16, 18, 22, 25, 29],
+    &[
+        1, 3, 4, 5, 6, 7, 9, 10, 12, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 26, 27, 28,
+        30,
+    ],
+    &[3, 5, 7, 8, 14, 17, 23],
+    &[4, 9, 12, 17, 18, 19, 20, 23, 25, 26, 27, 28, 30],
+    &[
+        1, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 18, 20, 21, 22, 23, 25, 26, 27, 28,
+        30,
+    ],
+    &[4, 11, 12, 13, 22, 25, 30],
+    &[1, 2, 3, 4, 6, 8, 11, 12, 14, 16, 21, 22, 23, 24, 25, 26, 29],
+    &[5, 8, 11, 13, 14, 15, 20, 21, 24, 25, 27, 28, 29],
+];
+
 /// Return one 3K rotor in the documented overall base setting.
 ///
 /// For a PROTON-2 rotor this corresponds to matching body/core, side 1
@@ -58,6 +83,16 @@ const WIRING_3K_ONE_BASED: [[u8; 10]; 30] = [
 #[must_use]
 pub(crate) fn rotor(id: RotorId) -> RotorCore {
     RotorCore::new(id, wiring(id)).expect("published 3K rotor wiring must be a permutation")
+}
+
+/// Return one Polish 3K mechanical wheel body in its source/base ring
+/// coordinates.
+#[must_use]
+pub(crate) fn body(id: RotorId) -> RotorBody {
+    let blocking_pins = BlockingPins::from_one_based(BLOCKING_PINS_3K_ONE_BASED[id.index()])
+        .expect("published 3K blocking-pin positions must be valid");
+
+    RotorBody::new(RotorBodyId::new(id), blocking_pins)
 }
 
 /// Convert one source-table column to zero-based machine contacts.
@@ -167,6 +202,57 @@ mod tests {
 
         assert_eq!(rotor.right_to_left(contact(1)), contact(21));
         assert_eq!(rotor.left_to_right(contact(21)), contact(1));
+    }
+
+    #[test]
+    fn all_ten_published_blocking_pin_sets_match_the_source_table() {
+        for id in RotorId::ALL {
+            let body = body(id);
+            assert_eq!(body.id().rotor_id(), id);
+
+            let expected = BLOCKING_PINS_3K_ONE_BASED[id.index()];
+            assert_eq!(body.blocking_pins().len() as usize, expected.len());
+
+            for one_based in 1..=30 {
+                assert_eq!(
+                    body.has_blocking_pin(contact(one_based)),
+                    expected.contains(&one_based),
+                    "wheel {id:?}, source position {one_based}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn published_pin_count_pattern_is_preserved() {
+        // The 3K source table gives a useful symmetric count pattern that
+        // catches accidental row/column transposition in the transcription.
+        let expected = [13, 17, 7, 23, 7, 13, 23, 7, 17, 13];
+
+        for (id, expected_count) in RotorId::ALL.into_iter().zip(expected) {
+            assert_eq!(body(id).blocking_pins().len(), expected_count);
+        }
+    }
+
+    #[test]
+    fn perera_hamer_rotor_a_pin_example_matches() {
+        // Their text explicitly states that rotor A has no pin at source
+        // position 1, but does have one at source position 2.
+        let a = body(RotorId::A);
+        assert!(!a.has_blocking_pin(contact(1)));
+        assert!(a.has_blocking_pin(contact(2)));
+    }
+
+    #[test]
+    fn perera_hamer_even_chain_example_matches_rotor_b() {
+        // In the default A..K wheel order, physical slot 2 contains body B.
+        // The worked stepping example says positions 18, 17, 16 and 15 all
+        // block propagation to slot 4, while position 14 does not.
+        let b = body(RotorId::B);
+        for one_based in [15, 16, 17, 18] {
+            assert!(b.has_blocking_pin(contact(one_based)));
+        }
+        assert!(!b.has_blocking_pin(contact(14)));
     }
 
     #[test]

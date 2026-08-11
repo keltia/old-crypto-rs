@@ -6,10 +6,13 @@ use crossterm::{
 use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
-    EnglishStraddling, Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries, Nihilist,
+    EnglishStraddling, Nihilist,
     NullCipher, PlayfairCipher, PolybiusCipher, SecomCipher, Solitaire, Transposition, VicCipher,
-    VigenereCipher, Wheatstone, helpers,
+    VigenereCipher, Wheatstone, 
 };
+#[cfg(feature = "fialka")]
+use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries, };
+
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -223,6 +226,7 @@ impl App {
                     Err(e) => self.result = format!("Error: {}", e),
                 }
             }
+            #[cfg(feature = "fialka")]
             "Fialka" => {
                 let series = match self.key1.trim().to_ascii_uppercase().as_str() {
                     "" | "3K" => FialkaRotorSeries::Polish3K,
@@ -239,12 +243,14 @@ impl App {
                     Err(e) => self.result = format!("Error: {e}"),
                 }
             }
+            #[cfg(feature = "sigaba")]
             "Sigaba" => {
                 self.result =
                     "Sigaba requires complex keying, not fully supported in TUI yet".to_string();
             }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
+        #[cfg(feature = "fialka")]
         if cipher_name != "Fialka" {
             self.result = helpers::output_as_block(self.result.as_str());
         }
@@ -414,7 +420,9 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Plain Key", &app.key2),
             ("Cipher Key", &app.key3),
         ],
+        #[cfg(feature = "fialka")]
         "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
+        #[cfg(feature = "sigaba")]
         "Sigaba" => vec![("Key (Not fully supported)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };

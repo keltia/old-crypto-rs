@@ -14,6 +14,7 @@ mod secom;
 mod solitaire;
 mod vic;
 mod wheatstone;
+#[cfg(feature = "fialka")]
 mod fialka;
 #[cfg(feature = "sigaba")]
 mod sigaba;
@@ -32,6 +33,8 @@ pub use solitaire::Solitaire;
 pub use secom::{EnglishSecom, FrenchSecom, SecomCipher, column_order_from_digits};
 pub use vic::{EnglishVic, VicCipher};
 pub use wheatstone::{WheatstoneBasic, Wheatstone};
+
+#[cfg(feature = "fialka")]
 pub use fialka::{
     Commutator as FialkaCommutator, CoreSetting as FialkaCoreSetting, CoreSide as FialkaCoreSide,
     Fialka, FialkaConfig, FialkaConfigError, PermutationError as FialkaPermutationError,

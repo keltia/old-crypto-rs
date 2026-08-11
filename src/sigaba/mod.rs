@@ -23,6 +23,7 @@ mod maze;
 mod machine;
 mod permutation;
 mod stepping;
+mod text;
 
 use crate::Block;
 use std::cell::RefCell;

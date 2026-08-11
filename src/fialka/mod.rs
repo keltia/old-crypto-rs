@@ -4,6 +4,7 @@
 //! Text alphabets, rotor mechanics, and the complete signal path are layered on
 //! top of these primitives in later implementation steps.
 
+mod commutator;
 mod contact;
 mod data;
 mod drum;
@@ -14,6 +15,7 @@ mod proton2;
 mod rotor;
 mod settings;
 
+pub(crate) use commutator::Commutator;
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
 pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};

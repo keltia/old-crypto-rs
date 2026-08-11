@@ -12,6 +12,7 @@
 //! * [Wikipedia: SIGABA](https://en.wikipedia.org/wiki/SIGABA)
 //! * [The SIGABA (ECM Mark II) Cipher Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 
+mod alphabet_rotor;
 mod contact;
 mod data;
 mod permutation;

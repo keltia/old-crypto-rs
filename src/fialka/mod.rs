@@ -5,6 +5,7 @@
 //! top of these primitives in later implementation steps.
 
 mod contact;
+mod data;
 mod permutation;
 mod position;
 mod proton2;

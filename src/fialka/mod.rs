@@ -8,7 +8,10 @@ mod contact;
 mod position;
 mod proton2;
 mod rotor;
+mod settings;
+
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use position::RotorPosition;
 pub(crate) use proton2::{CoreSide, Proton2Rotor, RotorBodyId};
 pub(crate) use rotor::{PositionedRotor, RotorCore, RotorId};
+pub(crate) use settings::{CoreSetting, RingSetting};

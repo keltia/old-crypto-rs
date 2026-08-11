@@ -15,6 +15,7 @@
 mod alphabet_rotor;
 mod contact;
 mod data;
+mod index_rotor;
 mod permutation;
 
 use crate::Block;

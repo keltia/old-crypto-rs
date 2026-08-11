@@ -5,6 +5,8 @@
 //! top of these primitives in later implementation steps.
 
 mod contact;
+mod position;
 mod rotor;
 pub(crate) use contact::{CONTACT_COUNT, Contact};
+pub(crate) use position::RotorPosition;
 pub(crate) use rotor::{PositionedRotor, RotorCore, RotorId};

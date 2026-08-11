@@ -82,6 +82,54 @@ impl FialkaCore {
     }
 }
 
+/// Stateful Fialka machine.
+///
+/// Each contact is transformed using the current drum state and the drum is
+/// advanced exactly once afterwards, matching the documented M-125-3 keypress
+/// sequence.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct FialkaMachine {
+    core: FialkaCore,
+}
+
+impl FialkaMachine {
+    /// Assemble a stateful machine from a drum and punched-card commutator.
+    #[must_use]
+    pub(crate) fn new(drum: RotorDrum, commutator: Commutator) -> Self {
+        Self {
+            core: FialkaCore::new(drum, commutator),
+        }
+    }
+
+    /// Process one contact in coding mode, then advance the drum once.
+    pub(crate) fn encode_contact(&mut self, input: Contact) -> Contact {
+        self.process_contact(input, CipherDirection::Encode)
+    }
+
+    /// Process one contact in decoding mode, then advance the drum once.
+    pub(crate) fn decode_contact(&mut self, input: Contact) -> Contact {
+        self.process_contact(input, CipherDirection::Decode)
+    }
+
+    /// Process one contact with the current state, then perform one mechanical
+    /// step.  The ordering is intentional: Fialka enciphers/deciphers first
+    /// and advances the wheels afterwards.
+    pub(crate) fn process_contact(
+        &mut self,
+        input: Contact,
+        direction: CipherDirection,
+    ) -> Contact {
+        let output = self.core.process_contact(input, direction);
+        self.core.drum.step();
+        output
+    }
+
+    #[must_use]
+    pub(crate) const fn drum(&self) -> &RotorDrum {
+        self.core.drum()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -263,4 +311,105 @@ mod tests {
 
         assert_eq!(core.drum().positions(), before);
     }
+
+    #[test]
+    fn stateful_machine_enciphers_before_it_steps() {
+        let drum = base_3k_drum();
+        let frozen = FialkaCore::new(drum.clone(), Commutator::identity());
+        let mut machine = FialkaMachine::new(drum, Commutator::identity());
+        let input = contact(0);
+
+        // The first output must be produced by the initial all-А state.
+        assert_eq!(machine.encode_contact(input), frozen.encode_contact(input));
+
+        // Only after producing that output do the two unconditional drivers
+        // advance: slot 2 А→Й and slot 9 А→Б.
+        assert_eq!(
+            machine.drum().positions().map(|position| position.get() + 1),
+            [1, 30, 1, 1, 1, 1, 1, 1, 2, 1]
+        );
+    }
+
+    #[test]
+    fn stateful_processing_reproduces_the_published_twenty_keypress_trace() {
+        const EXPECTED: [[u8; 10]; 21] = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 30, 1, 1, 1, 1, 1, 1, 2, 1],
+            [1, 29, 1, 1, 1, 1, 1, 1, 3, 1],
+            [1, 28, 1, 1, 1, 1, 1, 1, 4, 1],
+            [1, 27, 1, 1, 1, 1, 1, 1, 5, 1],
+            [1, 26, 1, 30, 1, 30, 1, 1, 6, 1],
+            [1, 25, 1, 30, 1, 30, 1, 1, 7, 1],
+            [1, 24, 1, 29, 1, 30, 2, 1, 8, 1],
+            [1, 23, 1, 29, 1, 30, 3, 1, 9, 1],
+            [1, 22, 1, 28, 1, 30, 3, 1, 10, 1],
+            [1, 21, 1, 27, 1, 30, 4, 1, 11, 1],
+            [1, 20, 1, 26, 1, 30, 4, 1, 12, 1],
+            [1, 19, 1, 26, 1, 30, 4, 1, 13, 1],
+            [1, 18, 1, 25, 1, 29, 4, 1, 14, 1],
+            [1, 17, 1, 25, 1, 29, 4, 1, 15, 1],
+            [2, 16, 2, 24, 2, 29, 5, 1, 16, 1],
+            [2, 15, 2, 24, 2, 29, 5, 1, 17, 1],
+            [2, 14, 2, 23, 2, 28, 6, 30, 18, 30],
+            [2, 13, 2, 22, 2, 28, 6, 30, 19, 30],
+            [2, 12, 2, 22, 2, 28, 7, 30, 20, 30],
+            [2, 11, 2, 22, 2, 28, 8, 30, 21, 30],
+        ];
+
+        let mut machine = FialkaMachine::new(base_3k_drum(), Commutator::identity());
+        assert_eq!(
+            machine.drum().positions().map(|position| position.get() + 1),
+            EXPECTED[0]
+        );
+
+        // The actual electrical input is irrelevant to stepping; using А for
+        // every keypress isolates state evolution from message contents.
+        for (keypress, expected) in EXPECTED.iter().enumerate().skip(1) {
+            let _ = machine.encode_contact(contact(0));
+            assert_eq!(
+                machine.drum().positions().map(|position| position.get() + 1),
+                *expected,
+                "after keypress {keypress}"
+            );
+        }
+    }
+
+    #[test]
+    fn stateful_encode_and_decode_round_trip_with_identical_starting_state() {
+        let drum = configured_3k_drum();
+        let card = non_reciprocal_card();
+        let mut encoder = FialkaMachine::new(drum.clone(), card.clone());
+        let mut decoder = FialkaMachine::new(drum, card);
+
+        let plaintext: Vec<_> = (0..90)
+            .map(|index| contact(((index * 11 + 7) % CONTACT_COUNT) as u8))
+            .collect();
+        let ciphertext: Vec<_> = plaintext
+            .iter()
+            .copied()
+            .map(|input| encoder.encode_contact(input))
+            .collect();
+        let recovered: Vec<_> = ciphertext
+            .iter()
+            .copied()
+            .map(|input| decoder.decode_contact(input))
+            .collect();
+
+        assert_eq!(recovered, plaintext);
+        assert_eq!(encoder.drum().positions(), decoder.drum().positions());
+    }
+
+    #[test]
+    fn every_processed_contact_advances_the_drum_exactly_once() {
+        let drum = base_3k_drum();
+        let mut expected = drum.clone();
+        let mut machine = FialkaMachine::new(drum, Commutator::identity());
+
+        for value in 0..CONTACT_COUNT as u8 {
+            let _ = machine.process_contact(contact(value), CipherDirection::Encode);
+            expected.step();
+            assert_eq!(machine.drum().positions(), expected.positions());
+        }
+    }
+
 }

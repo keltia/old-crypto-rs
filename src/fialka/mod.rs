@@ -22,7 +22,7 @@ pub(crate) use commutator::Commutator;
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
 pub(crate) use entry_disc::EntryDisc;
-pub(crate) use machine::FialkaCore;
+pub(crate) use machine::{FialkaCore, FialkaMachine};
 pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};
 pub(crate) use permutation::{Permutation, PermutationError};
 pub(crate) use position::RotorPosition;

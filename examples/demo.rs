@@ -1,5 +1,8 @@
-use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling, Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
+use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET};
+
+#[cfg(feature = "fialka")]
+use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
 
 use eyre::Result;
 
@@ -220,10 +223,12 @@ fn main() -> Result<()>{
         }
     }
 
+    #[cfg(feature = "fialka")]
     demo_fialka()?;
     Ok(())
 }
 
+#[cfg(feature = "fialka")]
 fn demo_fialka() -> Result<()> {
     const FIALKA_PLAIN: &str = "СЕКРЕТНОЕСООБЩЕНИЕ";
 

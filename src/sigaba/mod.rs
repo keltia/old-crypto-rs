@@ -14,9 +14,11 @@
 
 mod alphabet_rotor;
 mod contact;
+mod control;
 mod data;
 mod index_rotor;
 mod permutation;
+mod stepping;
 
 use crate::Block;
 use std::cell::RefCell;

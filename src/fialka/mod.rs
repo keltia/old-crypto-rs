@@ -12,6 +12,7 @@ mod mechanics;
 mod permutation;
 mod position;
 mod proton2;
+mod reflector;
 mod rotor;
 mod settings;
 
@@ -22,5 +23,6 @@ pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};
 pub(crate) use permutation::{Permutation, PermutationError};
 pub(crate) use position::RotorPosition;
 pub(crate) use proton2::{CoreSide, Proton2Rotor};
+pub(crate) use reflector::{CipherDirection, ReflectorResult, ReflectorUnit};
 pub(crate) use rotor::{PositionedRotor, RotorCore, RotorId};
 pub(crate) use settings::{CoreSetting, RingSetting};

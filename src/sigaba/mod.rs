@@ -14,6 +14,7 @@
 
 mod alphabet_rotor;
 mod cipher_bank;
+mod config;
 mod contact;
 mod control;
 mod control_bank;

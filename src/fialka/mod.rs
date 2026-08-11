@@ -6,6 +6,7 @@
 
 mod alphabet;
 mod commutator;
+mod config;
 mod contact;
 mod data;
 mod drum;
@@ -23,6 +24,7 @@ pub(crate) use alphabet::{
     MixedRegister, RussianAlphabet, RussianSymbol, RussianTextState, TextMode,
 };
 pub(crate) use commutator::Commutator;
+pub(crate) use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
 pub(crate) use entry_disc::EntryDisc;

@@ -241,6 +241,21 @@ fn demo_fialka() -> Result<()> {
     assert_eq!(recovered, FIALKA_PLAIN);
     println!("decrypt ok\n");
 
+    const FIALKA_LATIN_PLAIN: &str = "TAJNASPRAVA2578";
+    let config = FialkaConfig::overall_base(
+        FialkaRotorSeries::Czechoslovak6K,
+        FialkaCommutator::identity(),
+    );
+    let fialka = Fialka::new(config);
+    let ciphertext = fialka.encrypt_latin(FIALKA_LATIN_PLAIN)?;
+    let recovered = fialka.decrypt_latin(&ciphertext)?;
+
+    println!("==> Fialka M-125-3 (Czechoslovak 6K, Latin, overall base)");
+    println!("Plain:  {FIALKA_LATIN_PLAIN}");
+    println!("Cipher: {ciphertext}");
+    assert_eq!(recovered, FIALKA_LATIN_PLAIN);
+    println!("decrypt ok\n");
+
     Ok(())
 }
 

@@ -6,7 +6,7 @@ use super::{CONTACT_COUNT, Contact};
 
 /// Failure while constructing a fixed-size permutation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum PermutationError {
+pub enum PermutationError {
     /// A table entry is not a valid index for the permutation.
     OutOfRange {
         index: usize,

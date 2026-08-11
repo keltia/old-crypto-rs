@@ -10,12 +10,12 @@ use super::Contact;
 /// Angular position of a rotor, expressed in Fialka's 30-position alphabet.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct RotorPosition(Contact);
+pub struct RotorPosition(Contact);
 
 impl RotorPosition {
     /// Construct a position from its zero-based index (`А == 0`, `Б == 1`, ...).
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         match Contact::new(value) {
             Some(contact) => Some(Self(contact)),
             None => None,
@@ -24,7 +24,7 @@ impl RotorPosition {
 
     /// Return the zero-based position index.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0.get()
     }
 

@@ -9,9 +9,11 @@
 //! electrical transform to the mechanical drum only after the frozen path has
 //! its own exhaustive tests.
 
+use crate::Block;
+
 use super::{
-    CipherDirection, Commutator, Contact, EntryDisc, ReflectorResult, ReflectorUnit, RotorDrum,
-    RotorSlot,
+    CipherDirection, Commutator, Contact, EntryDisc, FialkaConfig, ReflectorResult, ReflectorUnit,
+    RotorDrum, RotorSlot,
 };
 
 /// Complete 30-contact electrical machine with rotor movement disabled.
@@ -130,12 +132,85 @@ impl FialkaMachine {
     }
 }
 
+
+/// Public adapter for using a validated Fialka configuration through the
+/// crate's [`Block`] interface.
+///
+/// The `Block` byte domain is deliberately the machine's native electrical
+/// coordinate system: every source byte must be a contact number in `0..30`.
+/// Text/Unicode conversion belongs to the alphabet layer and is not performed
+/// implicitly here.
+///
+/// Each `encrypt()` or `decrypt()` call starts from the configured initial
+/// rotor positions, matching the reset-per-call convention used by the other
+/// stateful machine adapters in this crate.  Stateful/contact-by-contact work
+/// remains implemented by `FialkaMachine` internally.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Fialka {
+    config: FialkaConfig,
+}
+
+impl Fialka {
+    /// Create a reusable Fialka adapter from a validated machine key.
+    #[must_use]
+    pub const fn new(config: FialkaConfig) -> Self {
+        Self { config }
+    }
+
+    /// Return the validated configuration used to initialise each operation.
+    #[must_use]
+    pub const fn config(&self) -> &FialkaConfig {
+        &self.config
+    }
+
+    fn process_block(&self, dst: &mut [u8], src: &[u8], direction: CipherDirection) -> usize {
+        let limit = dst.len().min(src.len());
+        let mut machine = self.config.build_machine();
+
+        for index in 0..limit {
+            let Some(input) = Contact::new(src[index]) else {
+                // Block has no error channel.  A short processed-count is the
+                // only non-panicking way to report an invalid raw contact.
+                return index;
+            };
+
+            let output = machine.process_contact(input, direction);
+            dst[index] = output.get();
+        }
+
+        limit
+    }
+}
+
+impl Block for Fialka {
+    /// Fialka is a stateful stream machine with one electrical contact per step.
+    fn block_size(&self) -> usize {
+        1
+    }
+
+    /// Encode raw zero-based electrical contacts (`0..29`).
+    ///
+    /// Processing stops at the first invalid byte or when `dst` is full; the
+    /// return value is the number of contacts written.
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        self.process_block(dst, src, CipherDirection::Encode)
+    }
+
+    /// Decode raw zero-based electrical contacts (`0..29`).
+    ///
+    /// Processing stops at the first invalid byte or when `dst` is full; the
+    /// return value is the number of contacts written.
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        self.process_block(dst, src, CipherDirection::Decode)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::fialka::{
         CONTACT_COUNT, CoreSetting, CoreSide, Proton2Rotor, RingSetting, RotorId, RotorPosition,
-        data::polish,
+        RotorSeries, data::polish,
     };
 
     fn contact(value: u8) -> Contact {
@@ -410,6 +485,71 @@ mod tests {
             expected.step();
             assert_eq!(machine.drum().positions(), expected.positions());
         }
+    }
+
+
+    #[test]
+    fn block_adapter_matches_native_stateful_machine() {
+        let config = FialkaConfig::overall_base(RotorSeries::Polish3K, Commutator::identity());
+        let adapter = Fialka::new(config.clone());
+        let src: Vec<u8> = (0..60).map(|i| (i % CONTACT_COUNT) as u8).collect();
+        let mut via_block = vec![0_u8; src.len()];
+
+        assert_eq!(adapter.encrypt(&mut via_block, &src), src.len());
+
+        let mut native = config.build_machine();
+        let expected: Vec<u8> = src
+            .iter()
+            .copied()
+            .map(|value| native.encode_contact(Contact::new(value).unwrap()).get())
+            .collect();
+
+        assert_eq!(via_block, expected);
+    }
+
+    #[test]
+    fn block_adapter_round_trips_and_resets_each_call() {
+        let adapter = Fialka::new(FialkaConfig::overall_base(
+            RotorSeries::Polish3K,
+            non_reciprocal_card(),
+        ));
+        let plain: Vec<u8> = (0..90).map(|i| ((i * 11 + 7) % CONTACT_COUNT) as u8).collect();
+        let mut cipher_a = vec![0_u8; plain.len()];
+        let mut cipher_b = vec![0_u8; plain.len()];
+        let mut recovered = vec![0_u8; plain.len()];
+
+        assert_eq!(adapter.encrypt(&mut cipher_a, &plain), plain.len());
+        // A second call must restart from the configured initial rotor state.
+        assert_eq!(adapter.encrypt(&mut cipher_b, &plain), plain.len());
+        assert_eq!(cipher_a, cipher_b);
+
+        assert_eq!(adapter.decrypt(&mut recovered, &cipher_a), plain.len());
+        assert_eq!(recovered, plain);
+    }
+
+    #[test]
+    fn block_adapter_stops_before_invalid_contact_without_masking_it() {
+        let adapter = Fialka::new(FialkaConfig::overall_base(
+            RotorSeries::Polish3K,
+            Commutator::identity(),
+        ));
+        let src = [0_u8, 1, 29, 30, 2, 3];
+        let mut dst = [0xAA_u8; 6];
+
+        assert_eq!(adapter.encrypt(&mut dst, &src), 3);
+        assert_eq!(dst[3..], [0xAA; 3]);
+    }
+
+    #[test]
+    fn block_adapter_respects_short_destination() {
+        let adapter = Fialka::new(FialkaConfig::overall_base(
+            RotorSeries::Polish3K,
+            Commutator::identity(),
+        ));
+        let src = [0_u8, 1, 2, 3, 4];
+        let mut dst = [0_u8; 3];
+
+        assert_eq!(adapter.encrypt(&mut dst, &src), dst.len());
     }
 
 }

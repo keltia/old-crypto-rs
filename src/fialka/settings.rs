@@ -10,15 +10,15 @@ use super::Contact;
 /// Position of the movable index ring (`А == 0`, ..., `Й == 29`).
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct RingSetting(Contact);
+pub struct RingSetting(Contact);
 
 impl RingSetting {
     /// Basic PROTON-2 ring setting (`А`).
-    pub(crate) const A: Self = Self(Contact::ZERO);
+    pub const A: Self = Self(Contact::ZERO);
 
     /// Construct a checked zero-based ring setting.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         match Contact::new(value) {
             Some(contact) => Some(Self(contact)),
             None => None,
@@ -27,7 +27,7 @@ impl RingSetting {
 
     /// Return the zero-based setting.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0.get()
     }
 }
@@ -52,15 +52,15 @@ impl From<RingSetting> for u8 {
 /// on the index ring.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct CoreSetting(Contact);
+pub struct CoreSetting(Contact);
 
 impl CoreSetting {
     /// Basic PROTON-2 core setting (`А`).
-    pub(crate) const A: Self = Self(Contact::ZERO);
+    pub const A: Self = Self(Contact::ZERO);
 
     /// Construct a checked zero-based core setting.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         match Contact::new(value) {
             Some(contact) => Some(Self(contact)),
             None => None,
@@ -69,7 +69,7 @@ impl CoreSetting {
 
     /// Return the zero-based setting.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0.get()
     }
 }

@@ -12,7 +12,7 @@ use super::{CONTACT_COUNT, Contact, Permutation, PermutationError};
 
 /// Static 30-contact punched-card permutation.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct Commutator {
+pub struct Commutator {
     wiring: Permutation<CONTACT_COUNT>,
 }
 
@@ -22,7 +22,7 @@ impl Commutator {
     /// `mapping[input]` is the drum-side contact reached from the corresponding
     /// keyboard-side contact.  The mapping must contain every value `0..29`
     /// exactly once.
-    pub(crate) fn new(mapping: [u8; CONTACT_COUNT]) -> Result<Self, PermutationError> {
+    pub fn new(mapping: [u8; CONTACT_COUNT]) -> Result<Self, PermutationError> {
         Ok(Self {
             wiring: Permutation::new(mapping)?,
         })
@@ -32,7 +32,7 @@ impl Commutator {
     /// reader.  Keeping this as a named constructor mirrors the documented
     /// maintenance configuration and is useful for later full-path tests.
     #[must_use]
-    pub(crate) fn identity() -> Self {
+    pub fn identity() -> Self {
         let mapping = std::array::from_fn(|index| index as u8);
         Self::new(mapping).expect("identity commutator must be a valid permutation")
     }
@@ -51,7 +51,7 @@ impl Commutator {
 
     /// Zero-based keyboard-to-drum mapping, primarily for key-data tests.
     #[must_use]
-    pub(crate) const fn as_array(&self) -> &[u8; CONTACT_COUNT] {
+    pub const fn as_array(&self) -> &[u8; CONTACT_COUNT] {
         self.wiring.as_array()
     }
 }

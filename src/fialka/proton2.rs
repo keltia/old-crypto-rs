@@ -28,7 +28,7 @@ use super::{
 /// Which face of a removable PROTON-2 wiring core is visible from the left
 /// (flat-contact) side of the assembled wheel.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum CoreSide {
+pub enum CoreSide {
     /// Historical basic orientation: side 1 visible from the left.
     One,
     /// Reversed orientation: side 2 visible from the left.

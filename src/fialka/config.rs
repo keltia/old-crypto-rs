@@ -14,7 +14,7 @@ use super::{
 
 /// Historically documented adjustable-rotor series available to the machine.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum RotorSeries {
+pub enum RotorSeries {
     /// Polish 3K-series rotors.
     Polish3K,
     /// Czechoslovak 6K-series rotors.
@@ -44,7 +44,7 @@ impl RotorSeries {
 /// by this value's index in [`FialkaConfig::rotors`]: index 0 is physical slot
 /// 1 (leftmost), index 9 is slot 10 (rightmost).
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct RotorConfig {
+pub struct RotorConfig {
     body_id: RotorId,
     core_id: RotorId,
     core_side: CoreSide,
@@ -56,7 +56,7 @@ pub(crate) struct RotorConfig {
 impl RotorConfig {
     /// Construct one fully specified keyed rotor slot.
     #[must_use]
-    pub(crate) const fn new(
+    pub const fn new(
         body_id: RotorId,
         core_id: RotorId,
         core_side: CoreSide,
@@ -76,7 +76,7 @@ impl RotorConfig {
 
     /// Overall/basic setting for a body with its matching wiring core.
     #[must_use]
-    pub(crate) fn overall_base(id: RotorId) -> Self {
+    pub fn overall_base(id: RotorId) -> Self {
         Self::new(
             id,
             id,
@@ -88,39 +88,39 @@ impl RotorConfig {
     }
 
     #[must_use]
-    pub(crate) const fn body_id(self) -> RotorId {
+    pub const fn body_id(self) -> RotorId {
         self.body_id
     }
 
     #[must_use]
-    pub(crate) const fn core_id(self) -> RotorId {
+    pub const fn core_id(self) -> RotorId {
         self.core_id
     }
 
     #[must_use]
-    pub(crate) const fn core_side(self) -> CoreSide {
+    pub const fn core_side(self) -> CoreSide {
         self.core_side
     }
 
     #[must_use]
-    pub(crate) const fn core_setting(self) -> CoreSetting {
+    pub const fn core_setting(self) -> CoreSetting {
         self.core_setting
     }
 
     #[must_use]
-    pub(crate) const fn ring_setting(self) -> RingSetting {
+    pub const fn ring_setting(self) -> RingSetting {
         self.ring_setting
     }
 
     #[must_use]
-    pub(crate) const fn position(self) -> RotorPosition {
+    pub const fn position(self) -> RotorPosition {
         self.position
     }
 }
 
 /// Errors rejected before a keyed Fialka machine is assembled.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum FialkaConfigError {
+pub enum FialkaConfigError {
     /// The same mechanical wheel body occurs in more than one physical slot.
     DuplicateBody {
         body: RotorId,
@@ -166,7 +166,7 @@ impl Error for FialkaConfigError {}
 
 /// Complete validated key material for the implemented 30-contact M-125-3.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub(crate) struct FialkaConfig {
+pub struct FialkaConfig {
     rotor_series: RotorSeries,
     rotors: [RotorConfig; 10],
     commutator: Commutator,
@@ -178,7 +178,7 @@ impl FialkaConfig {
     /// Every one of the ten mechanical bodies and every one of the ten wiring
     /// cores must occur exactly once. Their orders may differ, which is how
     /// PROTON-2 core mixing is represented.
-    pub(crate) fn new(
+    pub fn new(
         rotor_series: RotorSeries,
         rotors: [RotorConfig; 10],
         commutator: Commutator,
@@ -196,24 +196,24 @@ impl FialkaConfig {
     /// This is chiefly useful for tests and reference work; it is not a claim
     /// about an operational daily key.
     #[must_use]
-    pub(crate) fn overall_base(rotor_series: RotorSeries, commutator: Commutator) -> Self {
+    pub fn overall_base(rotor_series: RotorSeries, commutator: Commutator) -> Self {
         let rotors = std::array::from_fn(|index| RotorConfig::overall_base(RotorId::ALL[index]));
         Self::new(rotor_series, rotors, commutator)
             .expect("the canonical А..К base configuration is unique")
     }
 
     #[must_use]
-    pub(crate) const fn rotor_series(&self) -> RotorSeries {
+    pub const fn rotor_series(&self) -> RotorSeries {
         self.rotor_series
     }
 
     #[must_use]
-    pub(crate) const fn rotors(&self) -> &[RotorConfig; 10] {
+    pub const fn rotors(&self) -> &[RotorConfig; 10] {
         &self.rotors
     }
 
     #[must_use]
-    pub(crate) const fn commutator(&self) -> &Commutator {
+    pub const fn commutator(&self) -> &Commutator {
         &self.commutator
     }
 

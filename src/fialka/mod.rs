@@ -23,16 +23,20 @@ mod settings;
 pub(crate) use alphabet::{
     MixedRegister, RussianAlphabet, RussianSymbol, RussianTextState, TextMode,
 };
-pub(crate) use commutator::Commutator;
-pub(crate) use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
+pub use commutator::Commutator;
+pub use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
 pub(crate) use entry_disc::EntryDisc;
+pub use machine::Fialka;
 pub(crate) use machine::{FialkaCore, FialkaMachine};
 pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};
-pub(crate) use permutation::{Permutation, PermutationError};
-pub(crate) use position::RotorPosition;
-pub(crate) use proton2::{CoreSide, Proton2Rotor};
+pub use permutation::PermutationError;
+pub(crate) use permutation::Permutation;
+pub use position::RotorPosition;
+pub use proton2::CoreSide;
+pub(crate) use proton2::Proton2Rotor;
 pub(crate) use reflector::{CipherDirection, ReflectorResult, ReflectorUnit};
-pub(crate) use rotor::{PositionedRotor, RotorCore, RotorId};
-pub(crate) use settings::{CoreSetting, RingSetting};
+pub use rotor::RotorId;
+pub(crate) use rotor::{PositionedRotor, RotorCore};
+pub use settings::{CoreSetting, RingSetting};

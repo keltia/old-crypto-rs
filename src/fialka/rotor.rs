@@ -11,7 +11,7 @@ use super::{Contact, Permutation, PermutationError, RotorPosition};
 /// The variants transliterate the first ten letters used to mark Fialka
 /// rotors: А, Б, В, Г, Д, Е, Ж, З, И, К.
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) enum RotorId {
+pub enum RotorId {
     A,
     B,
     V,
@@ -26,7 +26,7 @@ pub(crate) enum RotorId {
 
 impl RotorId {
     /// All ten rotor identities in the historical table order А .. К.
-    pub(crate) const ALL: [Self; 10] = [
+    pub const ALL: [Self; 10] = [
         Self::A,
         Self::B,
         Self::V,

@@ -12,6 +12,8 @@
 //! * [Wikipedia: SIGABA](https://en.wikipedia.org/wiki/SIGABA)
 //! * [The SIGABA (ECM Mark II) Cipher Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 
+mod contact;
+mod permutation;
 use crate::Block;
 use std::cell::RefCell;
 

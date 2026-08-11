@@ -4,6 +4,7 @@
 //! Text alphabets, rotor mechanics, and the complete signal path are layered on
 //! top of these primitives in later implementation steps.
 
+mod alphabet;
 mod commutator;
 mod contact;
 mod data;
@@ -18,6 +19,9 @@ mod reflector;
 mod rotor;
 mod settings;
 
+pub(crate) use alphabet::{
+    MixedRegister, RussianAlphabet, RussianSymbol, RussianTextState, TextMode,
+};
 pub(crate) use commutator::Commutator;
 pub(crate) use contact::{CONTACT_COUNT, Contact};
 pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};

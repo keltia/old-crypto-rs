@@ -13,7 +13,7 @@ use crate::Block;
 
 use super::{
     CipherDirection, Commutator, Contact, EntryDisc, FialkaConfig, ReflectorResult, ReflectorUnit,
-    RotorDrum, RotorSlot,
+    RotorDrum, RotorSlot, RussianAlphabet, UnsupportedRussianLetter,
 };
 
 /// Complete 30-contact electrical machine with rotor movement disabled.
@@ -161,6 +161,47 @@ impl Fialka {
     #[must_use]
     pub const fn config(&self) -> &FialkaConfig {
         &self.config
+    }
+
+    /// Encode Russian letters through the 30-contact machine.
+    ///
+    /// Lower-case input is accepted and normalized to upper-case. The historical
+    /// 30-letter Fialka alphabet omits Ё, Ъ and Э; any unsupported character
+    /// returns an error instead of being silently discarded or remapped.
+    pub fn encrypt_russian_letters(
+        &self,
+        src: &str,
+    ) -> Result<String, UnsupportedRussianLetter> {
+        self.process_russian_letters(src, CipherDirection::Encode)
+    }
+
+    /// Decode Russian letters through the 30-contact machine.
+    ///
+    /// This is the text-layer counterpart of [`Block::decrypt`]. Each input
+    /// letter is translated to its electrical contact, processed in decoding
+    /// mode, and translated back to the canonical upper-case Russian alphabet.
+    pub fn decrypt_russian_letters(
+        &self,
+        src: &str,
+    ) -> Result<String, UnsupportedRussianLetter> {
+        self.process_russian_letters(src, CipherDirection::Decode)
+    }
+
+    fn process_russian_letters(
+        &self,
+        src: &str,
+        direction: CipherDirection,
+    ) -> Result<String, UnsupportedRussianLetter> {
+        let mut machine = self.config.build_machine();
+        let mut output = String::with_capacity(src.len());
+
+        for ch in src.chars() {
+            let input = RussianAlphabet::encode(ch)?;
+            let contact = machine.process_contact(input, direction);
+            output.push(RussianAlphabet::decode(contact));
+        }
+
+        Ok(output)
     }
 
     fn process_block(&self, dst: &mut [u8], src: &[u8], direction: CipherDirection) -> usize {
@@ -525,6 +566,38 @@ mod tests {
 
         assert_eq!(adapter.decrypt(&mut recovered, &cipher_a), plain.len());
         assert_eq!(recovered, plain);
+    }
+
+    #[test]
+    fn russian_letters_text_api_round_trips_and_normalizes_case() {
+        let fialka = Fialka::new(FialkaConfig::overall_base(
+            RotorSeries::Polish3K,
+            Commutator::identity(),
+        ));
+        let plaintext = "секретноесообщение";
+
+        let ciphertext = fialka.encrypt_russian_letters(plaintext).unwrap();
+        let recovered = fialka.decrypt_russian_letters(&ciphertext).unwrap();
+
+        assert_eq!(recovered, "СЕКРЕТНОЕСООБЩЕНИЕ");
+        assert_eq!(ciphertext.chars().count(), plaintext.chars().count());
+    }
+
+    #[test]
+    fn russian_letters_text_api_rejects_characters_outside_machine_alphabet() {
+        let fialka = Fialka::new(FialkaConfig::overall_base(
+            RotorSeries::Polish3K,
+            Commutator::identity(),
+        ));
+
+        assert_eq!(
+            fialka.encrypt_russian_letters("Ё"),
+            Err(UnsupportedRussianLetter('Ё'))
+        );
+        assert_eq!(
+            fialka.encrypt_russian_letters("А Б"),
+            Err(UnsupportedRussianLetter(' '))
+        );
     }
 
     #[test]

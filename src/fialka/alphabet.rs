@@ -65,7 +65,7 @@ pub(crate) enum RussianSymbol {
 /// Error returned when a Unicode character is not part of Fialka's 30-letter
 /// Russian alphabet.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct UnsupportedRussianLetter(pub(crate) char);
+pub struct UnsupportedRussianLetter(pub char);
 
 impl fmt::Display for UnsupportedRussianLetter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

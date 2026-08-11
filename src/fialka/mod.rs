@@ -23,6 +23,7 @@ mod settings;
 pub(crate) use alphabet::{
     MixedRegister, RussianAlphabet, RussianSymbol, RussianTextState, TextMode,
 };
+pub use alphabet::UnsupportedRussianLetter;
 pub use commutator::Commutator;
 pub use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
 pub(crate) use contact::{CONTACT_COUNT, Contact};

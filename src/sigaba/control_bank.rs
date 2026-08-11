@@ -84,6 +84,45 @@ impl ControlBank {
         band_control_outputs(self.outputs())
     }
 
+
+    /// Advance the CSP-889 metered control rotors once.
+    ///
+    /// Physical slots are stored left-to-right as 0..4. Historical slots
+    /// 3/4/2 therefore correspond to indices 2/3/1:
+    ///
+    /// - slot 3 (index 2): fast, steps every character;
+    /// - slot 4 (index 3): medium, steps when fast leaves `O`;
+    /// - slot 2 (index 1): slow, steps when medium leaves `O`.
+    ///
+    /// Carry is determined from the *pre-step* visible position and occurs
+    /// when the driving rotor is at `O`, regardless of its orientation.
+    pub(crate) fn meter(&mut self) {
+        const O: u8 = 14;
+        const SLOW: usize = 1;
+        const FAST: usize = 2;
+        const MEDIUM: usize = 3;
+
+        let carry_to_medium = self.rotors[FAST].position().get() == O;
+        let carry_to_slow =
+            carry_to_medium && self.rotors[MEDIUM].position().get() == O;
+
+        self.rotors[FAST].step();
+
+        if carry_to_medium {
+            self.rotors[MEDIUM].step();
+        }
+
+        if carry_to_slow {
+            self.rotors[SLOW].step();
+        }
+    }
+
+    /// Current visible control-rotor positions in physical left-to-right order.
+    #[must_use]
+    pub(crate) fn positions(&self) -> [u8; 5] {
+        self.rotors.map(|rotor| rotor.position().get())
+    }
+
     /// Access one physical left-to-right control slot.
     #[must_use]
     pub(crate) const fn rotor(&self, slot: usize) -> &AlphabetRotor {
@@ -253,4 +292,120 @@ mod tests {
         assert_eq!(bank.rotor(1).orientation(), Orientation::Reversed);
         assert_eq!(bank.rotor(3).orientation(), Orientation::Reversed);
     }
+    #[test]
+    fn fast_control_slot_steps_every_character() {
+        let mut bank = ControlBank::new([
+            rotor(0, 0, Orientation::Normal),
+            rotor(1, 0, Orientation::Normal),
+            rotor(2, 0, Orientation::Normal),
+            rotor(3, 0, Orientation::Normal),
+            rotor(4, 0, Orientation::Normal),
+        ]);
+
+        bank.meter();
+
+        assert_eq!(bank.positions(), [0, 0, 25, 0, 0]);
+    }
+
+    #[test]
+    fn fast_o_carries_to_medium_on_the_same_step() {
+        let mut bank = ControlBank::new([
+            rotor(0, 0, Orientation::Normal),
+            rotor(1, 0, Orientation::Normal),
+            rotor(2, 14, Orientation::Normal), // fast O
+            rotor(3, 0, Orientation::Normal),
+            rotor(4, 0, Orientation::Normal),
+        ]);
+
+        bank.meter();
+
+        // fast O->N; medium A->Z; slow and stationary slots unchanged.
+        assert_eq!(bank.positions(), [0, 0, 13, 25, 0]);
+    }
+
+    #[test]
+    fn medium_o_carries_to_slow_when_fast_also_turns_over() {
+        let mut bank = ControlBank::new([
+            rotor(0, 7, Orientation::Normal),
+            rotor(1, 0, Orientation::Normal),
+            rotor(2, 14, Orientation::Normal), // fast O
+            rotor(3, 14, Orientation::Normal), // medium O
+            rotor(4, 9, Orientation::Normal),
+        ]);
+
+        bank.meter();
+
+        assert_eq!(bank.positions(), [7, 25, 13, 13, 9]);
+    }
+
+    #[test]
+    fn carry_condition_is_o_for_reversed_rotors_too() {
+        let mut bank = ControlBank::new([
+            rotor(0, 0, Orientation::Normal),
+            rotor(1, 0, Orientation::Reversed),
+            rotor(2, 14, Orientation::Reversed), // O -> P
+            rotor(3, 14, Orientation::Reversed), // O -> P
+            rotor(4, 0, Orientation::Normal),
+        ]);
+
+        bank.meter();
+
+        // Carry uses the pre-step O position, but each reversed rotor moves
+        // toward increasing visible letters.
+        assert_eq!(bank.positions(), [0, 1, 15, 15, 0]);
+    }
+
+    #[test]
+    fn control_slots_one_and_five_never_meter() {
+        let mut bank = ControlBank::new([
+            rotor(0, 14, Orientation::Reversed),
+            rotor(1, 14, Orientation::Normal),
+            rotor(2, 14, Orientation::Normal),
+            rotor(3, 14, Orientation::Normal),
+            rotor(4, 14, Orientation::Reversed),
+        ]);
+
+        for _ in 0..(26 * 26 * 2) {
+            bank.meter();
+        }
+
+        assert_eq!(bank.rotor(0).position(), Position26::new(14).unwrap());
+        assert_eq!(bank.rotor(4).position(), Position26::new(14).unwrap());
+    }
+
+    #[test]
+    fn twenty_six_fast_steps_advance_medium_exactly_once() {
+        let mut bank = ControlBank::new([
+            rotor(0, 0, Orientation::Normal),
+            rotor(1, 0, Orientation::Normal),
+            rotor(2, 0, Orientation::Normal),
+            rotor(3, 0, Orientation::Normal),
+            rotor(4, 0, Orientation::Normal),
+        ]);
+
+        for _ in 0..26 {
+            bank.meter();
+        }
+
+        // Fast returns to A; medium has moved one normal step A->Z.
+        assert_eq!(bank.positions(), [0, 0, 0, 25, 0]);
+    }
+
+    #[test]
+    fn full_control_odometer_period_advances_slow_once() {
+        let mut bank = ControlBank::new([
+            rotor(0, 0, Orientation::Normal),
+            rotor(1, 0, Orientation::Normal),
+            rotor(2, 0, Orientation::Normal),
+            rotor(3, 0, Orientation::Normal),
+            rotor(4, 0, Orientation::Normal),
+        ]);
+
+        for _ in 0..(26 * 26) {
+            bank.meter();
+        }
+
+        assert_eq!(bank.positions(), [0, 25, 0, 0, 0]);
+    }
+
 }

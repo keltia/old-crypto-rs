@@ -91,6 +91,24 @@ impl AlphabetRotor {
         self.orientation
     }
 
+    /// Advance this mounted rotor by one mechanical step.
+    ///
+    /// SIGABA's visible alphabet moves in opposite directions depending on
+    /// physical insertion:
+    ///
+    /// - normal:   O -> N -> M ...
+    /// - reversed: O -> P -> Q ...
+    ///
+    /// The electrical transform already interprets `position` in the mounted
+    /// rotor's visible coordinate frame, so stepping changes only that value.
+    pub(crate) fn step(&mut self) {
+        let amount = match self.orientation {
+            Orientation::Normal => -1,
+            Orientation::Reversed => 1,
+        };
+        self.position = self.position.offset(amount);
+    }
+
     /// Transform in the source/forward electrical direction.
     #[must_use]
     pub(crate) fn forward(&self, input: Contact26) -> Contact26 {
@@ -304,4 +322,33 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn normal_rotor_steps_in_decreasing_visible_alphabet_direction() {
+        let mut rotor = rotor(0, 14, Orientation::Normal); // O
+        rotor.step();
+        assert_eq!(rotor.position(), position(13)); // N
+        rotor.step();
+        assert_eq!(rotor.position(), position(12)); // M
+    }
+
+    #[test]
+    fn reversed_rotor_steps_in_increasing_visible_alphabet_direction() {
+        let mut rotor = rotor(0, 14, Orientation::Reversed); // O
+        rotor.step();
+        assert_eq!(rotor.position(), position(15)); // P
+        rotor.step();
+        assert_eq!(rotor.position(), position(16)); // Q
+    }
+
+    #[test]
+    fn stepping_wraps_in_both_orientations() {
+        let mut normal = rotor(0, 0, Orientation::Normal);
+        normal.step();
+        assert_eq!(normal.position(), position(25));
+
+        let mut reversed = rotor(0, 25, Orientation::Reversed);
+        reversed.step();
+        assert_eq!(reversed.position(), position(0));
+    }
+
 }

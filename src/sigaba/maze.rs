@@ -177,19 +177,19 @@ mod tests {
         // With historical index rotors 1..5 at position 0, the five-wheel
         // composition maps:
         //
-        // 2 -> 5
+        // 2 -> 0
         // 5 -> 6
-        // 7 -> 0
-        // 9 -> 4
+        // 7 -> 2
+        // 9 -> 5
         //
-        // Hence active index outputs are {0,4,5,6}. Their paired cipher slots
+        // Hence active index outputs are {0,2,5,6}. Their paired cipher slots
         // are:
         //
         // 0 -> slot 0
         // 5/6 -> slot 2
-        // 4 -> slot 3
+        // 2 -> slot 4
         //
-        // resulting in cipher-step set {0,2,3}.
+        // resulting in cipher-step set {0,2,4}.
         let maze = SteppingMaze::new(base_control(), identity_position_index_bank());
 
         assert_eq!(
@@ -200,17 +200,17 @@ mod tests {
         let outputs = maze.index_outputs(maze.control_index_inputs());
         assert_eq!(
             outputs.bits(),
-            (1_u16 << 0) | (1_u16 << 4) | (1_u16 << 5) | (1_u16 << 6),
+            (1_u16 << 0) | (1_u16 << 2) | (1_u16 << 5) | (1_u16 << 6),
         );
 
         let steps = maze.cipher_steps();
-        assert_eq!(steps.bits(), 0b01101);
+        assert_eq!(steps.bits(), 0b10101);
         assert_eq!(steps.count(), 3);
         assert!(steps.contains_slot(0));
         assert!(!steps.contains_slot(1));
         assert!(steps.contains_slot(2));
-        assert!(steps.contains_slot(3));
-        assert!(!steps.contains_slot(4));
+        assert!(!steps.contains_slot(3));
+        assert!(steps.contains_slot(4));
     }
 
     #[test]
@@ -227,8 +227,8 @@ mod tests {
         let steps = maze.cipher_steps();
 
         // Freeze the complete maze output for this non-trivial index setting.
-        assert_eq!(steps.bits(), 0b11011);
-        assert_eq!(steps.count(), 4);
+        assert_eq!(steps.bits(), 0b10011);
+        assert_eq!(steps.count(), 3);
     }
 
     #[test]

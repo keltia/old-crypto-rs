@@ -256,6 +256,16 @@ fn demo_fialka() -> Result<()> {
     assert_eq!(recovered, FIALKA_LATIN_PLAIN);
     println!("decrypt ok\n");
 
+    const FIALKA_NUMERIC_PLAIN: &str = "31415926535897932384";
+    let ciphertext = fialka.encrypt_numeric(FIALKA_NUMERIC_PLAIN)?;
+    let recovered = fialka.decrypt_numeric(&ciphertext)?;
+
+    println!("==> Fialka M-125-3 (30<->10 numbers-only mode)");
+    println!("Plain:  {FIALKA_NUMERIC_PLAIN}");
+    println!("Cipher: {ciphertext}");
+    assert_eq!(recovered, FIALKA_NUMERIC_PLAIN);
+    println!("decrypt ok\n");
+
     Ok(())
 }
 

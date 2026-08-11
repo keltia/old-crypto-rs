@@ -14,7 +14,8 @@ use crate::Block;
 
 use super::{
     CipherDirection, Commutator, Contact, EntryDisc, FialkaConfig, KeyboardMapping, ReflectorResult,
-    ReflectorUnit, RotorDrum, RotorSlot, RussianAlphabet, UnsupportedRussianLetter,
+    NumericAlphabet, NumericModeError, ReductionSwitch, ReflectorUnit, RotorDrum, RotorSlot,
+    RussianAlphabet, UnsupportedRussianLetter,
 };
 
 /// Complete 30-contact electrical machine with rotor movement disabled.
@@ -83,6 +84,99 @@ impl FialkaCore {
         }
     }
 
+    /// Process one numbered-key contact with NumLock in position `10`,
+    /// Process one complete NumLock keypress electrically, without stepping.
+    ///
+    /// The reduction network is bidirectional. Forward re-entry occurs at
+    /// exported reflector contacts; reverse re-entry occurs when the return
+    /// path reaches one of the twenty switched card-reader contacts.
+    pub(crate) fn process_numeric_contact(
+        &self,
+        input: Contact,
+        direction: CipherDirection,
+    ) -> Result<Contact, NumericModeError> {
+        let original_input = input;
+
+        // The ten coloured numeric keys remain connected to the card reader.
+        let mut card_input = self.keyboard.keyboard_to_card(input);
+
+        // Forward reduction.
+        let mut seen_forward = [false; 30];
+        let terminal_reflector = loop {
+            let reflector = self.card_input_to_reflector(card_input);
+
+            let Some(next_card) = ReductionSwitch::card_input(reflector) else {
+                break reflector;
+            };
+
+            let index = usize::from(reflector.get());
+            if seen_forward[index] {
+                return Err(NumericModeError::ReductionCycle {
+                    reflector_contact: reflector.get() + 1,
+                });
+            }
+            seen_forward[index] = true;
+            card_input = next_card;
+        };
+
+        // Contact 13 selects the original mechanically encoded symbol and has
+        // no electrical return path through the drum.
+        let mut reflector_output = match self.reflector.transform(
+            terminal_reflector,
+            direction,
+            original_input,
+        ) {
+            ReflectorResult::Plaintext(contact) => return Ok(contact),
+            ReflectorResult::ReturnThroughDrum(contact) => contact,
+        };
+
+        // Reverse reduction. A switched card contact is connected directly to
+        // its exported reflector contact and therefore starts another
+        // left-to-right traversal of the rotor drum.
+        let mut seen_reverse = [false; 30];
+        loop {
+            let card_output = self.reflector_to_card(reflector_output);
+
+            if let Some(next_reflector) = ReductionSwitch::reflector_contact(card_output) {
+                let index = usize::from(next_reflector.get());
+                if seen_reverse[index] {
+                    return Err(NumericModeError::ReductionCycle {
+                        reflector_contact: next_reflector.get() + 1,
+                    });
+                }
+                seen_reverse[index] = true;
+                reflector_output = next_reflector;
+                continue;
+            }
+
+            // Only the ten direct card contacts can reach the keyboard in
+            // NumLock position 10.
+            return Ok(self.keyboard.card_to_keyboard(card_output));
+        }
+    }
+
+    /// Card-reader side -> reflector side.
+    fn card_input_to_reflector(&self, mut contact: Contact) -> Contact {
+        contact = self.commutator.keyboard_to_drum(contact);
+        contact = self.entry_disc.card_to_drum(contact);
+        for slot in RotorSlot::ALL.into_iter().rev() {
+            contact = self.drum.rotor(slot).right_to_left(contact);
+        }
+        contact
+    }
+
+    /// Reflector side -> card-reader side.
+    ///
+    /// This deliberately stops before the fixed card->keyboard substitution,
+    /// because NumLock intercepts twenty card contacts at this point.
+    fn reflector_to_card(&self, mut contact: Contact) -> Contact {
+        for slot in RotorSlot::ALL {
+            contact = self.drum.rotor(slot).left_to_right(contact);
+        }
+        contact = self.entry_disc.drum_to_card(contact);
+        self.commutator.drum_to_output(contact)
+    }
+
     #[must_use]
     pub(crate) const fn drum(&self) -> &RotorDrum {
         &self.drum
@@ -129,6 +223,17 @@ impl FialkaMachine {
         let output = self.core.process_contact(input, direction);
         self.core.drum.step();
         output
+    }
+
+    /// Process a complete numbers-only keypress and step once afterwards.
+    pub(crate) fn process_numeric_contact(
+        &mut self,
+        input: Contact,
+        direction: CipherDirection,
+    ) -> Result<Contact, NumericModeError> {
+        let output = self.core.process_numeric_contact(input, direction)?;
+        self.core.drum.step();
+        Ok(output)
     }
 
     #[must_use]
@@ -204,6 +309,34 @@ impl Fialka {
             let input = RussianAlphabet::encode(ch)?;
             let contact = machine.process_contact(input, direction);
             output.push(RussianAlphabet::decode(contact));
+        }
+
+        Ok(output)
+    }
+
+    /// Encrypt ASCII decimal digits through the M-125-3 `30 <-> 10`
+    /// numbers-only reduction circuit.
+    pub fn encrypt_numeric(&self, src: &str) -> Result<String, NumericModeError> {
+        self.process_numeric_text(src, CipherDirection::Encode)
+    }
+
+    /// Decrypt ASCII decimal digits through the M-125-3 numbers-only circuit.
+    pub fn decrypt_numeric(&self, src: &str) -> Result<String, NumericModeError> {
+        self.process_numeric_text(src, CipherDirection::Decode)
+    }
+
+    fn process_numeric_text(
+        &self,
+        src: &str,
+        direction: CipherDirection,
+    ) -> Result<String, NumericModeError> {
+        let mut machine = self.config.build_machine();
+        let mut output = String::with_capacity(src.len());
+
+        for ch in src.chars() {
+            let input = NumericAlphabet::encode(ch)?;
+            let contact = machine.process_numeric_contact(input, direction)?;
+            output.push(NumericAlphabet::decode(contact)?);
         }
 
         Ok(output)

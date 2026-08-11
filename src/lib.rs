@@ -35,6 +35,7 @@ pub use wheatstone::{WheatstoneBasic, Wheatstone};
 pub use fialka::{
     Commutator as FialkaCommutator, CoreSetting as FialkaCoreSetting, CoreSide as FialkaCoreSide,
     Fialka, FialkaConfig, FialkaConfigError, PermutationError as FialkaPermutationError,
+    NumericModeError as FialkaNumericError,
     UnsupportedLatinSymbol as FialkaLatinTextError,
     UnsupportedRussianLetter as FialkaTextError,
     RingSetting as FialkaRingSetting, RotorConfig as FialkaRotorConfig, RotorId as FialkaRotorId,

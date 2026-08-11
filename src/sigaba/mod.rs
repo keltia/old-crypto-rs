@@ -20,6 +20,7 @@ mod control_bank;
 mod data;
 mod index_rotor;
 mod maze;
+mod machine;
 mod permutation;
 mod stepping;
 

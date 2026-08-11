@@ -6,6 +6,7 @@
 
 mod contact;
 mod data;
+mod drum;
 mod mechanics;
 mod permutation;
 mod position;
@@ -14,6 +15,7 @@ mod rotor;
 mod settings;
 
 pub(crate) use contact::{CONTACT_COUNT, Contact};
+pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
 pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};
 pub(crate) use permutation::{Permutation, PermutationError};
 pub(crate) use position::RotorPosition;

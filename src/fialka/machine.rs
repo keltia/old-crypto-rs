@@ -2,8 +2,9 @@
 //!
 //! This module assembles the components already validated independently:
 //!
-//! keyboard -> commutator -> entry disc -> rotors 10..1 -> reflector
-//!          -> rotors 1..10 -> entry disc -> inverse commutator -> output
+//! keyboard -> fixed keyboard map -> commutator -> entry disc -> rotors 10..1
+//!          -> reflector -> rotors 1..10 -> entry disc -> inverse commutator
+//!          -> inverse keyboard map -> output
 //!
 //! Rotor stepping is deliberately absent here.  Step 11 will couple this
 //! electrical transform to the mechanical drum only after the frozen path has
@@ -12,14 +13,15 @@
 use crate::Block;
 
 use super::{
-    CipherDirection, Commutator, Contact, EntryDisc, FialkaConfig, ReflectorResult, ReflectorUnit,
-    RotorDrum, RotorSlot, RussianAlphabet, UnsupportedRussianLetter,
+    CipherDirection, Commutator, Contact, EntryDisc, FialkaConfig, KeyboardMapping, ReflectorResult,
+    ReflectorUnit, RotorDrum, RotorSlot, RussianAlphabet, UnsupportedRussianLetter,
 };
 
 /// Complete 30-contact electrical machine with rotor movement disabled.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct FialkaCore {
     drum: RotorDrum,
+    keyboard: KeyboardMapping,
     commutator: Commutator,
     entry_disc: EntryDisc,
     reflector: ReflectorUnit,
@@ -31,6 +33,7 @@ impl FialkaCore {
     pub(crate) fn new(drum: RotorDrum, commutator: Commutator) -> Self {
         Self {
             drum,
+            keyboard: KeyboardMapping::new(),
             commutator,
             entry_disc: EntryDisc::new(),
             reflector: ReflectorUnit::new(),
@@ -54,7 +57,8 @@ impl FialkaCore {
     pub(crate) fn process_contact(&self, input: Contact, direction: CipherDirection) -> Contact {
         let original_input = input;
 
-        let mut contact = self.commutator.keyboard_to_drum(input);
+        let mut contact = self.keyboard.keyboard_to_card(input);
+        contact = self.commutator.keyboard_to_drum(contact);
         contact = self.entry_disc.card_to_drum(contact);
 
         // The keyboard is at the right of the drum.  Physical slots are stored
@@ -73,7 +77,8 @@ impl FialkaCore {
                 }
 
                 contact = self.entry_disc.drum_to_card(contact);
-                self.commutator.drum_to_output(contact)
+                contact = self.commutator.drum_to_output(contact);
+                self.keyboard.card_to_keyboard(contact)
             }
         }
     }
@@ -302,7 +307,8 @@ mod tests {
     }
 
     fn forward_to_reflector(core: &FialkaCore, input: Contact) -> Contact {
-        let mut contact = core.commutator.keyboard_to_drum(input);
+        let mut contact = core.keyboard.keyboard_to_card(input);
+        contact = core.commutator.keyboard_to_drum(contact);
         contact = core.entry_disc.card_to_drum(contact);
         for slot in RotorSlot::ALL.into_iter().rev() {
             contact = core.drum.rotor(slot).right_to_left(contact);
@@ -315,7 +321,8 @@ mod tests {
         let core = FialkaCore::new(base_3k_drum(), Commutator::identity());
         let input = contact(4);
 
-        let mut outward = core.commutator.keyboard_to_drum(input);
+        let mut outward = core.keyboard.keyboard_to_card(input);
+        outward = core.commutator.keyboard_to_drum(outward);
         outward = core.entry_disc.card_to_drum(outward);
         for slot in RotorSlot::ALL.into_iter().rev() {
             outward = core.drum.rotor(slot).right_to_left(outward);
@@ -341,6 +348,7 @@ mod tests {
         }
         returned = core.entry_disc.drum_to_card(returned);
         returned = core.commutator.drum_to_output(returned);
+        returned = core.keyboard.card_to_keyboard(returned);
 
         assert_eq!(core.encode_contact(input), returned);
     }
@@ -353,12 +361,12 @@ mod tests {
         // disc/reflector.  This is a frozen component-composition fixture, not
         // yet the historical message vector required by Step 12.
         const ENCODE_ONE_BASED: [u8; CONTACT_COUNT] = [
-            15, 29, 17, 18, 30, 10, 21, 22, 20, 6, 12, 11, 25, 27, 1, 2, 3, 4, 24, 9, 7, 8,
-            26, 19, 13, 23, 14, 28, 16, 5,
+            30, 28, 22, 23, 18, 21, 25, 15, 10, 9, 27, 26, 19, 14, 8, 11, 24, 5, 13, 29, 6, 3,
+            4, 17, 7, 12, 16, 2, 20, 1,
         ];
         const DECODE_ONE_BASED: [u8; CONTACT_COUNT] = [
-            15, 16, 17, 18, 30, 10, 21, 22, 20, 6, 12, 11, 25, 27, 1, 29, 3, 4, 24, 9, 7, 8,
-            26, 19, 13, 23, 14, 28, 2, 5,
+            30, 28, 22, 23, 18, 21, 25, 15, 10, 9, 16, 26, 19, 14, 8, 27, 24, 5, 13, 29, 6, 3,
+            4, 17, 7, 12, 11, 2, 20, 1,
         ];
 
         let core = FialkaCore::new(base_3k_drum(), Commutator::identity());

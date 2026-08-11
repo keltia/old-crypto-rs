@@ -6,8 +6,9 @@ use crossterm::{
 use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
-    EnglishStraddling, Nihilist, NullCipher, PlayfairCipher, PolybiusCipher, SecomCipher,
-    Solitaire, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
+    EnglishStraddling, Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries, Nihilist,
+    NullCipher, PlayfairCipher, PolybiusCipher, SecomCipher, Solitaire, Transposition, VicCipher,
+    VigenereCipher, Wheatstone, helpers,
 };
 use ratatui::{
     prelude::*,
@@ -75,6 +76,7 @@ impl App {
                 "VIC",
                 "SECOM",
                 "Wheatstone",
+                "Fialka",
                 "Sigaba",
             ],
             cipher_list_state,
@@ -221,13 +223,31 @@ impl App {
                     Err(e) => self.result = format!("Error: {}", e),
                 }
             }
+            "Fialka" => {
+                let series = match self.key1.trim().to_ascii_uppercase().as_str() {
+                    "" | "3K" => FialkaRotorSeries::Polish3K,
+                    "6K" => FialkaRotorSeries::Czechoslovak6K,
+                    _ => {
+                        self.result = "Invalid rotor series (use 3K or 6K)".to_string();
+                        return;
+                    }
+                };
+                let config = FialkaConfig::overall_base(series, FialkaCommutator::identity());
+                let cipher = Fialka::new(config);
+                match cipher.encrypt_russian_letters(&self.cleartext) {
+                    Ok(result) => self.result = result,
+                    Err(e) => self.result = format!("Error: {e}"),
+                }
+            }
             "Sigaba" => {
                 self.result =
                     "Sigaba requires complex keying, not fully supported in TUI yet".to_string();
             }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
-        self.result = helpers::output_as_block(self.result.as_str());
+        if cipher_name != "Fialka" {
+            self.result = helpers::output_as_block(self.result.as_str());
+        }
     }
 }
 
@@ -394,6 +414,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Plain Key", &app.key2),
             ("Cipher Key", &app.key3),
         ],
+        "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
         "Sigaba" => vec![("Key (Not fully supported)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };

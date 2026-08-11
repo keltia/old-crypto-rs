@@ -50,6 +50,7 @@ It currently implements a few more compared to the Go/Ruby code, namely:
 It also implements simulation for some cipher devices/machines:
 - Chaocipher
 - Wheatstone cipher machine
+- Fialka M-125-3, with Polish 3K and Czechoslovak 6K adjustable rotor sets
 - SIGABA, a US cipher machine from WWII
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.

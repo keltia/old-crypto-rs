@@ -1,4 +1,4 @@
-use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
+use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling, Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET};
 
 use eyre::Result;
@@ -219,8 +219,31 @@ fn main() -> Result<()>{
             println!("Got:      {}\n", nplain);
         }
     }
+
+    demo_fialka()?;
     Ok(())
 }
+
+fn demo_fialka() -> Result<()> {
+    const FIALKA_PLAIN: &str = "СЕКРЕТНОЕСООБЩЕНИЕ";
+
+    let config = FialkaConfig::overall_base(
+        FialkaRotorSeries::Polish3K,
+        FialkaCommutator::identity(),
+    );
+    let fialka = Fialka::new(config);
+    let ciphertext = fialka.encrypt_russian_letters(FIALKA_PLAIN)?;
+    let recovered = fialka.decrypt_russian_letters(&ciphertext)?;
+
+    println!("==> Fialka M-125-3 (Polish 3K, overall base)");
+    println!("Plain:  {FIALKA_PLAIN}");
+    println!("Cipher: {ciphertext}");
+    assert_eq!(recovered, FIALKA_PLAIN);
+    println!("decrypt ok\n");
+
+    Ok(())
+}
+
 
 #[cfg(test)]
 mod tests {

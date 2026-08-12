@@ -5,7 +5,7 @@ use old_crypto_rs::{
     SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
     SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
 };
-use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET};
+use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET, output_as_block};
 
 #[cfg(feature = "fialka")]
 use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
@@ -312,18 +312,29 @@ fn sigaba_reference_config() -> Result<SigabaConfig> {
 
 #[cfg(feature = "sigaba")]
 fn demo_sigaba() -> Result<()> {
-    const PLAIN: &str = "HELLO WORLD";
-    const EXPECTED: &str = "FLQGFQUEQCH";
-
     let sigaba = Sigaba::new(sigaba_reference_config()?);
+
+    println!("==> ECM Mark II SIGABA (Pekelney reference key)");
     let ciphertext = sigaba.encrypt_text(PLAIN)?;
+    println!("{}", output_as_block(&ciphertext));
     let recovered = sigaba.decrypt_text(&ciphertext)?;
 
-    println!("==> SIGABA CSP-889 (Pekelney reference key)");
-    println!("Plain:  {PLAIN}");
+    assert_eq!(recovered, PLAIN);
+    println!("decrypt ok\n");
+
+    // Known plain & ciphertext from reference documents
+    //
+    const REFPLAIN: &str = "HELLO WORLD";
+    const EXPECTED: &str = "FLQGFQUEQCH";
+
+    let ciphertext = sigaba.encrypt_text(REFPLAIN)?;
+    let recovered = sigaba.decrypt_text(&ciphertext)?;
+
+    println!("==> ECM Mark II SIGABA (Pekelney reference key)");
+    println!("Plain:  {REFPLAIN}");
     println!("Cipher: {ciphertext}");
     assert_eq!(ciphertext, EXPECTED);
-    assert_eq!(recovered, PLAIN);
+    assert_eq!(recovered, REFPLAIN);
     println!("decrypt ok\n");
     Ok(())
 }

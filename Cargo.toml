@@ -38,7 +38,7 @@ maintenance = { status = "actively-developed" }
 debug = 1
 
 [features]
-default = []
+default = ["sigaba"]
 fialka = []
 sigaba = []
 dhat-heap = []

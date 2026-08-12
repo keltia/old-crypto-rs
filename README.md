@@ -83,17 +83,34 @@ To run the TUI:
 
     cargo run --bin old-crypto
 
-## Features
+## Feature flags
 
-SIGABA CSP-889 support is available behind the `sigaba` feature flag. The implementation interoperates with the Pekelney/Dunn reference model. The five index-rotor wirings are historical; the Pekelney large-rotor wirings are reference/simulator data rather than surviving wartime US large-rotor wirings.
+There are two main feature flags: `fialka` and `sigaba` for the two main cipher machines implementations.
 
-### SIGABA CSP-889 example
+The first is for the implementation of the Russian device called , and the
+second one is for the 
+
+### [Fialka](https://en.wikipedia.org/wiki/Fialka) (M-125)  
+
+Fialkais the name of a Cold War-era Soviet cipher machine. A rotor machine, the device uses 10 rotors, each 
+with 30 contacts along with mechanical pins to control stepping. It also makes use of a punched card mechanism.  Both
+Poland and Czechoslovakia had their own variants.
+
+There are at least two versions known to exist, the M-125-MN and the M-125-3MN. The M-125-MN had a typewheel that could 
+handle Latin and Cyrillic letters. The M-125-3MN had separate typewheels for Latin and Cyrillic. The M-125-3MN had 
+three modes, single shift letters, double shift with letters and symbols, and digits only, for use with code books and 
+to superencrypt numeric ciphers.
+
+### [SIGABA](https://en.wikipedia.org/wiki/SIGABA) or ECM Mark II
+
+The implementation interoperates with the Pekelney/Dunn reference model. The five index-rotor wirings are historical; 
+the Pekelney large-rotor wirings are reference/simulator data rather than surviving wartime US large-rotor wirings.
 
 SIGABA uses a typed configuration: five cipher rotors, five control rotors, and
 five 10-contact index rotors. This is the Pekelney/Dunn reference configuration
 used by the interoperability suite (`OOOOO/OOOOO/00000`):
 
-```rust
+```rust,no_run
 use old_crypto_rs::{
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
     SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
@@ -121,11 +138,13 @@ let sigaba = Sigaba::new(config);
 assert_eq!(sigaba.encrypt_text("HELLO WORLD")?, "FLQGFQUEQCH");
 ```
 
-Run the demo with:
+## Available demo
 
 ```sh
-cargo run --example demo --features sigaba
+cargo run --example demo
 ```
+
+You may want to add `--features sigaba` or `fialka` for the cipher machines.
 
 ## Benchmarks & Tests
 
@@ -134,7 +153,7 @@ implementations.
 
 You can run them with
 
-    cargo nextest run
+    cargo nextest run (or cargo test)
     cargo bench
 
 ## Benchmarks
@@ -182,6 +201,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Transposition](https://en.wikipedia.org/wiki/Transposition_(cryptography))
 - [Nihilist cipher](https://en.wikipedia.org/wiki/Nihilist_cipher)
 - [SECOM](http://www.ciphermachinesandcryptology.com/en/secom.htm)
+- [Fialka](https://en.wikipedia.org/wiki/Fialka)
 - [SIGABA cipher machine](https://en.wikipedia.org/wiki/SIGABA)
 - [Solitaire](https://en.wikipedia.org/wiki/Solitaire_(cipher))
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)

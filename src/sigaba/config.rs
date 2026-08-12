@@ -29,7 +29,7 @@ use super::{
 
 /// One mounted 26-contact cipher/control rotor description.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct LargeRotorSetting {
+pub struct LargeRotorSetting {
     pub(crate) id: LargeRotorId,
     pub(crate) position: Position26,
     pub(crate) orientation: Orientation,
@@ -37,7 +37,7 @@ pub(crate) struct LargeRotorSetting {
 
 impl LargeRotorSetting {
     #[must_use]
-    pub(crate) const fn new(
+    pub const fn new(
         id: LargeRotorId,
         position: Position26,
         orientation: Orientation,
@@ -52,21 +52,21 @@ impl LargeRotorSetting {
 
 /// One mounted 10-contact index rotor description.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct IndexRotorSetting {
+pub struct IndexRotorSetting {
     pub(crate) id: IndexRotorId,
     pub(crate) position: Position10,
 }
 
 impl IndexRotorSetting {
     #[must_use]
-    pub(crate) const fn new(id: IndexRotorId, position: Position10) -> Self {
+    pub const fn new(id: IndexRotorId, position: Position10) -> Self {
         Self { id, position }
     }
 }
 
 /// Invalid SIGABA key/configuration.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum ConfigError {
+pub enum ConfigError {
     /// A large rotor appears more than once across cipher/control banks.
     DuplicateLargeRotor {
         id: LargeRotorId,
@@ -87,7 +87,7 @@ pub(crate) enum ConfigError {
 
 /// Which 26-contact bank contains a large rotor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum LargeRotorBank {
+pub enum LargeRotorBank {
     Cipher,
     Control,
 }
@@ -138,7 +138,7 @@ impl From<PermutationError> for ConfigError {
 
 /// Complete validated CSP-889 rotor key.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct SigabaConfig {
+pub struct SigabaConfig {
     rotor_set: LargeRotorSet,
     cipher: [LargeRotorSetting; 5],
     control: [LargeRotorSetting; 5],
@@ -147,7 +147,7 @@ pub(crate) struct SigabaConfig {
 
 impl SigabaConfig {
     /// Validate and construct a complete key.
-    pub(crate) fn new(
+    pub fn new(
         rotor_set: LargeRotorSet,
         cipher: [LargeRotorSetting; 5],
         control: [LargeRotorSetting; 5],
@@ -197,17 +197,17 @@ impl SigabaConfig {
     }
 
     #[must_use]
-    pub(crate) const fn cipher_settings(&self) -> &[LargeRotorSetting; 5] {
+    pub const fn cipher_settings(&self) -> &[LargeRotorSetting; 5] {
         &self.cipher
     }
 
     #[must_use]
-    pub(crate) const fn control_settings(&self) -> &[LargeRotorSetting; 5] {
+    pub const fn control_settings(&self) -> &[LargeRotorSetting; 5] {
         &self.control
     }
 
     #[must_use]
-    pub(crate) const fn index_settings(&self) -> &[IndexRotorSetting; 5] {
+    pub const fn index_settings(&self) -> &[IndexRotorSetting; 5] {
         &self.index
     }
 

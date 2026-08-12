@@ -35,11 +35,11 @@ pub(crate) const INDEX_ROTOR_COUNT: usize = 5;
 /// Identity of one of the ten interchangeable 26-contact rotors.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct LargeRotorId(u8);
+pub struct LargeRotorId(u8);
 
 impl LargeRotorId {
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < LARGE_ROTOR_COUNT as u8 {
             Some(Self(value))
         } else {
@@ -48,7 +48,7 @@ impl LargeRotorId {
     }
 
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 
@@ -61,11 +61,11 @@ impl LargeRotorId {
 /// Identity of one of the five 10-contact index rotors.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct IndexRotorId(u8);
+pub struct IndexRotorId(u8);
 
 impl IndexRotorId {
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < INDEX_ROTOR_COUNT as u8 {
             Some(Self(value))
         } else {
@@ -74,7 +74,7 @@ impl IndexRotorId {
     }
 
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 
@@ -87,7 +87,7 @@ impl IndexRotorId {
 /// At present the only public, complete ten-rotor set suitable for simulator
 /// interoperability is Pekelney's non-historical reference set.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum LargeRotorSet {
+pub enum LargeRotorSet {
     /// Reference wiring created by Richard Pekelney for his ECM Mark II
     /// simulator.  This is not claimed to reproduce a wartime US rotor set.
     PekelneyReference,

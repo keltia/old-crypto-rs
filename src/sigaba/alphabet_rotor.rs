@@ -34,7 +34,7 @@ use super::{
 
 /// Physical insertion orientation of a 26-contact SIGABA rotor.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub(crate) enum Orientation {
+pub enum Orientation {
     /// Rotor inserted normally; lettering is upright to the operator.
     #[default]
     Normal,

@@ -45,7 +45,12 @@ pub use fialka::{
     RotorPosition as FialkaRotorPosition, RotorSeries as FialkaRotorSeries,
 };
 #[cfg(feature = "sigaba")]
-pub use sigaba::Sigaba;
+pub use sigaba::{
+    LargeRotorBank as SigabaLargeRotorBank, LargeRotorSet as SigabaRotorSet, Sigaba,
+    SigabaConfig, SigabaConfigError, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaRotorId, SigabaRotorPosition, SigabaTextError, IndexRotorSetting as SigabaIndexRotorSetting,
+    LargeRotorSetting as SigabaLargeRotorSetting,
+};
 
 
 pub trait Block {

@@ -38,7 +38,9 @@ use super::{
 
 /// Error from the historical SIGABA text adapter.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) enum TextError {
+pub enum TextError {
+    /// The validated configuration could not construct its static reference wiring.
+    InvalidConfiguration,
     /// Plaintext contained a character not representable by the wartime
     /// alphabet/space keyboard path used here.
     UnsupportedPlaintext(char),
@@ -49,6 +51,7 @@ pub(crate) enum TextError {
 impl fmt::Display for TextError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
+            Self::InvalidConfiguration => f.write_str("invalid SIGABA configuration"),
             Self::UnsupportedPlaintext(ch) => write!(
                 f,
                 "character {ch:?} is not supported by the SIGABA plaintext text layer"
@@ -62,6 +65,12 @@ impl fmt::Display for TextError {
 }
 
 impl std::error::Error for TextError {}
+
+impl From<super::config::ConfigError> for TextError {
+    fn from(_: super::config::ConfigError) -> Self {
+        Self::InvalidConfiguration
+    }
+}
 
 /// Encode one human plaintext character into the contact presented to the
 /// cipher bank.

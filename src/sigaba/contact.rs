@@ -23,7 +23,7 @@ pub(crate) struct Contact26(u8);
 impl Contact26 {
     /// Construct a contact from its zero-based `A=0 .. Z=25` coordinate.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < ALPHABET_CONTACTS {
             Some(Self(value))
         } else {
@@ -33,7 +33,7 @@ impl Contact26 {
 
     /// Return the zero-based coordinate.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 
@@ -52,7 +52,7 @@ pub(crate) struct Contact10(u8);
 impl Contact10 {
     /// Construct a contact from its zero-based `0..9` coordinate.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < INDEX_CONTACTS {
             Some(Self(value))
         } else {
@@ -62,7 +62,7 @@ impl Contact10 {
 
     /// Return the zero-based coordinate.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 
@@ -76,12 +76,12 @@ impl Contact10 {
 /// A checked angular position of a 26-contact cipher/control rotor.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct Position26(u8);
+pub struct Position26(u8);
 
 impl Position26 {
     /// Construct a position from zero-based `A=0 .. Z=25`.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < ALPHABET_CONTACTS {
             Some(Self(value))
         } else {
@@ -90,11 +90,11 @@ impl Position26 {
     }
 
     /// The `A` position.
-    pub(crate) const A: Self = Self(0);
+    pub const A: Self = Self(0);
 
     /// Return the zero-based coordinate.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 
@@ -108,12 +108,12 @@ impl Position26 {
 /// A checked angular position of a 10-contact index rotor.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub(crate) struct Position10(u8);
+pub struct Position10(u8);
 
 impl Position10 {
     /// Construct a position from zero-based `0..9`.
     #[must_use]
-    pub(crate) const fn new(value: u8) -> Option<Self> {
+    pub const fn new(value: u8) -> Option<Self> {
         if value < INDEX_CONTACTS {
             Some(Self(value))
         } else {
@@ -122,11 +122,11 @@ impl Position10 {
     }
 
     /// Position `0`.
-    pub(crate) const ZERO: Self = Self(0);
+    pub const ZERO: Self = Self(0);
 
     /// Return the zero-based coordinate.
     #[must_use]
-    pub(crate) const fn get(self) -> u8 {
+    pub const fn get(self) -> u8 {
         self.0
     }
 

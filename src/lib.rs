@@ -46,7 +46,7 @@ pub use fialka::{
 };
 #[cfg(feature = "sigaba")]
 pub use sigaba::{
-    LargeRotorBank as SigabaLargeRotorBank, LargeRotorSet as SigabaRotorSet, Sigaba,
+    LargeRotorBank as SigabaLargeRotorBank, LargeRotorSet as SigabaRotorSet, Orientation as SigabaOrientation, Sigaba,
     SigabaConfig, SigabaConfigError, SigabaIndexPosition, SigabaIndexRotorId,
     SigabaRotorId, SigabaRotorPosition, SigabaTextError, IndexRotorSetting as SigabaIndexRotorSetting,
     LargeRotorSetting as SigabaLargeRotorSetting,

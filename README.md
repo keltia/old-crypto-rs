@@ -85,7 +85,47 @@ To run the TUI:
 
 ## Features
 
-The SIGABA cipher machine is still a work in progress, so it has been put under the `sigaba` feature flag.
+SIGABA CSP-889 support is available behind the `sigaba` feature flag. The implementation interoperates with the Pekelney/Dunn reference model. The five index-rotor wirings are historical; the Pekelney large-rotor wirings are reference/simulator data rather than surviving wartime US large-rotor wirings.
+
+### SIGABA CSP-889 example
+
+SIGABA uses a typed configuration: five cipher rotors, five control rotors, and
+five 10-contact index rotors. This is the Pekelney/Dunn reference configuration
+used by the interoperability suite (`OOOOO/OOOOO/00000`):
+
+```rust
+use old_crypto_rs::{
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
+    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+};
+
+let large = |id| SigabaLargeRotorSetting::new(
+    SigabaRotorId::new(id).unwrap(),
+    SigabaRotorPosition::new(14).unwrap(), // O
+    SigabaOrientation::Normal,
+);
+let index = |id| SigabaIndexRotorSetting::new(
+    SigabaIndexRotorId::new(id).unwrap(),
+    SigabaIndexPosition::ZERO,
+);
+
+let config = SigabaConfig::new(
+    SigabaRotorSet::PekelneyReference,
+    [large(0), large(1), large(2), large(3), large(4)],
+    [large(5), large(6), large(7), large(8), large(9)],
+    [index(0), index(1), index(2), index(3), index(4)],
+)?;
+let sigaba = Sigaba::new(config);
+
+assert_eq!(sigaba.encrypt_text("HELLO WORLD")?, "FLQGFQUEQCH");
+```
+
+Run the demo with:
+
+```sh
+cargo run --example demo --features sigaba
+```
 
 ## Benchmarks & Tests
 

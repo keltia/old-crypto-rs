@@ -4,6 +4,12 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
+#[cfg(feature = "sigaba")]
+use old_crypto_rs::{
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
+    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
     EnglishStraddling, Nihilist,
@@ -244,9 +250,20 @@ impl App {
                 }
             }
             #[cfg(feature = "sigaba")]
+            #[cfg(feature = "sigaba")]
+            "Sigaba" => match sigaba_reference_config() {
+                Ok(config) => {
+                    let cipher = Sigaba::new(config);
+                    match cipher.encrypt_text(&self.cleartext) {
+                        Ok(result) => self.result = result,
+                        Err(e) => self.result = format!("Error: {e}"),
+                    }
+                }
+                Err(e) => self.result = format!("Error: {e}"),
+            },
+            #[cfg(not(feature = "sigaba"))]
             "Sigaba" => {
-                self.result =
-                    "Sigaba requires complex keying, not fully supported in TUI yet".to_string();
+                self.result = "SIGABA support requires --features sigaba".to_string();
             }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
@@ -255,6 +272,34 @@ impl App {
             self.result = helpers::output_as_block(self.result.as_str());
         }
     }
+}
+
+
+#[cfg(feature = "sigaba")]
+fn sigaba_reference_config() -> Result<SigabaConfig, String> {
+    let large = |id: u8| -> Result<SigabaLargeRotorSetting, String> {
+        Ok(SigabaLargeRotorSetting::new(
+            SigabaRotorId::new(id).ok_or_else(|| "invalid SIGABA rotor id".to_string())?,
+            SigabaRotorPosition::new(14)
+                .ok_or_else(|| "invalid SIGABA rotor position".to_string())?,
+            SigabaOrientation::Normal,
+        ))
+    };
+    let index = |id: u8| -> Result<SigabaIndexRotorSetting, String> {
+        Ok(SigabaIndexRotorSetting::new(
+            SigabaIndexRotorId::new(id)
+                .ok_or_else(|| "invalid SIGABA index rotor id".to_string())?,
+            SigabaIndexPosition::ZERO,
+        ))
+    };
+
+    SigabaConfig::new(
+        SigabaRotorSet::PekelneyReference,
+        [large(0)?, large(1)?, large(2)?, large(3)?, large(4)?],
+        [large(5)?, large(6)?, large(7)?, large(8)?, large(9)?],
+        [index(0)?, index(1)?, index(2)?, index(3)?, index(4)?],
+    )
+    .map_err(|e| e.to_string())
 }
 
 fn main() -> io::Result<()> {
@@ -423,7 +468,7 @@ fn ui(f: &mut Frame, app: &mut App) {
         #[cfg(feature = "fialka")]
         "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
         #[cfg(feature = "sigaba")]
-        "Sigaba" => vec![("Key (Not fully supported)", &app.key1)],
+        "Sigaba" => vec![],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };
 

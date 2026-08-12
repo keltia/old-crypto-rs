@@ -1,4 +1,10 @@
 use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
+#[cfg(feature = "sigaba")]
+use old_crypto_rs::{
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
+    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET};
 
 #[cfg(feature = "fialka")]
@@ -225,6 +231,8 @@ fn main() -> Result<()>{
 
     #[cfg(feature = "fialka")]
     demo_fialka()?;
+    #[cfg(feature = "sigaba")]
+    demo_sigaba()?;
     Ok(())
 }
 
@@ -274,6 +282,51 @@ fn demo_fialka() -> Result<()> {
     Ok(())
 }
 
+
+
+#[cfg(feature = "sigaba")]
+fn sigaba_reference_config() -> Result<SigabaConfig> {
+    let large = |id: u8| -> Result<SigabaLargeRotorSetting> {
+        Ok(SigabaLargeRotorSetting::new(
+            SigabaRotorId::new(id).ok_or_else(|| eyre::eyre!("invalid SIGABA rotor id"))?,
+            SigabaRotorPosition::new(14)
+                .ok_or_else(|| eyre::eyre!("invalid SIGABA rotor position"))?,
+            SigabaOrientation::Normal,
+        ))
+    };
+    let index = |id: u8| -> Result<SigabaIndexRotorSetting> {
+        Ok(SigabaIndexRotorSetting::new(
+            SigabaIndexRotorId::new(id)
+                .ok_or_else(|| eyre::eyre!("invalid SIGABA index rotor id"))?,
+            SigabaIndexPosition::ZERO,
+        ))
+    };
+
+    Ok(SigabaConfig::new(
+        SigabaRotorSet::PekelneyReference,
+        [large(0)?, large(1)?, large(2)?, large(3)?, large(4)?],
+        [large(5)?, large(6)?, large(7)?, large(8)?, large(9)?],
+        [index(0)?, index(1)?, index(2)?, index(3)?, index(4)?],
+    )?)
+}
+
+#[cfg(feature = "sigaba")]
+fn demo_sigaba() -> Result<()> {
+    const PLAIN: &str = "HELLO WORLD";
+    const EXPECTED: &str = "FLQGFQUEQCH";
+
+    let sigaba = Sigaba::new(sigaba_reference_config()?);
+    let ciphertext = sigaba.encrypt_text(PLAIN)?;
+    let recovered = sigaba.decrypt_text(&ciphertext)?;
+
+    println!("==> SIGABA CSP-889 (Pekelney reference key)");
+    println!("Plain:  {PLAIN}");
+    println!("Cipher: {ciphertext}");
+    assert_eq!(ciphertext, EXPECTED);
+    assert_eq!(recovered, PLAIN);
+    println!("decrypt ok\n");
+    Ok(())
+}
 
 #[cfg(test)]
 mod tests {

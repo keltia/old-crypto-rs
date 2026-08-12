@@ -12,7 +12,7 @@
 use crate::Block;
 
 use super::{
-    config::{ConfigError, SigabaConfig},
+    config::SigabaConfig,
     contact::Contact26,
     text::{
         contact_to_plaintext, decipher_text, encipher_text, plaintext_to_contact,

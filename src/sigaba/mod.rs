@@ -20,6 +20,8 @@ mod control;
 mod control_bank;
 mod data;
 mod index_rotor;
+#[cfg(test)]
+mod kat;
 mod maze;
 mod machine;
 mod permutation;

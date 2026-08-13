@@ -140,7 +140,8 @@ impl Position10 {
 }
 
 fn wrapping_offset(value: u8, amount: i16, modulus: u8) -> u8 {
-    (i16::from(value) + amount).rem_euclid(i16::from(modulus)) as u8
+    u8::try_from((i16::from(value) + amount).rem_euclid(i16::from(modulus)))
+        .expect("a modular contact coordinate always fits in u8")
 }
 
 impl fmt::Display for Contact26 {

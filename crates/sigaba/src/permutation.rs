@@ -77,7 +77,8 @@ impl<const N: usize> Permutation<N> {
             }
 
             first_seen[output] = index;
-            inverse[output] = index as u8;
+            inverse[output] = u8::try_from(index)
+                .expect("permutation size is constrained to fit in u8");
         }
 
         Ok(Self { forward, inverse })

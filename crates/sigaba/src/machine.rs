@@ -258,8 +258,7 @@ mod tests {
             let _ = core.encipher_contact(contact(b'A'));
 
             // Exactly the selected cipher slots move one step.
-            for slot in 0..5 {
-                let before = previous_cipher[slot];
+            for (slot, &before) in previous_cipher.iter().enumerate() {
                 let after = core.cipher_positions()[slot];
 
                 if steps.contains_slot(slot) {

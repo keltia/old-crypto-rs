@@ -1,6 +1,6 @@
 //! Fixed CSP-889 index-output to cipher-step pairing.
 //!
-//! The ten index-bank outputs are ORed in five fixed pairs:
+//! The ten index-bank outputs are combined with logical OR in five fixed pairs:
 //!
 //! ```text
 //! outputs 0 or 9 -> cipher slot 0

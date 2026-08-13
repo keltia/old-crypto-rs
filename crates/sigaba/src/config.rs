@@ -147,6 +147,11 @@ pub struct SigabaConfig {
 
 impl SigabaConfig {
     /// Validate and construct a complete key.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ConfigError`] when a large or index rotor identity is used
+    /// more than once.
     pub fn new(
         rotor_set: LargeRotorSet,
         cipher: [LargeRotorSetting; 5],
@@ -183,11 +188,11 @@ impl SigabaConfig {
         ]);
 
         let index = IndexBank::new([
-            self.build_index(self.index[0])?,
-            self.build_index(self.index[1])?,
-            self.build_index(self.index[2])?,
-            self.build_index(self.index[3])?,
-            self.build_index(self.index[4])?,
+            Self::build_index(self.index[0])?,
+            Self::build_index(self.index[1])?,
+            Self::build_index(self.index[2])?,
+            Self::build_index(self.index[3])?,
+            Self::build_index(self.index[4])?,
         ]);
 
         Ok(SigabaCore::new(
@@ -223,10 +228,7 @@ impl SigabaConfig {
         )?)
     }
 
-    fn build_index(
-        &self,
-        setting: IndexRotorSetting,
-    ) -> Result<IndexRotor, ConfigError> {
+    fn build_index(setting: IndexRotorSetting) -> Result<IndexRotor, ConfigError> {
         Ok(IndexRotor::from_reference(
             setting.id,
             setting.position,

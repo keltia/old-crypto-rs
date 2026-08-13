@@ -6,7 +6,7 @@
 //! cases compare the C++ output against the Java simulator.
 //!
 //! Reference:
-//! https://github.com/JoeDunnStable/sigaba
+//! <https://github.com/JoeDunnStable/sigaba>
 //!
 //! Default CSP-889 reference key:
 //!

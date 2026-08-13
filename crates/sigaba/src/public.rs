@@ -51,6 +51,11 @@ impl Sigaba {
     /// - plaintext Z -> electrical X;
     /// - lowercase ASCII is normalized;
     /// - unsupported plaintext characters return `TextError`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TextError`] for unsupported plaintext or if the cached core
+    /// could not be constructed from the reference wiring.
     pub fn encrypt_text(&self, src: &str) -> Result<String, TextError> {
         let mut core = self.initial.map_err(TextError::from)?;
         encipher_text(&mut core, src)
@@ -60,6 +65,11 @@ impl Sigaba {
     ///
     /// The machine is reset to the configured initial state for every call.
     /// Ciphertext grouping whitespace is ignored without advancing the rotors.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TextError`] for invalid ciphertext or if the cached core could
+    /// not be constructed from the reference wiring.
     pub fn decrypt_text(&self, src: &str) -> Result<String, TextError> {
         let mut core = self.initial.map_err(TextError::from)?;
         decipher_text(&mut core, src)

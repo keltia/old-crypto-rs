@@ -40,7 +40,7 @@ pub struct LargeRotorId(u8);
 impl LargeRotorId {
     #[must_use]
     pub const fn new(value: u8) -> Option<Self> {
-        if value < LARGE_ROTOR_COUNT as u8 {
+        if value < 10 {
             Some(Self(value))
         } else {
             None
@@ -67,7 +67,7 @@ pub struct IndexRotorId(u8);
 impl IndexRotorId {
     #[must_use]
     pub const fn new(value: u8) -> Option<Self> {
-        if value < INDEX_ROTOR_COUNT as u8 {
+        if value < 5 {
             Some(Self(value))
         } else {
             None

@@ -387,7 +387,7 @@ impl Block for Fialka {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::{
+    use crate::{
         CONTACT_COUNT, CoreSetting, CoreSide, Proton2Rotor, RingSetting, RotorId, RotorPosition,
         RotorSeries, data::polish,
     };

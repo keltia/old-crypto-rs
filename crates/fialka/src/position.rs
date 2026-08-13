@@ -60,7 +60,7 @@ impl From<RotorPosition> for u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::CONTACT_COUNT;
+    use crate::CONTACT_COUNT;
 
     #[test]
     fn accepts_exact_rotor_position_range() {

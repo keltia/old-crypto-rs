@@ -48,3 +48,10 @@ pub(crate) use reflector::{CipherDirection, ReflectorResult, ReflectorUnit};
 pub use rotor::RotorId;
 pub(crate) use rotor::{PositionedRotor, RotorCore};
 pub use settings::{CoreSetting, RingSetting};
+
+/// Compatibility interface for block-oriented cipher consumers.
+pub trait Block {
+    fn block_size(&self) -> usize;
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+}

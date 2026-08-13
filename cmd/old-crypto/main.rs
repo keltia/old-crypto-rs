@@ -3,7 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
+use old_crypto_rs::helpers::{self, English, EnglishExt, Horizontal, LatinSC};
 #[cfg(feature = "sigaba")]
 use old_crypto_rs::{
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,

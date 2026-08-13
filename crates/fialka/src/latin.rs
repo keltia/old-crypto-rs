@@ -111,7 +111,7 @@ fn process_latin(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{FialkaCommutator, FialkaConfig, FialkaRotorSeries};
+    use crate::{Commutator, FialkaConfig, RotorSeries};
 
     #[test]
     fn latin_mapping_contains_thirty_unique_documented_symbols() {
@@ -169,8 +169,8 @@ mod tests {
     #[test]
     fn polish_3k_latin_text_round_trips() {
         let fialka = Fialka::new(FialkaConfig::overall_base(
-            FialkaRotorSeries::Polish3K,
-            FialkaCommutator::identity(),
+            RotorSeries::Polish3K,
+            Commutator::identity(),
         ));
         let plain = "TAJNE2578";
 
@@ -183,8 +183,8 @@ mod tests {
     #[test]
     fn czechoslovak_6k_latin_text_round_trips_and_normalizes_case() {
         let fialka = Fialka::new(FialkaConfig::overall_base(
-            FialkaRotorSeries::Czechoslovak6K,
-            FialkaCommutator::identity(),
+            RotorSeries::Czechoslovak6K,
+            Commutator::identity(),
         ));
         let plain = "tajnasprava";
 

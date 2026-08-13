@@ -159,7 +159,7 @@ impl Proton2Rotor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::{CONTACT_COUNT, PositionedRotor, data::polish};
+    use crate::{CONTACT_COUNT, PositionedRotor, data::polish};
 
     fn contact(value: u8) -> Contact {
         Contact::new(value).unwrap()

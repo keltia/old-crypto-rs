@@ -104,7 +104,7 @@ fn wiring(id: RotorId) -> [u8; 30] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::{Contact, PositionedRotor, RotorPosition};
+    use crate::{Contact, PositionedRotor, RotorPosition};
 
     fn contact(one_based: u8) -> Contact {
         Contact::new(one_based - 1).unwrap()

@@ -89,7 +89,7 @@ fn wiring(id: RotorId) -> [u8; 30] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::Contact;
+    use crate::Contact;
 
     fn contact(one_based: u8) -> Contact {
         Contact::new(one_based - 1).unwrap()
@@ -183,11 +183,11 @@ mod tests {
         // Same rotor identity and base coordinates, but a different national
         // series must produce different electrical and mechanical data.
         let a_6k = rotor(RotorId::A);
-        let a_3k = crate::fialka::data::polish::rotor(RotorId::A);
+        let a_3k = crate::data::polish::rotor(RotorId::A);
         assert_ne!(a_6k.right_to_left(contact(1)), a_3k.right_to_left(contact(1)));
 
         let body_6k = body(RotorId::A);
-        let body_3k = crate::fialka::data::polish::body(RotorId::A);
+        let body_3k = crate::data::polish::body(RotorId::A);
         assert_ne!(body_6k.blocking_pins(), body_3k.blocking_pins());
     }
 }

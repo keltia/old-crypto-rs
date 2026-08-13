@@ -90,8 +90,8 @@ There are two main feature flags: `fialka` and `sigaba` for the two main cipher 
 The first is for the implementation of the Russian device called , and the second one is for the ECM Mark II US machine
 from WWII.  Now that the SIGABA full rewirte is done, its feature flag has been made part of the default.
 
-The SIGABA implementation is maintained as the standalone `sigaba` workspace crate under `crates/sigaba`; this crate
-re-exports its public API when the `sigaba` feature is enabled.
+The Fialka and SIGABA implementations are maintained as standalone workspace crates under `crates/fialka` and
+`crates/sigaba`; this crate re-exports their public APIs when the corresponding feature is enabled.
 
 ### [Fialka](https://en.wikipedia.org/wiki/Fialka) (M-125)  
 

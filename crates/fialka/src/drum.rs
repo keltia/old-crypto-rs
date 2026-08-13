@@ -242,7 +242,7 @@ impl RotorDrum {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::{CoreSetting, CoreSide, RingSetting, RotorId, data::polish};
+    use crate::{CoreSetting, CoreSide, RingSetting, RotorId, data::polish};
 
     fn position(value: u8) -> RotorPosition {
         RotorPosition::new(value).unwrap()

@@ -14,8 +14,6 @@ mod secom;
 mod solitaire;
 mod vic;
 mod wheatstone;
-#[cfg(feature = "fialka")]
-mod fialka;
 
 pub use null::NullCipher;
 pub use vigenere::{Autocrypt, AutocryptCipher, Autokey, AutokeyCipher, Vigenere, VigenereCipher};
@@ -55,6 +53,21 @@ pub trait Block {
     fn block_size(&self) -> usize;
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+}
+
+#[cfg(feature = "fialka")]
+impl Block for Fialka {
+    fn block_size(&self) -> usize {
+        fialka::Block::block_size(self)
+    }
+
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        fialka::Block::encrypt(self, dst, src)
+    }
+
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        fialka::Block::decrypt(self, dst, src)
+    }
 }
 
 #[cfg(feature = "sigaba")]

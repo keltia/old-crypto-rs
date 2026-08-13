@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/sigaba"]
+members = ["crates/fialka", "crates/sigaba"]
 resolver = "3"
 
 [package]
@@ -43,12 +43,13 @@ debug = 1
 
 [features]
 default = ["sigaba"]
-fialka = []
+fialka = ["dep:fialka"]
 sigaba = ["dep:sigaba"]
 dhat-heap = []
 dhat-ad-hoc = []
 
 [dependencies]
+fialka = { version = "0.1.0", path = "crates/fialka", optional = true }
 sigaba = { version = "0.1.0", path = "crates/sigaba", optional = true }
 ahash = "0.8"
 crossterm = "0.29"

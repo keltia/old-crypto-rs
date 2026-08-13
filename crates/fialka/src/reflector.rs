@@ -114,7 +114,7 @@ fn contact(one_based: u8) -> Contact {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::CONTACT_COUNT;
+    use crate::CONTACT_COUNT;
 
     fn c(one_based: u8) -> Contact {
         contact(one_based)

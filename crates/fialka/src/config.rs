@@ -278,7 +278,7 @@ fn validate_unique_identities(rotors: &[RotorConfig; 10]) -> Result<(), FialkaCo
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::{Contact, CONTACT_COUNT, RotorSlot};
+    use crate::{Contact, CONTACT_COUNT, RotorSlot};
 
     fn contact(value: u8) -> Contact {
         Contact::new(value).unwrap()

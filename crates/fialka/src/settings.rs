@@ -91,7 +91,7 @@ impl From<CoreSetting> for u8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fialka::CONTACT_COUNT;
+    use crate::CONTACT_COUNT;
 
     #[test]
     fn ring_setting_accepts_exact_contact_range() {

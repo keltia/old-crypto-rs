@@ -1,0 +1,12 @@
+[package]
+name = "fialka"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ollivier Robert <roberto@keltia.net>"]
+description = "A typed simulation of the Fialka M-125-3 cipher machine."
+repository = "https://github.com/keltia/old-crypto-rs"
+license = "MIT"
+keywords = ["cryptography", "fialka", "cipher", "history"]
+categories = ["cryptography"]
+
+[dependencies]

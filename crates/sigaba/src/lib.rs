@@ -26,6 +26,7 @@ mod maze;
 mod machine;
 mod permutation;
 mod public;
+mod rotor_set;
 mod stepping;
 mod text;
 
@@ -37,6 +38,7 @@ pub use config::{
 pub use contact::{Position10 as SigabaIndexPosition, Position26 as SigabaRotorPosition};
 pub use data::{IndexRotorId as SigabaIndexRotorId, LargeRotorId as SigabaRotorId, LargeRotorSet};
 pub use public::Sigaba;
+pub use rotor_set::{RotorKind, RotorSet, RotorSetError};
 pub use text::TextError as SigabaTextError;
 
 /// Compatibility interface for block-oriented cipher consumers.

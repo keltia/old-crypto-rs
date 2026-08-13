@@ -97,7 +97,6 @@ impl<const N: usize> Permutation<N> {
     }
 
     /// Return the validated source mapping.
-    #[cfg(test)]
     #[must_use]
     pub(crate) const fn mapping(&self) -> &[u8; N] {
         &self.forward

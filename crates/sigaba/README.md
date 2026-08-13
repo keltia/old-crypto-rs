@@ -2,8 +2,6 @@
 
 `sigabactl` encrypts and decrypts text with the SIGABA simulator using a complete initial configuration from YAML.
 
-The repository includes `config/reference.yaml`, corresponding to the Pekelney/Dunn reference setup used by the known-answer tests.
-
 ```sh
 cargo run -p sigaba --bin sigabactl -- \
   --config crates/sigaba/config/reference.yaml encrypt "HELLO WORLD"
@@ -48,5 +46,6 @@ reversed orientation. Large-rotor positions use `A` through `Z`, while index pos
 Rotor arrays are ordered by physical slot from left to right. IDs must be unique across the two large-rotor banks 
 and within the index bank.
 
-The reference settings from the Savard-Pekelney paper in 1999 is also included.
+The reference settings from the Pekelney/Dunn paper in 1999 is also included as `config/reference.yaml`.
+
 

@@ -26,7 +26,6 @@
 //! mutation is introduced in the following step.
 
 use super::{
-    contact::Contact10,
     control::IndexSignals,
     control_bank::ControlBank,
     index_rotor::IndexBank,
@@ -52,11 +51,8 @@ impl SteppingMaze {
     pub(crate) fn index_outputs(&self, inputs: IndexSignals) -> IndexSignals {
         let mut outputs = IndexSignals::empty();
 
-        for value in 0..10_u8 {
-            let input = Contact10::new(value).expect("0..9 is a valid index contact");
-            if inputs.contains(input) {
-                outputs.insert(self.index.forward(input));
-            }
+        for input in inputs.iter() {
+            outputs.insert(self.index.forward(input));
         }
 
         outputs
@@ -99,6 +95,7 @@ impl SteppingMaze {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::contact::Contact10;
     use crate::{
         alphabet_rotor::{AlphabetRotor, Orientation},
         contact::{Position10, Position26},

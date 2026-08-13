@@ -13,10 +13,16 @@
 //! If both outputs in a pair are active, the cipher rotor still steps only
 //! once.
 
-use super::{
-    contact::Contact10,
-    control::IndexSignals,
-};
+use super::control::IndexSignals;
+
+/// Index-output pairs driving cipher slots from left to right.
+const INDEX_OUTPUT_PAIR_MASKS: [u16; 5] = [
+    (1 << 0) | (1 << 9),
+    (1 << 7) | (1 << 8),
+    (1 << 5) | (1 << 6),
+    (1 << 3) | (1 << 4),
+    (1 << 1) | (1 << 2),
+];
 
 /// Set of cipher rotors selected to step for one keypress.
 ///
@@ -60,7 +66,7 @@ impl CipherStepSet {
 
 /// Return the cipher slot driven by one active index output.
 #[must_use]
-pub(crate) fn index_output_to_cipher_slot(output: Contact10) -> usize {
+pub(crate) fn index_output_to_cipher_slot(output: crate::contact::Contact10) -> usize {
     match output.get() {
         0 | 9 => 0,
         7 | 8 => 1,
@@ -74,21 +80,21 @@ pub(crate) fn index_output_to_cipher_slot(output: Contact10) -> usize {
 /// Convert active index outputs into the set of cipher rotors to step.
 #[must_use]
 pub(crate) fn cipher_steps_from_index_outputs(outputs: IndexSignals) -> CipherStepSet {
-    let mut steps = CipherStepSet::empty();
+    let output_bits = outputs.bits();
+    let step_bits = INDEX_OUTPUT_PAIR_MASKS
+        .into_iter()
+        .enumerate()
+        .fold(0_u8, |steps, (slot, pair)| {
+            steps | (u8::from(output_bits & pair != 0) << slot)
+        });
 
-    for value in 0..10_u8 {
-        let contact = Contact10::new(value).expect("0..10 is a valid Contact10");
-        if outputs.contains(contact) {
-            steps.insert_slot(index_output_to_cipher_slot(contact));
-        }
-    }
-
-    steps
+    CipherStepSet::from_bits(step_bits)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::contact::Contact10;
 
     fn c10(value: u8) -> Contact10 {
         Contact10::new(value).unwrap()
@@ -152,5 +158,21 @@ mod tests {
     #[test]
     fn cipher_step_set_masks_nonexistent_slots() {
         assert_eq!(CipherStepSet::from_bits(u8::MAX).bits(), 0x1f);
+    }
+
+    #[test]
+    fn direct_pair_collapse_matches_contact_mapping_for_every_signal_set() {
+        for output_bits in 0..=0x03ff_u16 {
+            let steps = cipher_steps_from_index_outputs(IndexSignals::from_bits(output_bits));
+            let mut expected = CipherStepSet::empty();
+
+            for output in 0..10_u8 {
+                if output_bits & (1_u16 << output) != 0 {
+                    expected.insert_slot(index_output_to_cipher_slot(c10(output)));
+                }
+            }
+
+            assert_eq!(steps, expected, "index output bits {output_bits:010b}");
+        }
     }
 }

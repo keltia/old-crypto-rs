@@ -44,13 +44,21 @@ impl IndexSignals {
         self.0
     }
 
+    pub(crate) fn insert(&mut self, contact: Contact10) {
+        self.0 |= 1_u16 << contact.get();
+    }
+
+    /// Iterate active contacts from lowest to highest, skipping inactive bits.
+    #[must_use]
+    pub(crate) const fn iter(self) -> IndexSignalIter {
+        IndexSignalIter {
+            remaining: self.0,
+        }
+    }
+
     #[must_use]
     pub(crate) const fn contains(self, contact: Contact10) -> bool {
         self.0 & (1_u16 << contact.get()) != 0
-    }
-
-    pub(crate) fn insert(&mut self, contact: Contact10) {
-        self.0 |= 1_u16 << contact.get();
     }
 
     #[must_use]
@@ -58,6 +66,35 @@ impl IndexSignals {
         self.0.count_ones()
     }
 }
+
+/// Iterator over the active contacts in an [`IndexSignals`] bitset.
+pub(crate) struct IndexSignalIter {
+    remaining: u16,
+}
+
+impl Iterator for IndexSignalIter {
+    type Item = Contact10;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+
+        let value = u8::try_from(self.remaining.trailing_zeros())
+            .expect("a ten-bit signal index always fits in u8");
+        self.remaining &= self.remaining - 1;
+
+        Some(Contact10::new(value).expect("active index signal is in 0..10"))
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = usize::try_from(self.remaining.count_ones())
+            .expect("a ten-bit signal count always fits in usize");
+        (remaining, Some(remaining))
+    }
+}
+
+impl ExactSizeIterator for IndexSignalIter {}
 
 /// Map one control-bank output letter to its fixed CSP-889 index input.
 #[must_use]
@@ -165,5 +202,13 @@ mod tests {
     #[test]
     fn index_signal_mask_discards_nonexistent_contacts() {
         assert_eq!(IndexSignals::from_bits(u16::MAX).bits(), 0x03ff);
+    }
+
+    #[test]
+    fn active_signal_iterator_visits_only_set_bits_in_order() {
+        let signals = IndexSignals::from_bits((1_u16 << 9) | (1_u16 << 2) | (1_u16 << 6));
+        let contacts: Vec<u8> = signals.iter().map(Contact10::get).collect();
+
+        assert_eq!(contacts, [2, 6, 9]);
     }
 }

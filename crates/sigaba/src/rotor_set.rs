@@ -245,8 +245,9 @@ impl RotorSet {
     ///
     /// # Panics
     ///
-    /// Panics if the crate's built-in rotor constants fail their permutation
-    /// validation. The complete dataset is covered by exhaustive tests.
+    /// Panics if the crate's embedded reference YAML fails schema or
+    /// permutation validation. The complete dataset is covered by exhaustive
+    /// tests.
     #[must_use]
     pub fn pekelney_reference() -> Self {
         super::data::reference_rotor_set()
@@ -287,12 +288,16 @@ impl RotorSet {
             |symbol| symbol.is_ascii_digit().then(|| symbol as u8 - b'0'),
         )?;
 
-        Ok(Self::from_permutations(
-            raw.name,
-            raw.description,
-            &large,
-            &index,
-        ))
+        let transforms = large.map(RotorTransforms::new);
+        Ok(Self {
+            inner: Arc::new(RotorSetData {
+                name: raw.name,
+                description: raw.description,
+                large,
+                index,
+                transforms,
+            }),
+        })
     }
 
     /// Dataset name from the YAML document.
@@ -317,25 +322,6 @@ impl RotorSet {
     #[must_use]
     pub fn index_wiring(&self, id: IndexRotorId) -> &[u8; 10] {
         self.inner.index[usize::from(id.get())].mapping()
-    }
-
-    pub(crate) fn from_permutations(
-        name: String,
-        description: Option<String>,
-        large: &[Permutation<26>; LARGE_ROTOR_COUNT],
-        index: &[Permutation<10>; INDEX_ROTOR_COUNT],
-    ) -> Self {
-        let large = *large;
-        let transforms = large.map(RotorTransforms::new);
-        Self {
-            inner: Arc::new(RotorSetData {
-                name,
-                description,
-                large,
-                index: *index,
-                transforms,
-            }),
-        }
     }
 
     #[cfg(test)]

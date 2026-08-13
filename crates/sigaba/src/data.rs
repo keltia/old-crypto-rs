@@ -1,4 +1,4 @@
-//! SIGABA rotor wiring datasets.
+//! SIGABA rotor identities and cached built-in wiring dataset.
 //!
 //! There is an important provenance distinction between the two datasets in
 //! this module:
@@ -20,15 +20,20 @@
 //! - Richard Pekelney's ECM Mark II work, as summarized by Chan.
 //!
 //! Chan explicitly states that only the index rotor wirings in the simulator
-//! are actual rotor wirings; Pekelney created the large-rotor wirings.
+//! are actual rotor wirings; Pekelney created the large-rotor wirings. The
+//! built-in definitions live in `config/rotors/pekelney-reference.yaml`, which
+//! is embedded, parsed and validated once on first use.
 
 use core::fmt;
 use std::sync::OnceLock;
 
-use super::{
-    permutation::{Permutation, PermutationError},
-    rotor_set::RotorSet,
-};
+use super::rotor_set::{RotorSet, RotorSetError};
+
+#[cfg(test)]
+use super::permutation::Permutation;
+
+const REFERENCE_ROTOR_YAML: &str =
+    include_str!("../config/rotors/pekelney-reference.yaml");
 
 /// Number of interchangeable large cipher/control rotors in the reference set.
 pub(crate) const LARGE_ROTOR_COUNT: usize = 10;
@@ -107,45 +112,12 @@ impl fmt::Display for LargeRotorSet {
     }
 }
 
-/// Pekelney/Stamp reference large-rotor permutations.
-///
-/// Entries 0..4 are labeled "Cipher Rotor 0..4" and entries 5..9 correspond to
-/// "Control Rotor 0..4" in Chan's Appendix A.  SIGABA large rotors are
-/// physically interchangeable; these labels are only how the simulator's ten
-/// reference permutations were presented.
-///
-/// Each string maps input `A..Z` to the corresponding output letter.
-const PEKELNEY_LARGE_WIRINGS: [&[u8; 26]; LARGE_ROTOR_COUNT] = [
-    b"YCHLQSUGBDIXNZKERPVJTAWFOM",
-    b"INPXBWETGUYSAOCHVLDMQKZJFR",
-    b"WNDRIOZPTAXHFJYQBMSVEKUCGL",
-    b"TZGHOBKRVUXLQDMPNFWCJYEIAS",
-    b"YWTAHRQJVLCEXUNGBIPZMSDFOK",
-    b"QSLRBTEKOGAICFWYVMHJNXZUDP",
-    b"CHJDQIGNBSAKVTUOXFWLEPRMZY",
-    b"CDFAJXTIMNBEQHSUGRYLWZKVPO",
-    b"XHFESZDNRBCGKQIJLTVMUOYAPW",
-    b"EZJQXMOGYTCSFRIUPVNADLHWBK",
-];
-
-/// Actual 10-contact index-rotor wirings reported from the SIGABA simulator
-/// source material.
-///
-/// Each byte string maps input digit `0..9` to output digit `0..9`.
-const HISTORICAL_INDEX_WIRINGS: [&[u8; 10]; INDEX_ROTOR_COUNT] = [
-    b"7591482630",
-    b"3810592764",
-    b"4086153297",
-    b"3980526174",
-    b"6497135280",
-];
-
 /// Build one 26-contact rotor from a documented simulator reference set.
 #[cfg(test)]
 pub(crate) fn large_rotor(
     set: LargeRotorSet,
     id: LargeRotorId,
-) -> Result<Permutation<26>, PermutationError> {
+) -> Result<Permutation<26>, RotorSetError> {
     let rotor_set = match set {
         LargeRotorSet::PekelneyReference => reference_rotor_set()?,
     };
@@ -157,68 +129,16 @@ pub(crate) fn large_rotor(
 #[cfg(test)]
 pub(crate) fn index_rotor(
     id: IndexRotorId,
-) -> Result<Permutation<10>, PermutationError> {
+) -> Result<Permutation<10>, RotorSetError> {
     Ok(reference_rotor_set()?.index_rotor(id))
 }
 
-pub(crate) fn reference_rotor_set() -> Result<&'static RotorSet, PermutationError> {
-    static REFERENCE: OnceLock<Result<RotorSet, PermutationError>> = OnceLock::new();
-    match REFERENCE.get_or_init(build_reference_rotor_set) {
+pub(crate) fn reference_rotor_set() -> Result<&'static RotorSet, RotorSetError> {
+    static REFERENCE: OnceLock<Result<RotorSet, RotorSetError>> = OnceLock::new();
+    match REFERENCE.get_or_init(|| RotorSet::from_yaml(REFERENCE_ROTOR_YAML)) {
         Ok(set) => Ok(set),
-        Err(error) => Err(*error),
+        Err(error) => Err(error.clone()),
     }
-}
-
-fn build_reference_rotor_set() -> Result<RotorSet, PermutationError> {
-    let large: Vec<_> = PEKELNEY_LARGE_WIRINGS
-        .iter()
-        .map(|source| Permutation::new(alpha_wiring(source)))
-        .collect::<Result<_, _>>()?;
-    let index: Vec<_> = HISTORICAL_INDEX_WIRINGS
-        .iter()
-        .map(|source| Permutation::new(digit_wiring(source)))
-        .collect::<Result<_, _>>()?;
-    let large: [Permutation<26>; LARGE_ROTOR_COUNT] = large
-        .try_into()
-        .expect("the built-in dataset contains ten large rotors");
-    let index: [Permutation<10>; INDEX_ROTOR_COUNT] = index
-        .try_into()
-        .expect("the built-in dataset contains five index rotors");
-
-    Ok(RotorSet::from_permutations(
-        "pekelney_reference".into(),
-        Some("Pekelney/Dunn simulator reference wiring".into()),
-        &large,
-        &index,
-    ))
-}
-
-fn alpha_wiring(source: &[u8; 26]) -> [u8; 26] {
-    let mut result = [0_u8; 26];
-
-    for (index, &letter) in source.iter().enumerate() {
-        assert!(
-            letter.is_ascii_uppercase(),
-            "large-rotor source wiring contains a non-uppercase ASCII letter"
-        );
-        result[index] = letter - b'A';
-    }
-
-    result
-}
-
-fn digit_wiring(source: &[u8; 10]) -> [u8; 10] {
-    let mut result = [0_u8; 10];
-
-    for (index, &digit) in source.iter().enumerate() {
-        assert!(
-            digit.is_ascii_digit(),
-            "index-rotor source wiring contains a non-ASCII digit"
-        );
-        result[index] = digit - b'0';
-    }
-
-    result
 }
 
 #[cfg(test)]

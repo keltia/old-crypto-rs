@@ -35,7 +35,8 @@ use super::{
 #[cfg(test)]
 use super::{
     data::{large_rotor, reference_rotor_set, LargeRotorSet},
-    permutation::{Permutation, PermutationError},
+    permutation::Permutation,
+    rotor_set::RotorSetError,
 };
 
 /// Physical insertion orientation of a 26-contact SIGABA rotor.
@@ -77,7 +78,7 @@ impl AlphabetRotor {
         id: LargeRotorId,
         position: Position26,
         orientation: Orientation,
-    ) -> Result<Self, PermutationError> {
+    ) -> Result<Self, RotorSetError> {
         match set {
             LargeRotorSet::PekelneyReference => {
                 let _ = reference_rotor_set()?;

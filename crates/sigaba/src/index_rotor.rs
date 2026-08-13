@@ -25,7 +25,7 @@ use super::{
 #[cfg(test)]
 use super::{
     data::{index_rotor, IndexRotorId},
-    permutation::PermutationError,
+    rotor_set::RotorSetError,
 };
 
 /// One mounted 10-contact SIGABA index rotor.
@@ -47,7 +47,7 @@ impl IndexRotor {
     pub(crate) fn from_reference(
         id: IndexRotorId,
         position: Position10,
-    ) -> Result<Self, PermutationError> {
+    ) -> Result<Self, RotorSetError> {
         Ok(Self::new(index_rotor(id)?, position))
     }
 

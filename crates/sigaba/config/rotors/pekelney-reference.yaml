@@ -1,0 +1,47 @@
+# SIGABA rotor wiring dataset used by the Pekelney/Dunn reference simulator.
+#
+# The ten 26-contact large-rotor wirings were created for simulator
+# interoperability and are not claimed to be historical US wartime wirings.
+# The five 10-contact index-rotor wirings were documented from surviving
+# SIGABA index rotors.
+
+schema_version: 1
+name: pekelney_reference
+description: Pekelney/Dunn simulator reference wiring
+
+# Each wiring maps inputs A through Z to the listed output letters.
+large_rotors:
+  - id: 0
+    wiring: YCHLQSUGBDIXNZKERPVJTAWFOM
+  - id: 1
+    wiring: INPXBWETGUYSAOCHVLDMQKZJFR
+  - id: 2
+    wiring: WNDRIOZPTAXHFJYQBMSVEKUCGL
+  - id: 3
+    wiring: TZGHOBKRVUXLQDMPNFWCJYEIAS
+  - id: 4
+    wiring: YWTAHRQJVLCEXUNGBIPZMSDFOK
+  - id: 5
+    wiring: QSLRBTEKOGAICFWYVMHJNXZUDP
+  - id: 6
+    wiring: CHJDQIGNBSAKVTUOXFWLEPRMZY
+  - id: 7
+    wiring: CDFAJXTIMNBEQHSUGRYLWZKVPO
+  - id: 8
+    wiring: XHFESZDNRBCGKQIJLTVMUOYAPW
+  - id: 9
+    wiring: EZJQXMOGYTCSFRIUPVNADLHWBK
+
+# Each quoted wiring maps inputs 0 through 9 to the listed output digits.
+# Keep these values quoted so YAML parsers always preserve them as text.
+index_rotors:
+  - id: 0
+    wiring: "7591482630"
+  - id: 1
+    wiring: "3810592764"
+  - id: 2
+    wiring: "4086153297"
+  - id: 3
+    wiring: "3980526174"
+  - id: 4
+    wiring: "6497135280"

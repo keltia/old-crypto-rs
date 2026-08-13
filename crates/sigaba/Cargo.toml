@@ -6,7 +6,15 @@ authors = ["Ollivier Robert <roberto@keltia.net>"]
 description = "A typed simulation of the SIGABA (ECM Mark II) cipher machine."
 repository = "https://github.com/keltia/old-crypto-rs"
 license = "MIT"
+readme = "README.md"
 keywords = ["cryptography", "sigaba", "cipher", "history"]
 categories = ["cryptography"]
 
+[[bin]]
+name = "sigabactl"
+path = "cmd/sigabactl/main.rs"
+
 [dependencies]
+clap = { version = "4.6", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yml = "0"

@@ -1,0 +1,41 @@
+# Pekelney/Dunn reference configuration used by the interoperability tests.
+rotor_set: pekelney_reference
+
+# Five 26-contact cipher rotors, in physical left-to-right slot order.
+cipher:
+  - rotor: N0
+    position: O
+  - rotor: N1
+    position: O
+  - rotor: N2
+    position: O
+  - rotor: N3
+    position: O
+  - rotor: N4
+    position: O
+
+# Five 26-contact control rotors, in physical left-to-right slot order.
+control:
+  - rotor: N5
+    position: O
+  - rotor: N6
+    position: O
+  - rotor: N7
+    position: O
+  - rotor: N8
+    position: O
+  - rotor: N9
+    position: O
+
+# Five 10-contact index rotors, in physical left-to-right slot order.
+index:
+  - id: 0
+    position: 0
+  - id: 1
+    position: 0
+  - id: 2
+    position: 0
+  - id: 3
+    position: 0
+  - id: 4
+    position: 0

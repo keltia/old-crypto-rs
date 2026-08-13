@@ -52,6 +52,7 @@ impl LargeRotorId {
         self.0
     }
 
+    #[cfg(test)]
     pub(crate) const ALL: [Self; LARGE_ROTOR_COUNT] = [
         Self(0), Self(1), Self(2), Self(3), Self(4),
         Self(5), Self(6), Self(7), Self(8), Self(9),
@@ -78,6 +79,7 @@ impl IndexRotorId {
         self.0
     }
 
+    #[cfg(test)]
     pub(crate) const ALL: [Self; INDEX_ROTOR_COUNT] =
         [Self(0), Self(1), Self(2), Self(3), Self(4)];
 }

@@ -19,8 +19,10 @@ use super::{
     cipher_bank::CipherBank,
     contact::Contact26,
     maze::SteppingMaze,
-    stepping::CipherStepSet,
 };
+
+#[cfg(test)]
+use super::stepping::CipherStepSet;
 
 /// Electrical direction through the cipher bank.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -81,28 +83,33 @@ impl SigabaCore {
     }
 
     /// Current cipher-rotor positions in physical left-to-right order.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn cipher_positions(&self) -> [u8; 5] {
         self.cipher.positions()
     }
 
     /// Current control-rotor positions in physical left-to-right order.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn control_positions(&self) -> [u8; 5] {
         self.maze.control_bank().positions()
     }
 
     /// Current cipher-step decision without mutating machine state.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn current_cipher_steps(&self) -> CipherStepSet {
         self.maze.cipher_steps()
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn cipher_bank(&self) -> &CipherBank {
         &self.cipher
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn stepping_maze(&self) -> &SteppingMaze {
         &self.maze

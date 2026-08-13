@@ -38,6 +38,7 @@ impl Contact26 {
     }
 
     /// Add a signed displacement modulo 26.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn offset(self, amount: i16) -> Self {
         Self(wrapping_offset(self.0, amount, ALPHABET_CONTACTS))
@@ -131,6 +132,7 @@ impl Position10 {
     }
 
     /// Move the index-wheel position by a signed amount modulo 10.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn offset(self, amount: i16) -> Self {
         Self(wrapping_offset(self.0, amount, INDEX_CONTACTS))

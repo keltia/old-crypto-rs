@@ -118,12 +118,14 @@ impl ControlBank {
     }
 
     /// Current visible control-rotor positions in physical left-to-right order.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn positions(&self) -> [u8; 5] {
         self.rotors.map(|rotor| rotor.position().get())
     }
 
     /// Access one physical left-to-right control slot.
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn rotor(&self, slot: usize) -> &AlphabetRotor {
         &self.rotors[slot]

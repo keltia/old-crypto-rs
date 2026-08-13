@@ -62,11 +62,13 @@ impl CipherBank {
         }
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn rotor(&self, slot: usize) -> &AlphabetRotor {
         &self.rotors[slot]
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn positions(&self) -> [u8; 5] {
         self.rotors.map(|rotor| rotor.position().get())

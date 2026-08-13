@@ -44,6 +44,7 @@ impl CipherStepSet {
         Self(bits & Self::MASK)
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn bits(self) -> u8 {
         self.0
@@ -60,6 +61,7 @@ impl CipherStepSet {
         self.0 |= 1_u8 << slot;
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn count(self) -> u32 {
         self.0.count_ones()

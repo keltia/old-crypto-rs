@@ -67,18 +67,21 @@ impl SteppingMaze {
     }
 
     /// Expose the control-bank result for diagnostics/tests.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn control_index_inputs(&self) -> IndexSignals {
         self.control.index_inputs()
     }
 
     /// Access the fixed index bank.
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn index_bank(&self) -> &IndexBank {
         &self.index
     }
 
     /// Access the current control bank.
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn control_bank(&self) -> &ControlBank {
         &self.control
@@ -233,8 +236,6 @@ mod tests {
         // Construct an input set whose five-wheel index mapping produces both
         // members of one cipher-step pair if possible. Regardless of how many
         // active outputs land in a pair, CipherStepSet contains that slot once.
-        let maze = SteppingMaze::new(base_control(), identity_position_index_bank());
-
         let outputs = IndexSignals::from_bits((1_u16 << 5) | (1_u16 << 6));
         let steps = cipher_steps_from_index_outputs(outputs);
 

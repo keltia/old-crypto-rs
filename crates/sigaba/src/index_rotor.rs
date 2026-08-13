@@ -19,8 +19,13 @@
 
 use super::{
     contact::{Contact10, Position10},
+    permutation::Permutation,
+};
+
+#[cfg(test)]
+use super::{
     data::{index_rotor, IndexRotorId},
-    permutation::{Permutation, PermutationError},
+    permutation::PermutationError,
 };
 
 /// One mounted 10-contact SIGABA index rotor.
@@ -38,6 +43,7 @@ impl IndexRotor {
     }
 
     /// Construct one of the five historical SIGABA index rotors.
+    #[cfg(test)]
     pub(crate) fn from_reference(
         id: IndexRotorId,
         position: Position10,

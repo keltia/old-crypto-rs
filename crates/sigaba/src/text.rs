@@ -33,7 +33,7 @@ use core::fmt;
 
 use super::{
     contact::Contact26,
-    machine::SigabaCore,
+    machine::{SigabaCore, SigabaTables},
 };
 
 /// Error from the historical SIGABA text adapter.
@@ -118,15 +118,16 @@ pub(crate) fn ciphertext_to_contact(
 ///
 /// The returned ciphertext is ungrouped uppercase A-Z.  Each plaintext space
 /// is a real machine operation and therefore advances the rotor state.
-pub(crate) fn encipher_text(
+pub(crate) fn encipher_text_with(
     machine: &mut SigabaCore,
+    tables: &SigabaTables<'_>,
     src: &str,
 ) -> Result<String, TextError> {
     let mut output = String::with_capacity(src.len());
 
     for ch in src.chars() {
         let input = plaintext_to_contact(ch)?;
-        let encrypted = machine.encipher_contact(input);
+        let encrypted = machine.encipher_contact_with(tables, input);
         output.push(char::from(b'A' + encrypted.get()));
     }
 
@@ -138,8 +139,9 @@ pub(crate) fn encipher_text(
 ///
 /// ASCII whitespace is treated solely as five-letter-group formatting and is
 /// ignored without changing rotor state.
-pub(crate) fn decipher_text(
+pub(crate) fn decipher_text_with(
     machine: &mut SigabaCore,
+    tables: &SigabaTables<'_>,
     src: &str,
 ) -> Result<String, TextError> {
     let mut output = String::with_capacity(src.len());
@@ -149,11 +151,29 @@ pub(crate) fn decipher_text(
             continue;
         };
 
-        let decrypted = machine.decipher_contact(input);
+        let decrypted = machine.decipher_contact_with(tables, input);
         output.push(contact_to_plaintext(decrypted));
     }
 
     Ok(output)
+}
+
+#[cfg(test)]
+pub(crate) fn encipher_text(
+    machine: &mut SigabaCore,
+    src: &str,
+) -> Result<String, TextError> {
+    let tables = machine.resolve_tables(super::data::reference_rotor_set().unwrap());
+    encipher_text_with(machine, &tables, src)
+}
+
+#[cfg(test)]
+pub(crate) fn decipher_text(
+    machine: &mut SigabaCore,
+    src: &str,
+) -> Result<String, TextError> {
+    let tables = machine.resolve_tables(super::data::reference_rotor_set().unwrap());
+    decipher_text_with(machine, &tables, src)
 }
 
 fn contact(letter: u8) -> Contact26 {

@@ -11,20 +11,20 @@
 use crate::Block;
 
 use super::{
-    config::{ConfigError, SigabaConfig},
+    config::SigabaConfig,
     contact::Contact26,
     machine::SigabaCore,
     text::{
-        contact_to_plaintext, decipher_text, encipher_text, plaintext_to_contact,
-        TextError,
+        contact_to_plaintext, decipher_text_with, encipher_text_with,
+        plaintext_to_contact, TextError,
     },
 };
 
 /// Validated CSP-889 SIGABA / ECM Mark II machine.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Sigaba {
     config: SigabaConfig,
-    initial: Result<SigabaCore, ConfigError>,
+    initial: SigabaCore,
 }
 
 impl Sigaba {
@@ -54,11 +54,11 @@ impl Sigaba {
     ///
     /// # Errors
     ///
-    /// Returns [`TextError`] for unsupported plaintext or if the cached core
-    /// could not be constructed from the reference wiring.
+    /// Returns [`TextError`] for unsupported plaintext.
     pub fn encrypt_text(&self, src: &str) -> Result<String, TextError> {
-        let mut core = self.initial.map_err(TextError::from)?;
-        encipher_text(&mut core, src)
+        let tables = self.initial.resolve_tables(self.config.rotor_set());
+        let mut core = self.initial;
+        encipher_text_with(&mut core, &tables, src)
     }
 
     /// Historically accurate text decipherment.
@@ -68,11 +68,11 @@ impl Sigaba {
     ///
     /// # Errors
     ///
-    /// Returns [`TextError`] for invalid ciphertext or if the cached core could
-    /// not be constructed from the reference wiring.
+    /// Returns [`TextError`] for invalid ciphertext.
     pub fn decrypt_text(&self, src: &str) -> Result<String, TextError> {
-        let mut core = self.initial.map_err(TextError::from)?;
-        decipher_text(&mut core, src)
+        let tables = self.initial.resolve_tables(self.config.rotor_set());
+        let mut core = self.initial;
+        decipher_text_with(&mut core, &tables, src)
     }
 }
 
@@ -95,19 +95,15 @@ impl Block for Sigaba {
     /// copied unchanged and do not advance the machine.
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
-        let Ok(mut core) = self.initial else {
-            // A successfully constructed public SigabaConfig cannot currently
-            // reach this branch because reference wirings are static and
-            // validated. Preserve the Block contract without panicking.
-            return 0;
-        };
+        let tables = self.initial.resolve_tables(self.config.rotor_set());
+        let mut core = self.initial;
 
         for (&input, output) in src[..n].iter().zip(&mut dst[..n]) {
             let ch = char::from(input);
 
             match plaintext_to_contact(ch) {
                 Ok(contact) => {
-                    let encrypted = core.encipher_contact(contact);
+                    let encrypted = core.encipher_contact_with(&tables, contact);
                     *output = b'A' + encrypted.get();
                 }
                 Err(_) => {
@@ -127,16 +123,15 @@ impl Block for Sigaba {
     /// without affecting rotor state.
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
-        let Ok(mut core) = self.initial else {
-            return 0;
-        };
+        let tables = self.initial.resolve_tables(self.config.rotor_set());
+        let mut core = self.initial;
 
         for (&input, output) in src[..n].iter().zip(&mut dst[..n]) {
             if input.is_ascii_alphabetic() {
                 let normalized = input.to_ascii_uppercase();
                 let contact = Contact26::new(normalized - b'A')
                     .expect("ASCII alphabetic input is a valid Contact26");
-                let decrypted = core.decipher_contact(contact);
+                let decrypted = core.decipher_contact_with(&tables, contact);
                 *output = contact_to_plaintext(decrypted) as u8;
             } else {
                 *output = input;
@@ -155,9 +150,14 @@ mod tests {
         config::{IndexRotorSetting, LargeRotorSetting},
         contact::{Position10, Position26},
         data::{IndexRotorId, LargeRotorId, LargeRotorSet},
+        rotor_set::RotorSet,
     };
 
     fn config() -> SigabaConfig {
+        config_with(LargeRotorSet::PekelneyReference)
+    }
+
+    fn config_with<R: Into<RotorSet>>(rotor_set: R) -> SigabaConfig {
         let large = |id: u8, position: u8| {
             LargeRotorSetting::new(
                 LargeRotorId::new(id).unwrap(),
@@ -174,7 +174,7 @@ mod tests {
         };
 
         SigabaConfig::new(
-            LargeRotorSet::PekelneyReference,
+            rotor_set,
             [
                 large(0, 14),
                 large(1, 14),
@@ -194,6 +194,10 @@ mod tests {
         .unwrap()
     }
 
+    fn reference_rotor_yaml() -> &'static str {
+        include_str!("../config/rotors/pekelney-reference.yaml")
+    }
+
     #[test]
     fn public_text_api_matches_independent_known_answer() {
         let machine = Sigaba::new(config());
@@ -211,10 +215,10 @@ mod tests {
     #[test]
     fn cached_initial_core_matches_a_fresh_configuration_build() {
         let config = config();
-        let expected = config.build_core().unwrap();
+        let expected = config.build_core();
         let machine = Sigaba::new(config);
 
-        assert_eq!(machine.initial, Ok(expected));
+        assert_eq!(machine.initial, expected);
     }
 
     #[test]
@@ -301,5 +305,38 @@ mod tests {
         machine.encrypt(&mut second, b"HELLO");
 
         assert_eq!(first, second);
+    }
+
+    #[test]
+    fn custom_large_rotor_wiring_is_used_end_to_end() {
+        let yaml = reference_rotor_yaml().replace(
+            "YCHLQSUGBDIXNZKERPVJTAWFOM",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        );
+        let custom = Sigaba::new(config_with(RotorSet::from_yaml(&yaml).unwrap()));
+        let reference = Sigaba::new(config());
+        let plaintext = "HELLO WORLD";
+
+        let custom_ciphertext = custom.encrypt_text(plaintext).unwrap();
+        assert_ne!(
+            custom_ciphertext,
+            reference.encrypt_text(plaintext).unwrap()
+        );
+        assert_eq!(custom.decrypt_text(&custom_ciphertext).unwrap(), plaintext);
+    }
+
+    #[test]
+    fn custom_index_rotor_wiring_controls_stepping() {
+        let yaml = reference_rotor_yaml().replace("7591482630", "5791482630");
+        let custom = Sigaba::new(config_with(RotorSet::from_yaml(&yaml).unwrap()));
+        let reference = Sigaba::new(config());
+        let plaintext = "A".repeat(100);
+
+        let custom_ciphertext = custom.encrypt_text(&plaintext).unwrap();
+        assert_ne!(
+            custom_ciphertext,
+            reference.encrypt_text(&plaintext).unwrap()
+        );
+        assert_eq!(custom.decrypt_text(&custom_ciphertext).unwrap(), plaintext);
     }
 }

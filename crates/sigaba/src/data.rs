@@ -154,6 +154,7 @@ pub(crate) fn large_rotor(
 }
 
 /// Build one of the five historically documented 10-contact index rotors.
+#[cfg(test)]
 pub(crate) fn index_rotor(
     id: IndexRotorId,
 ) -> Result<Permutation<10>, PermutationError> {

@@ -19,6 +19,7 @@ use super::{
     cipher_bank::CipherBank,
     contact::Contact26,
     maze::SteppingMaze,
+    rotor_set::{MountedRotorTransforms, RotorSet},
 };
 
 #[cfg(test)]
@@ -38,6 +39,11 @@ pub(crate) struct SigabaCore {
     maze: SteppingMaze,
 }
 
+pub(crate) struct SigabaTables<'a> {
+    cipher: [&'a MountedRotorTransforms; 5],
+    control: [&'a MountedRotorTransforms; 5],
+}
+
 impl SigabaCore {
     #[must_use]
     pub(crate) const fn new(cipher: CipherBank, maze: SteppingMaze) -> Self {
@@ -48,18 +54,19 @@ impl SigabaCore {
     #[must_use]
     pub(crate) fn process_contact(
         &mut self,
+        tables: &SigabaTables<'_>,
         input: Contact26,
         direction: CipherDirection,
     ) -> Contact26 {
         // The electrical cipher transform uses the rotor state *before* this
         // character's stepping decision is applied.
         let output = match direction {
-            CipherDirection::Encipher => self.cipher.encipher(input),
-            CipherDirection::Decipher => self.cipher.decipher(input),
+            CipherDirection::Encipher => self.cipher.encipher_with(&tables.cipher, input),
+            CipherDirection::Decipher => self.cipher.decipher_with(&tables.cipher, input),
         };
 
         // The stepping maze is evaluated from the current control/index state.
-        let steps = self.maze.cipher_steps();
+        let steps = self.maze.cipher_steps_with(&tables.control);
 
         // Cipher rotors move after the character has been electrically
         // transformed.
@@ -73,13 +80,45 @@ impl SigabaCore {
     }
 
     #[must_use]
-    pub(crate) fn encipher_contact(&mut self, input: Contact26) -> Contact26 {
-        self.process_contact(input, CipherDirection::Encipher)
+    pub(crate) fn encipher_contact_with(
+        &mut self,
+        tables: &SigabaTables<'_>,
+        input: Contact26,
+    ) -> Contact26 {
+        self.process_contact(tables, input, CipherDirection::Encipher)
     }
 
     #[must_use]
+    pub(crate) fn decipher_contact_with(
+        &mut self,
+        tables: &SigabaTables<'_>,
+        input: Contact26,
+    ) -> Contact26 {
+        self.process_contact(tables, input, CipherDirection::Decipher)
+    }
+
+    pub(crate) fn resolve_tables<'a>(
+        &self,
+        rotor_set: &'a RotorSet,
+    ) -> SigabaTables<'a> {
+        SigabaTables {
+            cipher: self.cipher.resolve(rotor_set),
+            control: self.maze.control_bank().resolve(rotor_set),
+        }
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn encipher_contact(&mut self, input: Contact26) -> Contact26 {
+        let tables = self.resolve_tables(super::data::reference_rotor_set().unwrap());
+        self.encipher_contact_with(&tables, input)
+    }
+
+    #[cfg(test)]
+    #[must_use]
     pub(crate) fn decipher_contact(&mut self, input: Contact26) -> Contact26 {
-        self.process_contact(input, CipherDirection::Decipher)
+        let tables = self.resolve_tables(super::data::reference_rotor_set().unwrap());
+        self.decipher_contact_with(&tables, input)
     }
 
     /// Current cipher-rotor positions in physical left-to-right order.

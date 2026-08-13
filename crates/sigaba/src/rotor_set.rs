@@ -241,6 +241,19 @@ impl RotorTransforms {
 }
 
 impl RotorSet {
+    /// Return the built-in Pekelney/Dunn reference rotor set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the crate's built-in rotor constants fail their permutation
+    /// validation. The complete dataset is covered by exhaustive tests.
+    #[must_use]
+    pub fn pekelney_reference() -> Self {
+        super::data::reference_rotor_set()
+            .expect("the built-in reference rotor set is validated by tests")
+            .clone()
+    }
+
     /// Parse and validate a complete rotor set from YAML.
     ///
     /// # Errors
@@ -340,6 +353,16 @@ impl RotorSet {
         orientation: Orientation,
     ) -> &MountedRotorTransforms {
         self.inner.transforms[usize::from(id.get())].mounted(orientation)
+    }
+}
+
+impl From<super::data::LargeRotorSet> for RotorSet {
+    fn from(set: super::data::LargeRotorSet) -> Self {
+        match set {
+            super::data::LargeRotorSet::PekelneyReference => {
+                Self::pekelney_reference()
+            }
+        }
     }
 }
 

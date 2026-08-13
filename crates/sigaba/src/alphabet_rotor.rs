@@ -26,17 +26,17 @@
 //! - Wing On Chan, *Cryptanalysis of SIGABA*, §2, for the physical description
 //!   of normal/reversed insertion and visible alphabet direction.
 
-use core::fmt;
-
 use super::{
     contact::{Contact26, Position26},
-    data::{reference_rotor_set, LargeRotorId, LargeRotorSet},
-    permutation::PermutationError,
-    rotor_set::MountedRotorTransforms,
+    data::LargeRotorId,
+    rotor_set::RotorSet,
 };
 
 #[cfg(test)]
-use super::{data::large_rotor, permutation::Permutation};
+use super::{
+    data::{large_rotor, reference_rotor_set, LargeRotorSet},
+    permutation::{Permutation, PermutationError},
+};
 
 /// Physical insertion orientation of a 26-contact SIGABA rotor.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -48,73 +48,54 @@ pub enum Orientation {
     Reversed,
 }
 
-fn reference_transforms(
-    set: LargeRotorSet,
-    id: LargeRotorId,
-    orientation: Orientation,
-) -> Result<&'static MountedRotorTransforms, PermutationError> {
-    match set {
-        LargeRotorSet::PekelneyReference => {
-            Ok(reference_rotor_set()?.mounted(id, orientation))
-        }
-    }
-}
-
 /// One mounted 26-contact SIGABA rotor.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct AlphabetRotor {
-    transforms: &'static MountedRotorTransforms,
     id: LargeRotorId,
     position: Position26,
     orientation: Orientation,
 }
 
-impl fmt::Debug for AlphabetRotor {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("AlphabetRotor")
-            .field("id", &self.id)
-            .field("position", &self.position)
-            .field("orientation", &self.orientation)
-            .finish_non_exhaustive()
-    }
-}
-
-impl PartialEq for AlphabetRotor {
-    fn eq(&self, other: &Self) -> bool {
-        core::ptr::eq(self.transforms, other.transforms)
-            && self.position == other.position
-            && self.orientation == other.orientation
-    }
-}
-
-impl Eq for AlphabetRotor {}
-
 impl AlphabetRotor {
+    #[must_use]
+    pub(crate) const fn new(
+        id: LargeRotorId,
+        position: Position26,
+        orientation: Orientation,
+    ) -> Self {
+        Self {
+            id,
+            position,
+            orientation,
+        }
+    }
+
     /// Construct one rotor from a named reference data set.
+    #[cfg(test)]
     pub(crate) fn from_reference(
         set: LargeRotorSet,
         id: LargeRotorId,
         position: Position26,
         orientation: Orientation,
     ) -> Result<Self, PermutationError> {
-        Ok(Self {
-            transforms: reference_transforms(set, id, orientation)?,
-            id,
-            position,
-            orientation,
-        })
+        match set {
+            LargeRotorSet::PekelneyReference => {
+                let _ = reference_rotor_set()?;
+            }
+        }
+        Ok(Self::new(id, position, orientation))
     }
 
     /// Current visible position.
     #[must_use]
-    pub(crate) const fn position(&self) -> Position26 {
+    pub(crate) const fn position(self) -> Position26 {
         self.position
     }
 
     /// Physical insertion orientation.
     #[cfg(test)]
     #[must_use]
-    pub(crate) const fn orientation(&self) -> Orientation {
+    pub(crate) const fn orientation(self) -> Orientation {
         self.orientation
     }
 
@@ -136,16 +117,45 @@ impl AlphabetRotor {
         self.position = self.position.offset(amount);
     }
 
+    pub(crate) fn resolve(
+        self,
+        rotor_set: &RotorSet,
+    ) -> &super::rotor_set::MountedRotorTransforms {
+        rotor_set.mounted(self.id, self.orientation)
+    }
+
     /// Transform in the source/forward electrical direction.
     #[must_use]
-    pub(crate) fn forward(&self, input: Contact26) -> Contact26 {
-        self.transforms.forward(self.position, input)
+    pub(crate) fn forward_with(
+        self,
+        transforms: &super::rotor_set::MountedRotorTransforms,
+        input: Contact26,
+    ) -> Contact26 {
+        transforms.forward(self.position, input)
     }
 
     /// Transform in the inverse electrical direction.
     #[must_use]
-    pub(crate) fn reverse(&self, input: Contact26) -> Contact26 {
-        self.transforms.reverse(self.position, input)
+    pub(crate) fn reverse_with(
+        self,
+        transforms: &super::rotor_set::MountedRotorTransforms,
+        input: Contact26,
+    ) -> Contact26 {
+        transforms.reverse(self.position, input)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn forward(self, input: Contact26) -> Contact26 {
+        let transforms = self.resolve(reference_rotor_set().unwrap());
+        self.forward_with(transforms, input)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn reverse(self, input: Contact26) -> Contact26 {
+        let transforms = self.resolve(reference_rotor_set().unwrap());
+        self.reverse_with(transforms, input)
     }
 }
 

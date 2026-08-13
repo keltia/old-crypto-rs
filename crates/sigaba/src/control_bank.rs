@@ -27,6 +27,7 @@ use super::{
     alphabet_rotor::AlphabetRotor,
     contact::Contact26,
     control::{band_control_outputs, IndexSignals},
+    rotor_set::{MountedRotorTransforms, RotorSet},
 };
 
 /// The four fixed CSP-889 control-bank input contacts F, G, H and I.
@@ -64,26 +65,63 @@ impl ControlBank {
     /// `4 -> 0`. The signal enters each rotor in its inverse electrical
     /// direction.
     #[must_use]
-    pub(crate) fn right_to_left(&self, mut input: Contact26) -> Contact26 {
-        for rotor in self.rotors.iter().rev() {
-            input = rotor.reverse(input);
+    pub(crate) fn right_to_left_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+        mut input: Contact26,
+    ) -> Contact26 {
+        for (rotor, &transform) in self.rotors.iter().zip(transforms).rev() {
+            input = rotor.reverse_with(transform, input);
         }
         input
     }
 
     /// Process the four simultaneous CSP-889 inputs F/G/H/I.
     #[must_use]
-    pub(crate) fn outputs(&self) -> [Contact26; 4] {
-        CONTROL_INPUTS.map(|input| self.right_to_left(input))
+    pub(crate) fn outputs_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+    ) -> [Contact26; 4] {
+        CONTROL_INPUTS.map(|input| self.right_to_left_with(transforms, input))
     }
 
     /// Process F/G/H/I and apply the fixed control-output OR banding to produce
     /// the active index-bank inputs.
     #[must_use]
-    pub(crate) fn index_inputs(&self) -> IndexSignals {
-        band_control_outputs(self.outputs())
+    pub(crate) fn index_inputs_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+    ) -> IndexSignals {
+        band_control_outputs(self.outputs_with(transforms))
     }
 
+    pub(crate) fn resolve<'a>(
+        &self,
+        rotor_set: &'a RotorSet,
+    ) -> [&'a MountedRotorTransforms; 5] {
+        self.rotors.map(|rotor| rotor.resolve(rotor_set))
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn right_to_left(&self, input: Contact26) -> Contact26 {
+        let transforms = self.resolve(super::data::reference_rotor_set().unwrap());
+        self.right_to_left_with(&transforms, input)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn outputs(&self) -> [Contact26; 4] {
+        let transforms = self.resolve(super::data::reference_rotor_set().unwrap());
+        self.outputs_with(&transforms)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn index_inputs(&self) -> IndexSignals {
+        let transforms = self.resolve(super::data::reference_rotor_set().unwrap());
+        self.index_inputs_with(&transforms)
+    }
 
     /// Advance the CSP-889 metered control rotors once.
     ///

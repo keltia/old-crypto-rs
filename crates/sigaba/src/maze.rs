@@ -29,6 +29,7 @@ use super::{
     control::IndexSignals,
     control_bank::ControlBank,
     index_rotor::IndexBank,
+    rotor_set::MountedRotorTransforms,
     stepping::{cipher_steps_from_index_outputs, CipherStepSet},
 };
 
@@ -60,10 +61,22 @@ impl SteppingMaze {
 
     /// Compute the cipher rotors selected to step for the current maze state.
     #[must_use]
-    pub(crate) fn cipher_steps(&self) -> CipherStepSet {
-        let index_inputs = self.control.index_inputs();
+    pub(crate) fn cipher_steps_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+    ) -> CipherStepSet {
+        let index_inputs = self.control.index_inputs_with(transforms);
         let index_outputs = self.index_outputs(index_inputs);
         cipher_steps_from_index_outputs(index_outputs)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn cipher_steps(&self) -> CipherStepSet {
+        let transforms = self
+            .control
+            .resolve(super::data::reference_rotor_set().unwrap());
+        self.cipher_steps_with(&transforms)
     }
 
     /// Expose the control-bank result for diagnostics/tests.
@@ -81,7 +94,6 @@ impl SteppingMaze {
     }
 
     /// Access the current control bank.
-    #[cfg(test)]
     #[must_use]
     pub(crate) const fn control_bank(&self) -> &ControlBank {
         &self.control

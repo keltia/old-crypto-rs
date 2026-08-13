@@ -121,7 +121,7 @@ fn positions_to_string(positions: [u8; 5]) -> String {
 #[test]
 fn pekelney_dunn_csp889_known_answer_hello_world() {
     let config = reference_zeroized_config();
-    let mut machine = config.build_core().unwrap();
+    let mut machine = config.build_core();
 
     let ciphertext = encipher_text(&mut machine, "HELLO WORLD").unwrap();
 
@@ -131,7 +131,7 @@ fn pekelney_dunn_csp889_known_answer_hello_world() {
 #[test]
 fn pekelney_dunn_csp889_known_answer_deciphers_hello_world() {
     let config = reference_zeroized_config();
-    let mut machine = config.build_core().unwrap();
+    let mut machine = config.build_core();
 
     let plaintext = decipher_text(&mut machine, "FLQGF QUEQC H").unwrap();
 
@@ -141,7 +141,7 @@ fn pekelney_dunn_csp889_known_answer_deciphers_hello_world() {
 #[test]
 fn pekelney_dunn_csp889_abcde_known_answer() {
     let config = reference_abcde_config();
-    let mut machine = config.build_core().unwrap();
+    let mut machine = config.build_core();
 
     let ciphertext = encipher_text(&mut machine, "HELLO WORLD").unwrap();
 
@@ -164,7 +164,7 @@ fn pekelney_dunn_zeroized_cipher_position_trace_matches() {
     ];
 
     let config = reference_zeroized_config();
-    let mut machine = config.build_core().unwrap();
+    let mut machine = config.build_core();
 
     for (input, expected_positions) in b"HELLOWORLD".iter().zip(expected) {
         let plaintext = char::from(*input).to_string();
@@ -193,7 +193,7 @@ fn pekelney_dunn_zeroized_control_position_trace_matches() {
     ];
 
     let config = reference_zeroized_config();
-    let mut machine = config.build_core().unwrap();
+    let mut machine = config.build_core();
 
     for (input, expected_positions) in b"HELLOWORLD".iter().zip(expected) {
         let plaintext = char::from(*input).to_string();
@@ -210,11 +210,11 @@ fn pekelney_dunn_zeroized_control_position_trace_matches() {
 fn known_answer_grouping_is_presentation_only() {
     let config = reference_zeroized_config();
 
-    let mut grouped = config.build_core().unwrap();
+    let mut grouped = config.build_core();
     let grouped_plain =
         decipher_text(&mut grouped, "FLQGF QUEQC H").unwrap();
 
-    let mut ungrouped = config.build_core().unwrap();
+    let mut ungrouped = config.build_core();
     let ungrouped_plain =
         decipher_text(&mut ungrouped, "FLQGFQUEQCH").unwrap();
 

@@ -16,6 +16,7 @@
 use super::{
     alphabet_rotor::AlphabetRotor,
     contact::Contact26,
+    rotor_set::{MountedRotorTransforms, RotorSet},
     stepping::CipherStepSet,
 };
 
@@ -33,20 +34,49 @@ impl CipherBank {
 
     /// Encipher one electrical contact through the alphabet maze.
     #[must_use]
-    pub(crate) fn encipher(&self, mut input: Contact26) -> Contact26 {
-        for rotor in &self.rotors {
-            input = rotor.forward(input);
+    pub(crate) fn encipher_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+        mut input: Contact26,
+    ) -> Contact26 {
+        for (rotor, &transform) in self.rotors.iter().zip(transforms) {
+            input = rotor.forward_with(transform, input);
         }
         input
     }
 
     /// Decipher one electrical contact through the inverse alphabet-maze path.
     #[must_use]
-    pub(crate) fn decipher(&self, mut input: Contact26) -> Contact26 {
-        for rotor in self.rotors.iter().rev() {
-            input = rotor.reverse(input);
+    pub(crate) fn decipher_with(
+        &self,
+        transforms: &[&MountedRotorTransforms; 5],
+        mut input: Contact26,
+    ) -> Contact26 {
+        for (rotor, &transform) in self.rotors.iter().zip(transforms).rev() {
+            input = rotor.reverse_with(transform, input);
         }
         input
+    }
+
+    pub(crate) fn resolve<'a>(
+        &self,
+        rotor_set: &'a RotorSet,
+    ) -> [&'a MountedRotorTransforms; 5] {
+        self.rotors.map(|rotor| rotor.resolve(rotor_set))
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn encipher(&self, input: Contact26) -> Contact26 {
+        let transforms = self.resolve(super::data::reference_rotor_set().unwrap());
+        self.encipher_with(&transforms, input)
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn decipher(&self, input: Contact26) -> Contact26 {
+        let transforms = self.resolve(super::data::reference_rotor_set().unwrap());
+        self.decipher_with(&transforms, input)
     }
 
     /// Step exactly the cipher rotors selected by `steps`.

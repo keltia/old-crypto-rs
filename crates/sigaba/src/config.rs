@@ -20,12 +20,15 @@ use super::{
     cipher_bank::CipherBank,
     contact::{Position10, Position26},
     control_bank::ControlBank,
-    data::{IndexRotorId, LargeRotorId, LargeRotorSet},
+    data::{IndexRotorId, LargeRotorId},
     index_rotor::{IndexBank, IndexRotor},
     machine::SigabaCore,
     maze::SteppingMaze,
-    permutation::PermutationError,
+    rotor_set::RotorSet,
 };
+
+#[cfg(test)]
+use super::data::LargeRotorSet;
 
 /// One mounted 26-contact cipher/control rotor description.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -130,16 +133,10 @@ impl fmt::Display for ConfigError {
 
 impl std::error::Error for ConfigError {}
 
-impl From<PermutationError> for ConfigError {
-    fn from(_: PermutationError) -> Self {
-        Self::InvalidReferenceWiring
-    }
-}
-
 /// Complete validated CSP-889 rotor key.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SigabaConfig {
-    rotor_set: LargeRotorSet,
+    rotor_set: RotorSet,
     cipher: [LargeRotorSetting; 5],
     control: [LargeRotorSetting; 5],
     index: [IndexRotorSetting; 5],
@@ -152,8 +149,8 @@ impl SigabaConfig {
     ///
     /// Returns [`ConfigError`] when a large or index rotor identity is used
     /// more than once.
-    pub fn new(
-        rotor_set: LargeRotorSet,
+    pub fn new<R: Into<RotorSet>>(
+        rotor_set: R,
         cipher: [LargeRotorSetting; 5],
         control: [LargeRotorSetting; 5],
         index: [IndexRotorSetting; 5],
@@ -162,7 +159,7 @@ impl SigabaConfig {
         validate_index_permutation(&index)?;
 
         Ok(Self {
-            rotor_set,
+            rotor_set: rotor_set.into(),
             cipher,
             control,
             index,
@@ -170,35 +167,35 @@ impl SigabaConfig {
     }
 
     /// Build a fresh mutable machine at this key's initial state.
-    pub(crate) fn build_core(&self) -> Result<SigabaCore, ConfigError> {
+    pub(crate) fn build_core(&self) -> SigabaCore {
         let cipher = CipherBank::new([
-            self.build_large(self.cipher[0])?,
-            self.build_large(self.cipher[1])?,
-            self.build_large(self.cipher[2])?,
-            self.build_large(self.cipher[3])?,
-            self.build_large(self.cipher[4])?,
+            Self::build_large(self.cipher[0]),
+            Self::build_large(self.cipher[1]),
+            Self::build_large(self.cipher[2]),
+            Self::build_large(self.cipher[3]),
+            Self::build_large(self.cipher[4]),
         ]);
 
         let control = ControlBank::new([
-            self.build_large(self.control[0])?,
-            self.build_large(self.control[1])?,
-            self.build_large(self.control[2])?,
-            self.build_large(self.control[3])?,
-            self.build_large(self.control[4])?,
+            Self::build_large(self.control[0]),
+            Self::build_large(self.control[1]),
+            Self::build_large(self.control[2]),
+            Self::build_large(self.control[3]),
+            Self::build_large(self.control[4]),
         ]);
 
         let index = IndexBank::new([
-            Self::build_index(self.index[0])?,
-            Self::build_index(self.index[1])?,
-            Self::build_index(self.index[2])?,
-            Self::build_index(self.index[3])?,
-            Self::build_index(self.index[4])?,
+            self.build_index(self.index[0]),
+            self.build_index(self.index[1]),
+            self.build_index(self.index[2]),
+            self.build_index(self.index[3]),
+            self.build_index(self.index[4]),
         ]);
 
-        Ok(SigabaCore::new(
+        SigabaCore::new(
             cipher,
             SteppingMaze::new(control, index),
-        ))
+        )
     }
 
     #[must_use]
@@ -216,23 +213,24 @@ impl SigabaConfig {
         &self.index
     }
 
-    fn build_large(
-        &self,
-        setting: LargeRotorSetting,
-    ) -> Result<AlphabetRotor, ConfigError> {
-        Ok(AlphabetRotor::from_reference(
-            self.rotor_set,
+    #[must_use]
+    pub fn rotor_set(&self) -> &RotorSet {
+        &self.rotor_set
+    }
+
+    fn build_large(setting: LargeRotorSetting) -> AlphabetRotor {
+        AlphabetRotor::new(
             setting.id,
             setting.position,
             setting.orientation,
-        )?)
+        )
     }
 
-    fn build_index(setting: IndexRotorSetting) -> Result<IndexRotor, ConfigError> {
-        Ok(IndexRotor::from_reference(
-            setting.id,
+    fn build_index(&self, setting: IndexRotorSetting) -> IndexRotor {
+        IndexRotor::new(
+            self.rotor_set.index_rotor(setting.id),
             setting.position,
-        )?)
+        )
     }
 }
 
@@ -360,7 +358,7 @@ mod tests {
     #[test]
     fn valid_partition_builds_machine_with_requested_positions() {
         let config = valid_config();
-        let core = config.build_core().unwrap();
+        let core = config.build_core();
 
         assert_eq!(core.cipher_positions(), [0, 1, 2, 3, 4]);
         assert_eq!(core.control_positions(), [5, 6, 7, 8, 9]);
@@ -506,8 +504,8 @@ mod tests {
     fn two_machines_built_from_same_config_start_identically() {
         let config = valid_config();
 
-        let mut left = config.build_core().unwrap();
-        let mut right = config.build_core().unwrap();
+        let mut left = config.build_core();
+        let mut right = config.build_core();
 
         for value in 0..26 {
             let input = super::super::contact::Contact26::new(value).unwrap();

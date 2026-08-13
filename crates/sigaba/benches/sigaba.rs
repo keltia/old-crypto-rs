@@ -78,12 +78,15 @@ mod initialization {
         bencher.bench_local(|| black_box(config(black_box(SigabaOrientation::Normal))));
     }
 
-    /// An empty operation still builds the fresh mutable core used for each call.
+    /// Measures fresh-core construction plus the minimum useful operation.
+    ///
+    /// An empty input would let the optimizer discard the otherwise unobservable
+    /// core, so one contact is deliberately processed here.
     #[divan::bench]
-    fn reset_for_operation(bencher: Bencher) {
+    fn reset_plus_one_contact(bencher: Bencher) {
         let machine = machine(SigabaOrientation::Normal);
         bencher.bench_local(|| {
-            black_box(machine.encrypt_text(black_box("")).unwrap());
+            black_box(machine.encrypt_text(black_box("A")).unwrap());
         });
     }
 }

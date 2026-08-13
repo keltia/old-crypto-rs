@@ -141,6 +141,13 @@ let sigaba = Sigaba::new(config);
 assert_eq!(sigaba.encrypt_text("HELLO WORLD")?, "FLQGFQUEQCH");
 ```
 
+The `sigaba` crate also provides `sigabactl`, which reads the complete rotor configuration from YAML:
+
+```sh
+cargo run -p sigaba --bin sigabactl -- \
+  --config crates/sigaba/config/reference.yaml encrypt "HELLO WORLD"
+```
+
 ## Available demo
 
 ```sh

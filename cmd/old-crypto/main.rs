@@ -250,7 +250,6 @@ impl App {
                 }
             }
             #[cfg(feature = "sigaba")]
-            #[cfg(feature = "sigaba")]
             "Sigaba" => match sigaba_reference_config() {
                 Ok(config) => {
                     let cipher = Sigaba::new(config);

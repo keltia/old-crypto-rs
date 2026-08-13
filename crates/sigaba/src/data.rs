@@ -23,8 +23,12 @@
 //! are actual rotor wirings; Pekelney created the large-rotor wirings.
 
 use core::fmt;
+use std::sync::OnceLock;
 
-use super::permutation::{Permutation, PermutationError};
+use super::{
+    permutation::{Permutation, PermutationError},
+    rotor_set::RotorSet,
+};
 
 /// Number of interchangeable large cipher/control rotors in the reference set.
 pub(crate) const LARGE_ROTOR_COUNT: usize = 10;
@@ -137,23 +141,54 @@ const HISTORICAL_INDEX_WIRINGS: [&[u8; 10]; INDEX_ROTOR_COUNT] = [
 ];
 
 /// Build one 26-contact rotor from a documented simulator reference set.
+#[cfg(test)]
 pub(crate) fn large_rotor(
     set: LargeRotorSet,
     id: LargeRotorId,
 ) -> Result<Permutation<26>, PermutationError> {
-    let source = match set {
-        LargeRotorSet::PekelneyReference => PEKELNEY_LARGE_WIRINGS[id.get() as usize],
+    let rotor_set = match set {
+        LargeRotorSet::PekelneyReference => reference_rotor_set()?,
     };
 
-    Permutation::new(alpha_wiring(source))
+    Ok(rotor_set.large_rotor(id))
 }
 
 /// Build one of the five historically documented 10-contact index rotors.
 pub(crate) fn index_rotor(
     id: IndexRotorId,
 ) -> Result<Permutation<10>, PermutationError> {
-    Permutation::new(digit_wiring(
-        HISTORICAL_INDEX_WIRINGS[id.get() as usize],
+    Ok(reference_rotor_set()?.index_rotor(id))
+}
+
+pub(crate) fn reference_rotor_set() -> Result<&'static RotorSet, PermutationError> {
+    static REFERENCE: OnceLock<Result<RotorSet, PermutationError>> = OnceLock::new();
+    match REFERENCE.get_or_init(build_reference_rotor_set) {
+        Ok(set) => Ok(set),
+        Err(error) => Err(*error),
+    }
+}
+
+fn build_reference_rotor_set() -> Result<RotorSet, PermutationError> {
+    let large: Vec<_> = PEKELNEY_LARGE_WIRINGS
+        .iter()
+        .map(|source| Permutation::new(alpha_wiring(source)))
+        .collect::<Result<_, _>>()?;
+    let index: Vec<_> = HISTORICAL_INDEX_WIRINGS
+        .iter()
+        .map(|source| Permutation::new(digit_wiring(source)))
+        .collect::<Result<_, _>>()?;
+    let large: [Permutation<26>; LARGE_ROTOR_COUNT] = large
+        .try_into()
+        .expect("the built-in dataset contains ten large rotors");
+    let index: [Permutation<10>; INDEX_ROTOR_COUNT] = index
+        .try_into()
+        .expect("the built-in dataset contains five index rotors");
+
+    Ok(RotorSet::from_permutations(
+        "pekelney_reference".into(),
+        Some("Pekelney/Dunn simulator reference wiring".into()),
+        &large,
+        &index,
     ))
 }
 

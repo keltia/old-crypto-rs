@@ -1,10 +1,13 @@
 //! Runtime-loaded and validated SIGABA rotor wiring datasets.
 
 use core::fmt;
+use std::sync::Arc;
 
 use serde::Deserialize;
 
 use super::{
+    alphabet_rotor::Orientation,
+    contact::{Contact26, Position26},
     data::{INDEX_ROTOR_COUNT, IndexRotorId, LARGE_ROTOR_COUNT, LargeRotorId},
     permutation::{Permutation, PermutationError},
 };
@@ -152,10 +155,89 @@ impl std::error::Error for RotorSetError {}
 /// A complete, validated SIGABA rotor wiring dataset.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RotorSet {
+    inner: Arc<RotorSetData>,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+struct RotorSetData {
     name: String,
     description: Option<String>,
     large: [Permutation<26>; LARGE_ROTOR_COUNT],
     index: [Permutation<10>; INDEX_ROTOR_COUNT],
+    transforms: [RotorTransforms; LARGE_ROTOR_COUNT],
+}
+
+/// Position-dependent transforms for one rotor in one orientation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) struct MountedRotorTransforms {
+    forward: [[u8; 26]; 26],
+    reverse: [[u8; 26]; 26],
+}
+
+impl MountedRotorTransforms {
+    fn new(wiring: Permutation<26>, orientation: Orientation) -> Self {
+        let mut forward = [[0_u8; 26]; 26];
+        let mut reverse = [[0_u8; 26]; 26];
+
+        for position in 0..26_u8 {
+            for input in 0..26_u8 {
+                let (forward_output, reverse_output) = match orientation {
+                    Orientation::Normal => {
+                        let shifted = wrapping_offset(input, i16::from(position));
+                        (
+                            wrapping_offset(wiring.forward(shifted), -i16::from(position)),
+                            wrapping_offset(wiring.inverse(shifted), -i16::from(position)),
+                        )
+                    }
+                    Orientation::Reversed => {
+                        let reflected = wrapping_offset(position, -i16::from(input));
+                        (
+                            wrapping_offset(position, -i16::from(wiring.inverse(reflected))),
+                            wrapping_offset(position, -i16::from(wiring.forward(reflected))),
+                        )
+                    }
+                };
+
+                forward[usize::from(position)][usize::from(input)] = forward_output;
+                reverse[usize::from(position)][usize::from(input)] = reverse_output;
+            }
+        }
+
+        Self { forward, reverse }
+    }
+
+    #[must_use]
+    pub(crate) fn forward(&self, position: Position26, input: Contact26) -> Contact26 {
+        contact(self.forward[usize::from(position.get())][usize::from(input.get())])
+    }
+
+    #[must_use]
+    pub(crate) fn reverse(&self, position: Position26, input: Contact26) -> Contact26 {
+        contact(self.reverse[usize::from(position.get())][usize::from(input.get())])
+    }
+}
+
+/// Precomputed transforms for both ways of mounting one physical rotor.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct RotorTransforms {
+    normal: MountedRotorTransforms,
+    reversed: MountedRotorTransforms,
+}
+
+impl RotorTransforms {
+    fn new(wiring: Permutation<26>) -> Self {
+        Self {
+            normal: MountedRotorTransforms::new(wiring, Orientation::Normal),
+            reversed: MountedRotorTransforms::new(wiring, Orientation::Reversed),
+        }
+    }
+
+    const fn mounted(&self, orientation: Orientation) -> &MountedRotorTransforms {
+        match orientation {
+            Orientation::Normal => &self.normal,
+            Orientation::Reversed => &self.reversed,
+        }
+    }
 }
 
 impl RotorSet {
@@ -192,37 +274,82 @@ impl RotorSet {
             |symbol| symbol.is_ascii_digit().then(|| symbol as u8 - b'0'),
         )?;
 
-        Ok(Self {
-            name: raw.name,
-            description: raw.description,
-            large,
-            index,
-        })
+        Ok(Self::from_permutations(
+            raw.name,
+            raw.description,
+            &large,
+            &index,
+        ))
     }
 
     /// Dataset name from the YAML document.
     #[must_use]
     pub fn name(&self) -> &str {
-        &self.name
+        &self.inner.name
     }
 
     /// Optional human-readable dataset description.
     #[must_use]
     pub fn description(&self) -> Option<&str> {
-        self.description.as_deref()
+        self.inner.description.as_deref()
     }
 
     /// Validated numeric wiring for one large rotor.
     #[must_use]
     pub fn large_wiring(&self, id: LargeRotorId) -> &[u8; 26] {
-        self.large[usize::from(id.get())].mapping()
+        self.inner.large[usize::from(id.get())].mapping()
     }
 
     /// Validated numeric wiring for one index rotor.
     #[must_use]
     pub fn index_wiring(&self, id: IndexRotorId) -> &[u8; 10] {
-        self.index[usize::from(id.get())].mapping()
+        self.inner.index[usize::from(id.get())].mapping()
     }
+
+    pub(crate) fn from_permutations(
+        name: String,
+        description: Option<String>,
+        large: &[Permutation<26>; LARGE_ROTOR_COUNT],
+        index: &[Permutation<10>; INDEX_ROTOR_COUNT],
+    ) -> Self {
+        let large = *large;
+        let transforms = large.map(RotorTransforms::new);
+        Self {
+            inner: Arc::new(RotorSetData {
+                name,
+                description,
+                large,
+                index: *index,
+                transforms,
+            }),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn large_rotor(&self, id: LargeRotorId) -> Permutation<26> {
+        self.inner.large[usize::from(id.get())]
+    }
+
+    pub(crate) fn index_rotor(&self, id: IndexRotorId) -> Permutation<10> {
+        self.inner.index[usize::from(id.get())]
+    }
+
+    pub(crate) fn mounted(
+        &self,
+        id: LargeRotorId,
+        orientation: Orientation,
+    ) -> &MountedRotorTransforms {
+        self.inner.transforms[usize::from(id.get())].mounted(orientation)
+    }
+}
+
+fn wrapping_offset(value: u8, amount: i16) -> u8 {
+    u8::try_from((i16::from(value) + amount).rem_euclid(26))
+        .expect("a value reduced modulo 26 always fits in u8")
+}
+
+fn contact(value: u8) -> Contact26 {
+    Contact26::new(value).expect("validated 26-contact permutation returned an in-range contact")
 }
 
 #[derive(Deserialize)]
@@ -360,6 +487,38 @@ mod tests {
         assert_eq!(
             set.index_wiring(IndexRotorId::new(4).unwrap()),
             &[6, 4, 9, 7, 1, 3, 5, 2, 8, 0]
+        );
+    }
+
+    #[test]
+    fn cloning_a_rotor_set_shares_its_immutable_tables() {
+        let set = RotorSet::from_yaml(REFERENCE).unwrap();
+        let cloned = set.clone();
+
+        assert!(Arc::ptr_eq(&set.inner, &cloned.inner));
+    }
+
+    #[test]
+    fn parsed_wirings_have_owned_precomputed_mounted_transforms() {
+        let yaml = REFERENCE.replace(
+            "YCHLQSUGBDIXNZKERPVJTAWFOM",
+            "CYHLQSUGBDIXNZKERPVJTAWFOM",
+        );
+        let set = RotorSet::from_yaml(&yaml).unwrap();
+        let id = LargeRotorId::new(0).unwrap();
+        let transforms = set.mounted(id, Orientation::Normal);
+
+        assert_eq!(
+            transforms.forward(Position26::A, contact(0)).get(),
+            b'C' - b'A'
+        );
+        assert_eq!(
+            transforms.forward(Position26::A, contact(1)).get(),
+            b'Y' - b'A'
+        );
+        assert_eq!(
+            transforms.reverse(Position26::A, contact(b'C' - b'A')).get(),
+            0
         );
     }
 

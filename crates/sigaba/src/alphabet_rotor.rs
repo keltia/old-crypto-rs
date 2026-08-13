@@ -27,13 +27,16 @@
 //!   of normal/reversed insertion and visible alphabet direction.
 
 use core::fmt;
-use std::sync::OnceLock;
 
 use super::{
     contact::{Contact26, Position26},
-    data::{large_rotor, LargeRotorId, LargeRotorSet},
-    permutation::{Permutation, PermutationError},
+    data::{reference_rotor_set, LargeRotorId, LargeRotorSet},
+    permutation::PermutationError,
+    rotor_set::MountedRotorTransforms,
 };
+
+#[cfg(test)]
+use super::{data::large_rotor, permutation::Permutation};
 
 /// Physical insertion orientation of a 26-contact SIGABA rotor.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -45,123 +48,16 @@ pub enum Orientation {
     Reversed,
 }
 
-/// Position-dependent transforms for one rotor in one orientation.
-#[derive(Clone, Copy)]
-struct MountedRotorTransforms {
-    forward: [[u8; 26]; 26],
-    reverse: [[u8; 26]; 26],
-}
-
-impl MountedRotorTransforms {
-    fn new(wiring: Permutation<26>, orientation: Orientation) -> Self {
-        let mut forward = [[0_u8; 26]; 26];
-        let mut reverse = [[0_u8; 26]; 26];
-
-        for position in 0..26_u8 {
-            for input in 0..26_u8 {
-                let (forward_output, reverse_output) = match orientation {
-                    Orientation::Normal => {
-                        let shifted = wrapping_offset(input, i16::from(position));
-                        (
-                            wrapping_offset(
-                                wiring.forward(shifted),
-                                -i16::from(position),
-                            ),
-                            wrapping_offset(
-                                wiring.inverse(shifted),
-                                -i16::from(position),
-                            ),
-                        )
-                    }
-                    Orientation::Reversed => {
-                        let reflected =
-                            wrapping_offset(position, -i16::from(input));
-                        (
-                            wrapping_offset(
-                                position,
-                                -i16::from(wiring.inverse(reflected)),
-                            ),
-                            wrapping_offset(
-                                position,
-                                -i16::from(wiring.forward(reflected)),
-                            ),
-                        )
-                    }
-                };
-
-                forward[usize::from(position)][usize::from(input)] = forward_output;
-                reverse[usize::from(position)][usize::from(input)] = reverse_output;
-            }
-        }
-
-        Self { forward, reverse }
-    }
-}
-
-/// Precomputed transforms for both ways of mounting one physical rotor.
-#[derive(Clone, Copy)]
-struct RotorTransforms {
-    normal: MountedRotorTransforms,
-    reversed: MountedRotorTransforms,
-}
-
-impl RotorTransforms {
-    fn new(wiring: Permutation<26>) -> Self {
-        Self {
-            normal: MountedRotorTransforms::new(wiring, Orientation::Normal),
-            reversed: MountedRotorTransforms::new(wiring, Orientation::Reversed),
-        }
-    }
-
-    const fn mounted(&self, orientation: Orientation) -> &MountedRotorTransforms {
-        match orientation {
-            Orientation::Normal => &self.normal,
-            Orientation::Reversed => &self.reversed,
-        }
-    }
-}
-
-fn wrapping_offset(value: u8, amount: i16) -> u8 {
-    u8::try_from((i16::from(value) + amount).rem_euclid(26))
-        .expect("a value reduced modulo 26 always fits in u8")
-}
-
-fn build_pekelney_transforms() -> Result<Box<[RotorTransforms; 10]>, PermutationError> {
-    let mut transforms = Vec::with_capacity(10);
-
-    for raw_id in 0..10_u8 {
-        let id = LargeRotorId::new(raw_id).expect("reference rotor id is in 0..10");
-        transforms.push(RotorTransforms::new(large_rotor(
-            LargeRotorSet::PekelneyReference,
-            id,
-        )?));
-    }
-
-    match transforms.into_boxed_slice().try_into() {
-        Ok(transforms) => Ok(transforms),
-        Err(_) => unreachable!("exactly ten reference rotor tables were built"),
-    }
-}
-
 fn reference_transforms(
     set: LargeRotorSet,
     id: LargeRotorId,
     orientation: Orientation,
 ) -> Result<&'static MountedRotorTransforms, PermutationError> {
-    static PEKELNEY: OnceLock<Result<Box<[RotorTransforms; 10]>, PermutationError>> =
-        OnceLock::new();
-
-    let transforms = match set {
+    match set {
         LargeRotorSet::PekelneyReference => {
-            PEKELNEY.get_or_init(build_pekelney_transforms)
+            Ok(reference_rotor_set()?.mounted(id, orientation))
         }
-    };
-    let transforms = match transforms {
-        Ok(transforms) => transforms,
-        Err(error) => return Err(*error),
-    };
-
-    Ok(transforms[usize::from(id.get())].mounted(orientation))
+    }
 }
 
 /// One mounted 26-contact SIGABA rotor.
@@ -243,20 +139,17 @@ impl AlphabetRotor {
     /// Transform in the source/forward electrical direction.
     #[must_use]
     pub(crate) fn forward(&self, input: Contact26) -> Contact26 {
-        let output = self.transforms.forward[usize::from(self.position.get())]
-            [usize::from(input.get())];
-        c(output)
+        self.transforms.forward(self.position, input)
     }
 
     /// Transform in the inverse electrical direction.
     #[must_use]
     pub(crate) fn reverse(&self, input: Contact26) -> Contact26 {
-        let output = self.transforms.reverse[usize::from(self.position.get())]
-            [usize::from(input.get())];
-        c(output)
+        self.transforms.reverse(self.position, input)
     }
 }
 
+#[cfg(test)]
 fn c(value: u8) -> Contact26 {
     Contact26::new(value)
         .expect("validated 26-contact permutation returned an in-range contact")

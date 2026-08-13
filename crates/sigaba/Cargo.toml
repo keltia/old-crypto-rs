@@ -1,6 +1,6 @@
 [package]
 name = "sigaba"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
 description = "A typed simulation of the SIGABA (ECM Mark II) cipher machine."

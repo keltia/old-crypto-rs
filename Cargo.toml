@@ -15,6 +15,9 @@ description = "Rust implementation of my Go module called old-crypto."
 documentation = "https://docs.rs/cipher-rs"
 categories = ["command-line-utilities", "cryptography"]
 
+[lints.rust]
+linker_messages = "allow"
+
 [[bench]]
 name = "helpers"
 harness = false

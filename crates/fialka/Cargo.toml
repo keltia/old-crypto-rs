@@ -9,4 +9,7 @@ license = "MIT"
 keywords = ["cryptography", "fialka", "cipher", "history"]
 categories = ["cryptography"]
 
+[lints.rust]
+linker_messages = "allow"
+
 [dependencies]

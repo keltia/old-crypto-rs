@@ -10,6 +10,9 @@ readme = "README.md"
 keywords = ["cryptography", "sigaba", "cipher", "history"]
 categories = ["cryptography"]
 
+[lints.rust]
+linker_messages = "allow"
+
 [[bin]]
 name = "sigabactl"
 path = "cmd/sigabactl/main.rs"

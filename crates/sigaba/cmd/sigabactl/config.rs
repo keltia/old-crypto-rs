@@ -2,7 +2,7 @@
 
 use serde::Deserialize;
 use sigaba::{
-    IndexRotorSetting, LargeRotorSet, LargeRotorSetting, Orientation, SigabaConfig,
+    IndexRotorSetting, LargeRotorSetting, Orientation, RotorSet, SigabaConfig,
     SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
 };
 use std::error::Error;
@@ -12,16 +12,11 @@ use std::{fmt, fs};
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct FileConfig {
-    rotor_set: RotorSet,
+    /// Optional guard against accidentally combining a key with another set.
+    rotor_set: Option<String>,
     cipher: [LargeRotor; 5],
     control: [LargeRotor; 5],
     index: [IndexRotor; 5],
-}
-
-#[derive(Clone, Copy, Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum RotorSet {
-    PekelneyReference,
 }
 
 #[derive(Debug, Deserialize)]
@@ -44,6 +39,9 @@ pub struct IndexRotor {
 #[derive(Debug)]
 pub struct ConfigFileError(String);
 
+#[derive(Debug)]
+pub struct RotorFileError(String);
+
 impl fmt::Display for ConfigFileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
@@ -52,18 +50,60 @@ impl fmt::Display for ConfigFileError {
 
 impl Error for ConfigFileError {}
 
-pub fn load_config(path: &Path) -> Result<SigabaConfig, Box<dyn Error>> {
-    let yaml = fs::read_to_string(path)?;
-    parse_config(&yaml).map_err(Into::into)
+impl fmt::Display for RotorFileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
 }
 
+impl Error for RotorFileError {}
+
+pub fn load_rotor_set(path: Option<&Path>) -> Result<RotorSet, RotorFileError> {
+    let Some(path) = path else {
+        return Ok(RotorSet::pekelney_reference());
+    };
+    let yaml = fs::read_to_string(path).map_err(|error| {
+        RotorFileError(format!(
+            "could not read rotor wiring file {}: {error}",
+            path.display()
+        ))
+    })?;
+    RotorSet::from_yaml(&yaml).map_err(|error| {
+        RotorFileError(format!(
+            "invalid rotor wiring file {}: {error}",
+            path.display()
+        ))
+    })
+}
+
+pub fn load_config(
+    path: &Path,
+    rotor_set: RotorSet,
+) -> Result<SigabaConfig, Box<dyn Error>> {
+    let yaml = fs::read_to_string(path)?;
+    parse_config_with_rotors(&yaml, rotor_set).map_err(Into::into)
+}
+
+#[cfg(test)]
 pub fn parse_config(yaml: &str) -> Result<SigabaConfig, ConfigFileError> {
+    parse_config_with_rotors(yaml, RotorSet::pekelney_reference())
+}
+
+pub fn parse_config_with_rotors(
+    yaml: &str,
+    rotor_set: RotorSet,
+) -> Result<SigabaConfig, ConfigFileError> {
     let raw: FileConfig = serde_yml::from_str(yaml)
         .map_err(|error| ConfigFileError(format!("invalid YAML configuration: {error}")))?;
 
-    let rotor_set = match raw.rotor_set {
-        RotorSet::PekelneyReference => LargeRotorSet::PekelneyReference,
-    };
+    if let Some(expected) = raw.rotor_set.as_deref()
+        && expected != rotor_set.name()
+    {
+        return Err(ConfigFileError(format!(
+            "configuration expects rotor set {expected:?}, but selected {:?}",
+            rotor_set.name()
+        )));
+    }
     let cipher = convert_large_bank("cipher", raw.cipher)?;
     let control = convert_large_bank("control", raw.control)?;
     let index = convert_index_bank(raw.index)?;
@@ -164,6 +204,8 @@ mod tests {
     use sigaba::Sigaba;
 
     const REFERENCE: &str = include_str!("../../config/reference.yaml");
+    const REFERENCE_ROTORS: &str =
+        include_str!("../../config/rotors/pekelney-reference.yaml");
 
     #[test]
     fn reference_yaml_matches_known_answer() {
@@ -203,5 +245,46 @@ mod tests {
         let error = parse_config(&yaml).unwrap_err().to_string();
         assert!(error.contains("cipher rotor slot 1"), "{error}");
         assert!(error.contains("N0 through N9 or R0 through R9"), "{error}");
+    }
+
+    #[test]
+    fn omitted_rotor_file_uses_embedded_reference_set() {
+        let rotor_set = load_rotor_set(None).unwrap();
+        assert_eq!(rotor_set.name(), "pekelney_reference");
+    }
+
+    #[test]
+    fn optional_key_guard_rejects_a_different_selected_dataset() {
+        let custom_yaml = REFERENCE_ROTORS.replace(
+            "name: pekelney_reference",
+            "name: alternate_reference",
+        );
+        let custom = RotorSet::from_yaml(&custom_yaml).unwrap();
+        let error = parse_config_with_rotors(REFERENCE, custom)
+            .unwrap_err()
+            .to_string();
+
+        assert!(error.contains("expects rotor set"), "{error}");
+        assert!(error.contains("alternate_reference"), "{error}");
+    }
+
+    #[test]
+    fn alternate_dataset_is_used_when_key_has_no_name_guard() {
+        let custom_yaml = REFERENCE_ROTORS
+            .replace("name: pekelney_reference", "name: custom")
+            .replace(
+                "YCHLQSUGBDIXNZKERPVJTAWFOM",
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            );
+        let custom = RotorSet::from_yaml(&custom_yaml).unwrap();
+        let unguarded_key = REFERENCE.replace("rotor_set: pekelney_reference\n", "");
+        let custom_machine =
+            Sigaba::new(parse_config_with_rotors(&unguarded_key, custom).unwrap());
+        let reference_machine = Sigaba::new(parse_config(REFERENCE).unwrap());
+
+        assert_ne!(
+            custom_machine.encrypt_text("HELLO WORLD").unwrap(),
+            reference_machine.encrypt_text("HELLO WORLD").unwrap()
+        );
     }
 }

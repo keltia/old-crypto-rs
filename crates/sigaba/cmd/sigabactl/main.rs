@@ -13,7 +13,7 @@ use clap::Parser;
 use sigaba::Sigaba;
 
 use cli::{Command, Opts};
-use config::load_config;
+use config::{load_config, load_rotor_set};
 
 fn main() {
     if let Err(error) = run(Opts::parse()) {
@@ -23,7 +23,8 @@ fn main() {
 }
 
 fn run(cli: Opts) -> Result<(), Box<dyn Error>> {
-    let machine = Sigaba::new(load_config(&cli.config)?);
+    let rotor_set = load_rotor_set(cli.rotors.as_deref())?;
+    let machine = Sigaba::new(load_config(&cli.config, rotor_set)?);
     let (encrypt, words) = match cli.command {
         Command::Encrypt { text } => (true, text),
         Command::Decrypt { text } => (false, text),

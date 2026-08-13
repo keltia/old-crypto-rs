@@ -254,6 +254,29 @@ mod tests {
     }
 
     #[test]
+    fn explicit_reference_rotor_file_uses_the_file_loading_path() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("config/rotors/pekelney-reference.yaml");
+        let rotor_set = load_rotor_set(Some(&path)).unwrap();
+
+        assert_eq!(rotor_set.name(), "pekelney_reference");
+        assert_eq!(
+            rotor_set.description(),
+            Some("Pekelney/Dunn simulator reference wiring")
+        );
+    }
+
+    #[test]
+    fn missing_rotor_file_error_includes_its_path() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("config/rotors/does-not-exist.yaml");
+        let error = load_rotor_set(Some(&path)).unwrap_err().to_string();
+
+        assert!(error.contains("does-not-exist.yaml"), "{error}");
+        assert!(error.contains("could not read rotor wiring file"), "{error}");
+    }
+
+    #[test]
     fn optional_key_guard_rejects_a_different_selected_dataset() {
         let custom_yaml = REFERENCE_ROTORS.replace(
             "name: pekelney_reference",

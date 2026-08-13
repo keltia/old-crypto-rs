@@ -508,6 +508,14 @@ mod tests {
     }
 
     #[test]
+    fn repeated_default_acquisition_shares_the_cached_dataset() {
+        let first = RotorSet::pekelney_reference();
+        let second = RotorSet::pekelney_reference();
+
+        assert!(Arc::ptr_eq(&first.inner, &second.inner));
+    }
+
+    #[test]
     fn parsed_wirings_have_owned_precomputed_mounted_transforms() {
         let yaml = REFERENCE.replace(
             "YCHLQSUGBDIXNZKERPVJTAWFOM",
@@ -564,6 +572,16 @@ mod tests {
 
     #[test]
     fn out_of_range_and_duplicate_ids_are_rejected() {
+        let negative = REFERENCE.replacen("  - id: 0", "  - id: -1", 1);
+        assert_eq!(
+            RotorSet::from_yaml(&negative),
+            Err(RotorSetError::RotorIdOutOfRange {
+                kind: RotorKind::Large,
+                id: -1,
+                maximum: 10,
+            })
+        );
+
         let out_of_range = REFERENCE.replacen("  - id: 0", "  - id: 10", 1);
         assert_eq!(
             RotorSet::from_yaml(&out_of_range),
@@ -622,6 +640,52 @@ mod tests {
                 second_position: 1,
             })
         ));
+    }
+
+    #[test]
+    fn index_wiring_length_symbols_and_permutation_are_validated() {
+        let short = REFERENCE.replace("7591482630", "759148263");
+        assert_eq!(
+            RotorSet::from_yaml(&short),
+            Err(RotorSetError::WrongWiringLength {
+                kind: RotorKind::Index,
+                id: 0,
+                expected: 10,
+                actual: 9,
+            })
+        );
+
+        let invalid = REFERENCE.replace("7591482630", "759148263X");
+        assert_eq!(
+            RotorSet::from_yaml(&invalid),
+            Err(RotorSetError::InvalidWiringSymbol {
+                kind: RotorKind::Index,
+                id: 0,
+                position: 9,
+                symbol: 'X',
+            })
+        );
+
+        let duplicate = REFERENCE.replace("7591482630", "7591482637");
+        assert_eq!(
+            RotorSet::from_yaml(&duplicate),
+            Err(RotorSetError::DuplicateWiringContact {
+                kind: RotorKind::Index,
+                id: 0,
+                symbol: '7',
+                first_position: 0,
+                second_position: 9,
+            })
+        );
+    }
+
+    #[test]
+    fn missing_required_fields_are_rejected_as_yaml_errors() {
+        let missing_version = REFERENCE.replace("schema_version: 1\n", "");
+        let error = RotorSet::from_yaml(&missing_version).unwrap_err();
+
+        assert!(matches!(error, RotorSetError::InvalidYaml(_)));
+        assert!(error.to_string().contains("schema_version"), "{error}");
     }
 
     #[test]

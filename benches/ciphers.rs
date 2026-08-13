@@ -6,6 +6,8 @@ use old_crypto_rs::{
 
 use divan::Bencher;
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
+#[cfg(feature = "fialka")]
+use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
 #[cfg(feature = "sigaba")]
 use old_crypto_rs::{
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaIndexRotorSetting,
@@ -53,6 +55,19 @@ fn bench_sigaba() -> Sigaba {
         )
         .unwrap(),
     )
+}
+
+#[cfg(feature = "fialka")]
+fn bench_fialka() -> Fialka {
+    Fialka::new(FialkaConfig::overall_base(
+        FialkaRotorSeries::Polish3K,
+        FialkaCommutator::identity(),
+    ))
+}
+
+#[cfg(feature = "fialka")]
+fn fialka_plaintext() -> Vec<u8> {
+    PLAIN.bytes().map(|letter| letter - b'A').collect()
 }
 
 #[divan::bench_group]
@@ -229,6 +244,17 @@ mod b0_encryption {
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[cfg(feature = "fialka")]
+    #[divan::bench]
+    fn b18_fialka(bencher: Bencher) {
+        let c = bench_fialka();
+        let src = fialka_plaintext();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, &src);
         });
     }
 }
@@ -443,6 +469,19 @@ mod b1_decryption {
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[cfg(feature = "fialka")]
+    #[divan::bench]
+    fn b18_fialka(bencher: Bencher) {
+        let c = bench_fialka();
+        let src = fialka_plaintext();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, &src);
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.decrypt(&mut dst, &ct);

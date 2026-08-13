@@ -6,6 +6,11 @@ use old_crypto_rs::{
 
 use divan::Bencher;
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
+#[cfg(feature = "sigaba")]
+use old_crypto_rs::{
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaIndexRotorSetting,
+    SigabaLargeRotorSetting, SigabaOrientation, SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+};
 
 const CHAOS_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const CHAOS_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -22,6 +27,33 @@ fn main() {
 }
 
 type BenchVic = VicCipher<LatinSC, Horizontal, English>;
+
+#[cfg(feature = "sigaba")]
+fn bench_sigaba() -> Sigaba {
+    let large = |id: u8| {
+        SigabaLargeRotorSetting::new(
+            SigabaRotorId::new(id).unwrap(),
+            SigabaRotorPosition::new(14).unwrap(),
+            SigabaOrientation::Normal,
+        )
+    };
+    let index = |id: u8| {
+        SigabaIndexRotorSetting::new(
+            SigabaIndexRotorId::new(id).unwrap(),
+            SigabaIndexPosition::ZERO,
+        )
+    };
+
+    Sigaba::new(
+        SigabaConfig::new(
+            SigabaRotorSet::PekelneyReference,
+            [large(0), large(1), large(2), large(3), large(4)],
+            [large(5), large(6), large(7), large(8), large(9)],
+            [index(0), index(1), index(2), index(3), index(4)],
+        )
+        .unwrap(),
+    )
+}
 
 #[divan::bench_group]
 mod b0_encryption {
@@ -183,6 +215,17 @@ mod b0_encryption {
         let c = Wheatstone::new(b'M', KEY3, KEY4).unwrap();
         let fixpt = helpers::fix_double(PLAIN, 'Q');
         let src = fixpt.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[cfg(feature = "sigaba")]
+    #[divan::bench]
+    fn b17_sigaba(bencher: Bencher) {
+        let c = bench_sigaba();
+        let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.encrypt(&mut dst, src);
@@ -385,6 +428,19 @@ mod b1_decryption {
         let c = Wheatstone::new(b'M', KEY3, KEY4).unwrap();
         let fixpt = helpers::fix_double(PLAIN, 'Q');
         let src = fixpt.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[cfg(feature = "sigaba")]
+    #[divan::bench]
+    fn b17_sigaba(bencher: Bencher) {
+        let c = bench_sigaba();
+        let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len()];
         c.encrypt(&mut ct, src);
         let mut dst = vec![0u8; src.len()];

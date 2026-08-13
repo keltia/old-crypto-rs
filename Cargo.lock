@@ -1613,6 +1613,7 @@ name = "sigaba"
 version = "0.2.0"
 dependencies = [
  "clap",
+ "divan",
  "serde",
  "serde_yml",
 ]

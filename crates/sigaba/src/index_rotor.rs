@@ -46,6 +46,7 @@ impl IndexRotor {
     }
 
     /// Fixed visible index-wheel position.
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn position(&self) -> Position10 {
         self.position
@@ -62,6 +63,7 @@ impl IndexRotor {
     }
 
     /// Traverse the wheel in the inverse direction.
+    #[cfg(test)]
     #[must_use]
     pub(crate) fn reverse(&self, input: Contact10) -> Contact10 {
         let shifted = input.offset(i16::from(self.position.get()));
@@ -72,39 +74,60 @@ impl IndexRotor {
     }
 }
 
-/// Five fixed-position SIGABA index rotors.
+/// Precomposed mapping of five fixed-position SIGABA index rotors.
 ///
-/// Slot storage is left-to-right.  `forward()` traverses slots `0 -> 4`;
-/// `reverse()` traverses slots `4 -> 0`.
+/// The individual wheels never move during message processing, so their
+/// left-to-right traversal is composed once at construction. Runtime forward
+/// and reverse traversal then require one permutation lookup each.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(crate) struct IndexBank {
+    wiring: Permutation<10>,
+    #[cfg(test)]
     rotors: [IndexRotor; 5],
 }
 
 impl IndexBank {
     #[must_use]
-    pub(crate) const fn new(rotors: [IndexRotor; 5]) -> Self {
-        Self { rotors }
-    }
+    pub(crate) fn new(rotors: [IndexRotor; 5]) -> Self {
+        let mut mapping = [0_u8; 10];
 
-    /// Traverse all five index wheels left-to-right.
-    #[must_use]
-    pub(crate) fn forward(&self, mut input: Contact10) -> Contact10 {
-        for rotor in &self.rotors {
-            input = rotor.forward(input);
+        for value in 0..10_u8 {
+            let mut contact =
+                Contact10::new(value).expect("index-bank composition input is in 0..10");
+
+            for rotor in &rotors {
+                contact = rotor.forward(contact);
+            }
+
+            mapping[usize::from(value)] = contact.get();
         }
-        input
-    }
 
-    /// Traverse all five index wheels right-to-left.
-    #[must_use]
-    pub(crate) fn reverse(&self, mut input: Contact10) -> Contact10 {
-        for rotor in self.rotors.iter().rev() {
-            input = rotor.reverse(input);
+        let wiring = Permutation::new(mapping)
+            .expect("composing validated index rotors must produce a permutation");
+
+        Self {
+            wiring,
+            #[cfg(test)]
+            rotors,
         }
-        input
     }
 
+    /// Traverse the precomposed five-wheel mapping left-to-right.
+    #[must_use]
+    pub(crate) fn forward(&self, input: Contact10) -> Contact10 {
+        Contact10::new(self.wiring.forward(input.get()))
+            .expect("validated index-bank permutation returned an in-range contact")
+    }
+
+    /// Traverse the inverse precomposed five-wheel mapping right-to-left.
+    #[cfg(test)]
+    #[must_use]
+    pub(crate) fn reverse(&self, input: Contact10) -> Contact10 {
+        Contact10::new(self.wiring.inverse(input.get()))
+            .expect("validated inverse index-bank permutation returned an in-range contact")
+    }
+
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn rotor(&self, slot: usize) -> &IndexRotor {
         &self.rotors[slot]

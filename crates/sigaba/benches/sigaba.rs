@@ -82,7 +82,9 @@ mod initialization {
     #[divan::bench]
     fn construct_machine(bencher: Bencher) {
         let config = config(SigabaOrientation::Normal);
-        bencher.bench_local(|| black_box(Sigaba::new(black_box(config))));
+        bencher.bench_local(|| {
+            black_box(Sigaba::new(black_box(config.clone())))
+        });
     }
 
     /// Measures copying the cached initial core plus one contact operation.

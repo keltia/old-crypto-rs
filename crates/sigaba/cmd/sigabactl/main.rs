@@ -28,7 +28,7 @@ fn run(cli: Opts) -> Result<(), Box<dyn Error>> {
         Command::Encrypt { text } => (true, text),
         Command::Decrypt { text } => (false, text),
     };
-    let input = read_input(words)?;
+    let input = read_input(&words)?;
     let input = input.trim_end_matches(['\r', '\n']);
 
     let output = if encrypt {
@@ -40,7 +40,7 @@ fn run(cli: Opts) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn read_input(words: Vec<String>) -> io::Result<String> {
+fn read_input(words: &[String]) -> io::Result<String> {
     if words.is_empty() {
         let mut input = String::new();
         io::stdin().read_to_string(&mut input)?;
@@ -49,4 +49,3 @@ fn read_input(words: Vec<String>) -> io::Result<String> {
         Ok(words.join(" "))
     }
 }
-

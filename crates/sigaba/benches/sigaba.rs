@@ -70,7 +70,7 @@ fn verify_fixtures() {
 
 #[divan::bench_group]
 mod initialization {
-    use super::*;
+    use super::{Bencher, Sigaba, SigabaOrientation, black_box, config, machine};
 
     /// Measures typed key validation and construction, without processing text.
     #[divan::bench]
@@ -97,7 +97,9 @@ mod initialization {
 
 #[divan::bench_group]
 mod text_short {
-    use super::*;
+    use super::{
+        Bencher, SHORT_CIPHERTEXT, SHORT_PLAINTEXT, SigabaOrientation, black_box, machine,
+    };
 
     #[divan::bench]
     fn encrypt(bencher: Bencher) {
@@ -118,7 +120,7 @@ mod text_short {
 
 #[divan::bench_group]
 mod text_long {
-    use super::*;
+    use super::{Bencher, SigabaOrientation, black_box, long_plaintext, machine};
 
     #[divan::bench]
     fn encrypt_normal(bencher: Bencher) {
@@ -161,7 +163,7 @@ mod text_long {
 /// without the text API's output allocation.
 #[divan::bench_group]
 mod block_long {
-    use super::*;
+    use super::{Bencher, Block, SigabaOrientation, black_box, long_plaintext, machine};
 
     #[divan::bench]
     fn encrypt(bencher: Bencher) {

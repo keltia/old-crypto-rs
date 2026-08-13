@@ -17,7 +17,14 @@ linker_messages = "allow"
 name = "sigabactl"
 path = "cmd/sigabactl/main.rs"
 
+[[bench]]
+name = "sigaba"
+harness = false
+
 [dependencies]
 clap = { version = "4.6", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_yml = "0"
+
+[dev-dependencies]
+divan = "0.1"

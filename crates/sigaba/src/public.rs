@@ -1,9 +1,8 @@
 //! Public SIGABA facade.
 //!
-//! `Sigaba` stores only a validated immutable configuration.  Each high-level
-//! operation constructs a fresh `SigabaCore`, matching the crate's historical
-//! reset-per-call `Block` behavior while avoiding interior mutable legacy rotor
-//! state.
+//! `Sigaba` stores a validated immutable configuration and a fully constructed
+//! initial `SigabaCore`. Each operation copies that initial state, preserving
+//! reset-per-call behavior without reconstructing the rotor banks.
 //!
 //! Prefer `encrypt_text` / `decrypt_text` for historically accurate CSP-889
 //! text handling.  The `Block` implementation is a fixed-length compatibility
@@ -12,8 +11,9 @@
 use crate::Block;
 
 use super::{
-    config::SigabaConfig,
+    config::{ConfigError, SigabaConfig},
     contact::Contact26,
+    machine::SigabaCore,
     text::{
         contact_to_plaintext, decipher_text, encipher_text, plaintext_to_contact,
         TextError,
@@ -24,13 +24,15 @@ use super::{
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Sigaba {
     config: SigabaConfig,
+    initial: Result<SigabaCore, ConfigError>,
 }
 
 impl Sigaba {
     /// Construct a machine from a validated CSP-889 configuration.
     #[must_use]
-    pub const fn new(config: SigabaConfig) -> Self {
-        Self { config }
+    pub fn new(config: SigabaConfig) -> Self {
+        let initial = config.build_core();
+        Self { config, initial }
     }
 
     /// Return the immutable validated configuration.
@@ -50,7 +52,7 @@ impl Sigaba {
     /// - lowercase ASCII is normalized;
     /// - unsupported plaintext characters return `TextError`.
     pub fn encrypt_text(&self, src: &str) -> Result<String, TextError> {
-        let mut core = self.config.build_core().map_err(TextError::from)?;
+        let mut core = self.initial.map_err(TextError::from)?;
         encipher_text(&mut core, src)
     }
 
@@ -59,7 +61,7 @@ impl Sigaba {
     /// The machine is reset to the configured initial state for every call.
     /// Ciphertext grouping whitespace is ignored without advancing the rotors.
     pub fn decrypt_text(&self, src: &str) -> Result<String, TextError> {
-        let mut core = self.config.build_core().map_err(TextError::from)?;
+        let mut core = self.initial.map_err(TextError::from)?;
         decipher_text(&mut core, src)
     }
 }
@@ -83,7 +85,7 @@ impl Block for Sigaba {
     /// copied unchanged and do not advance the machine.
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
-        let Ok(mut core) = self.config.build_core() else {
+        let Ok(mut core) = self.initial else {
             // A successfully constructed public SigabaConfig cannot currently
             // reach this branch because reference wirings are static and
             // validated. Preserve the Block contract without panicking.
@@ -115,7 +117,7 @@ impl Block for Sigaba {
     /// without affecting rotor state.
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
-        let Ok(mut core) = self.config.build_core() else {
+        let Ok(mut core) = self.initial else {
             return 0;
         };
 
@@ -194,6 +196,15 @@ mod tests {
             machine.decrypt_text("FLQGF QUEQC H").unwrap(),
             "HELLO WORLD",
         );
+    }
+
+    #[test]
+    fn cached_initial_core_matches_a_fresh_configuration_build() {
+        let config = config();
+        let expected = config.build_core().unwrap();
+        let machine = Sigaba::new(config);
+
+        assert_eq!(machine.initial, Ok(expected));
     }
 
     #[test]

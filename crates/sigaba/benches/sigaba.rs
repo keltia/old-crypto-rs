@@ -78,12 +78,16 @@ mod initialization {
         bencher.bench_local(|| black_box(config(black_box(SigabaOrientation::Normal))));
     }
 
-    /// Measures fresh-core construction plus the minimum useful operation.
-    ///
-    /// An empty input would let the optimizer discard the otherwise unobservable
-    /// core, so one contact is deliberately processed here.
+    /// Measures the one-time construction of the cached initial core.
     #[divan::bench]
-    fn reset_plus_one_contact(bencher: Bencher) {
+    fn construct_machine(bencher: Bencher) {
+        let config = config(SigabaOrientation::Normal);
+        bencher.bench_local(|| black_box(Sigaba::new(black_box(config))));
+    }
+
+    /// Measures copying the cached initial core plus one contact operation.
+    #[divan::bench]
+    fn cached_reset_plus_one_contact(bencher: Bencher) {
         let machine = machine(SigabaOrientation::Normal);
         bencher.bench_local(|| {
             black_box(machine.encrypt_text(black_box("A")).unwrap());

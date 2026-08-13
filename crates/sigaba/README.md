@@ -64,3 +64,9 @@ permutations and five index rotors with quoted ten-digit permutations. The
 reference settings from the Pekelney/Dunn paper in 1999 are included as
 `config/reference.yaml`.
 
+## References
+
+[Original Java Simulator]: https://maritime.org/tech/ecmapp.php
+[SIGABA C++ Simulator]: https://github.com/JoeDunnStable/sigaba
+[SIGABA Python Simulator]: http://www.jfbouch.fr/crypto/sigaba/simu.html
+

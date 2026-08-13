@@ -1,12 +1,22 @@
 //! Configuration management
 
-use std::error::Error;
-use std::{fmt, fs};
-use std::path::Path;
 use serde::Deserialize;
-use sigaba::{IndexRotorSetting, LargeRotorSet, LargeRotorSetting, Orientation, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition};
+use sigaba::{
+    IndexRotorSetting, LargeRotorSet, LargeRotorSetting, Orientation, SigabaConfig,
+    SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
+};
+use std::error::Error;
+use std::path::Path;
+use std::{fmt, fs};
 
-use crate::cli::FileConfig;
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FileConfig {
+    rotor_set: RotorSet,
+    cipher: [LargeRotor; 5],
+    control: [LargeRotor; 5],
+    index: [IndexRotor; 5],
+}
 
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -41,7 +51,6 @@ impl fmt::Display for ConfigFileError {
 }
 
 impl Error for ConfigFileError {}
-
 
 pub fn load_config(path: &Path) -> Result<SigabaConfig, Box<dyn Error>> {
     let yaml = fs::read_to_string(path)?;
@@ -151,8 +160,8 @@ pub fn convert_index_bank(raw: [IndexRotor; 5]) -> Result<[IndexRotorSetting; 5]
 
 #[cfg(test)]
 mod tests {
-    use sigaba::Sigaba;
     use super::*;
+    use sigaba::Sigaba;
 
     const REFERENCE: &str = include_str!("../../config/reference.yaml");
 

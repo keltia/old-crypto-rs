@@ -1,9 +1,7 @@
 //! CLI configuration structs
 //!
-use std::path::PathBuf;
 use clap::{Parser, Subcommand};
-use serde::Deserialize;
-use crate::config::{IndexRotor, LargeRotor, RotorSet};
+use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -19,7 +17,6 @@ pub struct Opts {
     #[command(subcommand)]
     pub command: Command,
 }
-
 #[derive(Debug, Subcommand)]
 pub enum Command {
     /// Encrypt plaintext. Reads standard input when TEXT is omitted.
@@ -33,13 +30,3 @@ pub enum Command {
         text: Vec<String>,
     },
 }
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct FileConfig {
-    pub rotor_set: RotorSet,
-    pub cipher: [LargeRotor; 5],
-    pub control: [LargeRotor; 5],
-    pub index: [IndexRotor; 5],
-}
-

@@ -27,6 +27,7 @@ use super::contact::{Contact10, Contact26};
 pub(crate) struct IndexSignals(u16);
 
 impl IndexSignals {
+    #[cfg(test)]
     const MASK: u16 = 0x03ff;
 
     #[must_use]
@@ -34,6 +35,7 @@ impl IndexSignals {
         Self(0)
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn from_bits(bits: u16) -> Self {
         Self(bits & Self::MASK)
@@ -56,11 +58,13 @@ impl IndexSignals {
         }
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn contains(self, contact: Contact10) -> bool {
         self.0 & (1_u16 << contact.get()) != 0
     }
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn count(self) -> u32 {
         self.0.count_ones()

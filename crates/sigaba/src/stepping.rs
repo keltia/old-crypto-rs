@@ -33,6 +33,7 @@ pub(crate) struct CipherStepSet(u8);
 impl CipherStepSet {
     const MASK: u8 = 0x1f;
 
+    #[cfg(test)]
     #[must_use]
     pub(crate) const fn empty() -> Self {
         Self(0)
@@ -53,6 +54,7 @@ impl CipherStepSet {
         slot < 5 && (self.0 & (1_u8 << slot) != 0)
     }
 
+    #[cfg(test)]
     pub(crate) fn insert_slot(&mut self, slot: usize) {
         assert!(slot < 5, "SIGABA cipher slot must be in 0..5");
         self.0 |= 1_u8 << slot;
@@ -65,6 +67,7 @@ impl CipherStepSet {
 }
 
 /// Return the cipher slot driven by one active index output.
+#[cfg(test)]
 #[must_use]
 pub(crate) fn index_output_to_cipher_slot(output: crate::contact::Contact10) -> usize {
     match output.get() {

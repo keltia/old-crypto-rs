@@ -3,10 +3,13 @@ use std::hint::black_box;
 use divan::Bencher;
 use sigaba::{
     Block, IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
-    LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, Sigaba,
-    SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
+    LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, RotorSet,
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId,
+    SigabaRotorPosition,
 };
 
+const REFERENCE_ROTOR_YAML: &str =
+    include_str!("../config/rotors/pekelney-reference.yaml");
 const SHORT_PLAINTEXT: &str = "HELLO WORLD";
 const SHORT_CIPHERTEXT: &str = "FLQGFQUEQCH";
 const LONG_CHUNK: &str = "THE QUICK BROWN FOX ATTACKS AT DAWN ";
@@ -70,7 +73,25 @@ fn verify_fixtures() {
 
 #[divan::bench_group]
 mod initialization {
-    use super::{Bencher, Sigaba, SigabaOrientation, black_box, config, machine};
+    use super::{
+        Bencher, REFERENCE_ROTOR_YAML, RotorSet, Sigaba, SigabaOrientation,
+        black_box, config, machine,
+    };
+
+    /// Measures YAML deserialization, validation and transform precomputation.
+    #[divan::bench]
+    fn parse_rotor_yaml(bencher: Bencher) {
+        bencher.bench_local(|| {
+            black_box(RotorSet::from_yaml(black_box(REFERENCE_ROTOR_YAML)).unwrap())
+        });
+    }
+
+    /// Measures acquisition of the already-cached embedded reference dataset.
+    #[divan::bench]
+    fn cached_reference_rotor_set(bencher: Bencher) {
+        let _ = RotorSet::pekelney_reference();
+        bencher.bench_local(|| black_box(RotorSet::pekelney_reference()));
+    }
 
     /// Measures typed key validation and construction, without processing text.
     #[divan::bench]

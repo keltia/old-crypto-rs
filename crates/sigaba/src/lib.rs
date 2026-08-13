@@ -38,3 +38,10 @@ pub use contact::{Position10 as SigabaIndexPosition, Position26 as SigabaRotorPo
 pub use data::{IndexRotorId as SigabaIndexRotorId, LargeRotorId as SigabaRotorId, LargeRotorSet};
 pub use public::Sigaba;
 pub use text::TextError as SigabaTextError;
+
+/// Compatibility interface for block-oriented cipher consumers.
+pub trait Block {
+    fn block_size(&self) -> usize;
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+}

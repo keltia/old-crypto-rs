@@ -112,7 +112,7 @@ impl SigabaCore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sigaba::{
+    use crate::{
         alphabet_rotor::{AlphabetRotor, Orientation},
         contact::{Contact10, Position10, Position26},
         control_bank::ControlBank,

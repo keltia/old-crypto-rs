@@ -87,12 +87,15 @@ To run the TUI:
 
 There are two main feature flags: `fialka` and `sigaba` for the two main cipher machines implementations.
 
-The first is for the implementation of the Russian device called , and the
-second one is for the 
+The first is for the implementation of the Russian device called , and the second one is for the ECM Mark II US machine
+from WWII.  Now that the SIGABA full rewirte is done, its feature flag has been made part of the default.
+
+The SIGABA implementation is maintained as the standalone `sigaba` workspace crate under `crates/sigaba`; this crate
+re-exports its public API when the `sigaba` feature is enabled.
 
 ### [Fialka](https://en.wikipedia.org/wiki/Fialka) (M-125)  
 
-Fialkais the name of a Cold War-era Soviet cipher machine. A rotor machine, the device uses 10 rotors, each 
+Fialka is the name of a Cold War-era Soviet cipher machine. A rotor machine, the device uses 10 rotors, each
 with 30 contacts along with mechanical pins to control stepping. It also makes use of a punched card mechanism.  Both
 Poland and Czechoslovakia had their own variants.
 
@@ -208,4 +211,3 @@ Please see CONTRIBUTING.md for some simple rules.
 - [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
 - [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
 - [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
-

@@ -133,7 +133,7 @@ impl ControlBank {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sigaba::{
+    use crate::{
         alphabet_rotor::Orientation,
         contact::Position26,
         data::{LargeRotorId, LargeRotorSet},

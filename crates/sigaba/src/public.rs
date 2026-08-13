@@ -138,7 +138,7 @@ impl Block for Sigaba {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sigaba::{
+    use crate::{
         alphabet_rotor::Orientation,
         config::{IndexRotorSetting, LargeRotorSetting},
         contact::{Position10, Position26},

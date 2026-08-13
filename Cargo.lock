@@ -944,6 +944,7 @@ dependencies = [
  "rand 0.10.2",
  "ratatui",
  "rstest",
+ "sigaba",
  "smallvec",
  "thiserror 2.0.20",
 ]
@@ -1493,6 +1494,10 @@ dependencies = [
  "cpufeatures 0.2.17",
  "digest",
 ]
+
+[[package]]
+name = "sigaba"
+version = "0.1.0"
 
 [[package]]
 name = "signal-hook"

@@ -16,8 +16,6 @@ mod vic;
 mod wheatstone;
 #[cfg(feature = "fialka")]
 mod fialka;
-#[cfg(feature = "sigaba")]
-mod sigaba;
 
 pub use null::NullCipher;
 pub use vigenere::{Autocrypt, AutocryptCipher, Autokey, AutokeyCipher, Vigenere, VigenereCipher};
@@ -57,4 +55,19 @@ pub trait Block {
     fn block_size(&self) -> usize;
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
+}
+
+#[cfg(feature = "sigaba")]
+impl Block for Sigaba {
+    fn block_size(&self) -> usize {
+        sigaba::Block::block_size(self)
+    }
+
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        sigaba::Block::encrypt(self, dst, src)
+    }
+
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        sigaba::Block::decrypt(self, dst, src)
+    }
 }

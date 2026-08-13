@@ -164,7 +164,7 @@ fn contact(letter: u8) -> Contact26 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sigaba::{
+    use crate::{
         alphabet_rotor::{AlphabetRotor, Orientation},
         cipher_bank::CipherBank,
         contact::{Position10, Position26},

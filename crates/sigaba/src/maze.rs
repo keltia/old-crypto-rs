@@ -99,7 +99,7 @@ impl SteppingMaze {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sigaba::{
+    use crate::{
         alphabet_rotor::{AlphabetRotor, Orientation},
         contact::{Position10, Position26},
         data::{IndexRotorId, LargeRotorId, LargeRotorSet},

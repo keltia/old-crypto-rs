@@ -314,9 +314,12 @@ fn sigaba_reference_config() -> Result<SigabaConfig> {
 fn demo_sigaba() -> Result<()> {
     let sigaba = Sigaba::new(sigaba_reference_config()?);
 
+    const PLAIN: &str = "CE TOOT EST CHIFFRE AVEC ADFGVX ET LA CLE MASTODON";
+
     println!("==> ECM Mark II SIGABA (Pekelney reference key)");
+    println!("Will use (space -> Z, Z-> X)\nPlain:  {PLAIN}");
     let ciphertext = sigaba.encrypt_text(PLAIN)?;
-    println!("{}", output_as_block(&ciphertext));
+    println!("Cipher: {}", output_as_block(&ciphertext));
     let recovered = sigaba.decrypt_text(&ciphertext)?;
 
     assert_eq!(recovered, PLAIN);

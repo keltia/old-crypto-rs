@@ -52,6 +52,7 @@ It also implements simulation for some cipher devices/machines:
 - Wheatstone cipher machine
 - Fialka M-125-3, with Polish 3K and Czechoslovak 6K adjustable rotor sets
 - SIGABA, a US cipher machine from WWII
+- TSEC/KL-7 (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.  Some implementations were pretty
@@ -85,12 +86,12 @@ To run the TUI:
 
 ## Feature flags
 
-There are two main feature flags: `fialka` and `sigaba` for the two main cipher machines implementations.
+There are three main feature flags: `fialka`, `kl-7`, and `sigaba` for the cipher machines implementations.
 
-The first is for the implementation of the Russian device called , and the second one is for the ECM Mark II US machine
-from WWII.  Now that the SIGABA full rewirte is done, its feature flag has been made part of the default.
+The first is for the implementation of the Russian device called Fialka, the second is for the TSEC/KL-7 Cold War machine, and the third one is for the ECM Mark II US machine
+from WWII.  Now that the SIGABA full rewrite is done, its feature flag has been made part of the default.
 
-The Fialka and SIGABA implementations are maintained as standalone workspace crates under `crates/fialka` and
+The Fialka, KL-7, and SIGABA implementations are maintained as standalone workspace crates under `crates/fialka`, `crates/kl-7`, and
 `crates/sigaba`; this crate re-exports their public APIs when the corresponding feature is enabled.
 
 ### [Fialka](https://en.wikipedia.org/wiki/Fialka) (M-125)  
@@ -148,6 +149,11 @@ cargo run -p sigaba --bin sigabactl -- \
   --config crates/sigaba/config/reference.yaml encrypt "HELLO WORLD"
 ```
 
+### KL-7 Cipher Machine
+
+This is an implementation of the KL-7 cipher machine, a US cipher machine created to replace the SIGABA during Cold War.
+
+
 ## Available demo
 
 ```sh
@@ -196,6 +202,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [A Cryptographic Compendium](http://www.quadibloc.com/crypto/jscrypt.htm) - John J. G. Savard
 - [Cipher Machines and Cryptology](https://www.ciphermachinesandcryptology.com/index.htm)
 - [SIGINT Chatter](https://rijmenants.blogspot.com/) — Dirk Rijmenants
+- [KL-7 US Cipher Machine](https://www.cryptomuseum.com/crypto/usa/kl7/index.htm)
 - [SIGABA Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 - [Solitaire](https://www.schneier.com/academic/solitaire/) - Bruce Schneier
 
@@ -213,6 +220,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [SECOM](http://www.ciphermachinesandcryptology.com/en/secom.htm)
 - [Fialka](https://en.wikipedia.org/wiki/Fialka)
 - [SIGABA cipher machine](https://en.wikipedia.org/wiki/SIGABA)
+- [KL-7 cipher machine](https://en.wikipedia.org/wiki/KL-7)
 - [Solitaire](https://en.wikipedia.org/wiki/Solitaire_(cipher))
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)
 - [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)

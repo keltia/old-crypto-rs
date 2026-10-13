@@ -25,6 +25,9 @@ pub mod rotor;
 pub mod stepping;
 pub mod text;
 
+#[cfg(test)]
+mod kat;
+
 pub use actuator::{ActuatorState, ACTUATOR_SWITCH_COUNT, MOVABLE_ROTOR_SLOTS};
 pub use config::{ConfigError, KeySheetDto, Kl7Config, OperationMode};
 pub use contact::{Contact26, Contact36, Position36, ReentryWire};

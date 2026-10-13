@@ -4,7 +4,7 @@ resolver = "3"
 
 [package]
 name = "old-crypto-rs"
-version = "0.9.0"
+version = "0.11.0"
 edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
 keywords = ["cryptography", "old-crypto", "pen-and-paper", "education", "history"]
@@ -13,7 +13,7 @@ license = "MIT"
 readme = "README.md"
 description = "Rust implementation of my Go module called old-crypto."
 documentation = "https://docs.rs/cipher-rs"
-categories = ["command-line-utilities", "cryptography"]
+categories = ["command-line-utilities", "cryptography", "simulation"]
 
 [lints.rust]
 linker_messages = "allow"

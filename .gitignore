@@ -2,5 +2,6 @@
 *.svg
 *.json
 /.idea
+/.junie
 /fuzz
 /target

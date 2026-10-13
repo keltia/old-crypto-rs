@@ -3,13 +3,15 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::helpers::{English, EnglishExt, Horizontal, LatinSC};
+use old_crypto_rs::helpers::{self, English, EnglishExt, Horizontal, LatinSC};
 #[cfg(feature = "sigaba")]
 use old_crypto_rs::{
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
     SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
     SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
 };
+#[cfg(feature = "kl-7")]
+use old_crypto_rs::{Kl7, Kl7Config, Kl7Position36 as Position36};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
     EnglishStraddling, Nihilist,
@@ -87,6 +89,7 @@ impl App {
                 "Wheatstone",
                 "Fialka",
                 "Sigaba",
+                "KL-7",
             ],
             cipher_list_state,
             selected_cipher_index: 0,
@@ -264,10 +267,65 @@ impl App {
             "Sigaba" => {
                 self.result = "SIGABA support requires --features sigaba".to_string();
             }
+            #[cfg(feature = "kl-7")]
+            "KL-7" => {
+                let config = if self.key1.trim().is_empty() {
+                    Kl7Config::uss_beagle()
+                } else if let Ok(cfg) = Kl7Config::from_yaml(&self.key1) {
+                    cfg
+                } else {
+                    let tokens: Vec<&str> = self.key1.split_whitespace().collect();
+                    if tokens.len() == 8 {
+                        let mut init_pos = [Position36::ZERO; 8];
+                        let mut valid = true;
+                        for (i, t) in tokens.iter().enumerate() {
+                            if let Some(pos) = Position36::parse(t) {
+                                init_pos[i] = pos;
+                            } else {
+                                valid = false;
+                                break;
+                            }
+                        }
+                        if valid {
+                            let beagle = Kl7Config::uss_beagle();
+                            Kl7Config::new(
+                                *beagle.rotors(),
+                                *beagle.alpha_ring_sets(),
+                                *beagle.notch_rings(),
+                                *beagle.notch_ring_sets(),
+                                init_pos,
+                                beagle.mode(),
+                            )
+                            .unwrap_or_else(|_| Kl7Config::uss_beagle())
+                        } else {
+                            Kl7Config::uss_beagle()
+                        }
+                    } else {
+                        Kl7Config::uss_beagle()
+                    }
+                };
+                let cipher = Kl7::new(config);
+                match cipher.encrypt_text(&self.cleartext) {
+                    Ok(result) => self.result = result,
+                    Err(e) => self.result = format!("Error: {e}"),
+                }
+            }
+            #[cfg(not(feature = "kl-7"))]
+            "KL-7" => {
+                self.result = "KL-7 support requires --features kl-7".to_string();
+            }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
+        let mut skip_block_output = false;
         #[cfg(feature = "fialka")]
-        if cipher_name != "Fialka" {
+        if cipher_name == "Fialka" {
+            skip_block_output = true;
+        }
+        #[cfg(feature = "kl-7")]
+        if cipher_name == "KL-7" {
+            skip_block_output = true;
+        }
+        if !skip_block_output {
             self.result = helpers::output_as_block(self.result.as_str());
         }
     }
@@ -468,6 +526,8 @@ fn ui(f: &mut Frame, app: &mut App) {
         "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
         #[cfg(feature = "sigaba")]
         "Sigaba" => vec![],
+        #[cfg(feature = "kl-7")]
+        "KL-7" => vec![("Initial Positions (8 labels / YAML; blank = USS Beagle)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };
 

@@ -5,6 +5,8 @@ use old_crypto_rs::{
     SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
     SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
 };
+#[cfg(feature = "kl-7")]
+use old_crypto_rs::{Kl7, Kl7Config};
 use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET, output_as_block};
 
 #[cfg(feature = "fialka")]
@@ -233,6 +235,8 @@ fn main() -> Result<()>{
     demo_fialka()?;
     #[cfg(feature = "sigaba")]
     demo_sigaba()?;
+    #[cfg(feature = "kl-7")]
+    demo_kl7()?;
     Ok(())
 }
 
@@ -337,6 +341,33 @@ fn demo_sigaba() -> Result<()> {
     println!("Plain:  {REFPLAIN}");
     println!("Cipher: {ciphertext}");
     assert_eq!(ciphertext, EXPECTED);
+    assert_eq!(recovered, REFPLAIN);
+    println!("decrypt ok\n");
+    Ok(())
+}
+
+#[cfg(feature = "kl-7")]
+fn demo_kl7() -> Result<()> {
+    let kl7 = Kl7::new(Kl7Config::uss_beagle());
+
+    const PLAIN: &str = "CE TOOT EST CHIFFRE AVEC ADFGVX ET LA CLE MASTODON";
+
+    println!("==> TSEC/KL-7 (ADONIS / POLLUX, USS Beagle reference key)");
+    println!("Will use (space -> Z, Z -> X)\nPlain:  {PLAIN}");
+    let ciphertext = kl7.encrypt_text(PLAIN)?;
+    println!("Cipher: {ciphertext}");
+    let recovered = kl7.decrypt_text(&ciphertext)?;
+
+    assert_eq!(recovered, PLAIN);
+    println!("decrypt ok\n");
+
+    const REFPLAIN: &str = "THE QUICK BROWN FOX JUMPS OVER THE LAXY DOG";
+    let ciphertext = kl7.encrypt_text(REFPLAIN)?;
+    let recovered = kl7.decrypt_text(&ciphertext)?;
+
+    println!("==> TSEC/KL-7 (USS Beagle reference key)");
+    println!("Plain:  {REFPLAIN}");
+    println!("Cipher: {ciphertext}");
     assert_eq!(recovered, REFPLAIN);
     println!("decrypt ok\n");
     Ok(())

@@ -47,6 +47,27 @@ pub use sigaba::{
     SigabaRotorId, SigabaRotorPosition, SigabaTextError, IndexRotorSetting as SigabaIndexRotorSetting,
     LargeRotorSetting as SigabaLargeRotorSetting,
 };
+#[cfg(feature = "kl-7")]
+pub use kl_7::{
+    ActuatorState as Kl7ActuatorState, BasePlateTerminal as Kl7BasePlateTerminal,
+    ConfigError as Kl7ConfigError, KeySheetDto as Kl7KeySheetDto, Kl7, Kl7Config,
+    Kl7Core, Kl7Error, MazeDirection as Kl7MazeDirection, MazeError as Kl7MazeError,
+    NotchRing as Kl7NotchRing, NotchRingId as Kl7NotchRingId, OperationMode as Kl7OperationMode,
+    Permutation as Kl7Permutation, PermutationError as Kl7PermutationError,
+    Position36 as Kl7Position36, ReentryWire as Kl7ReentryWire, Rotor as Kl7Rotor,
+    RotorId as Kl7RotorId, RotorStepSet as Kl7RotorStepSet, RotorWiring as Kl7RotorWiring,
+    TextError as Kl7TextError, ACTUATOR_SWITCH_COUNT as KL7_ACTUATOR_SWITCH_COUNT,
+    DRUM_ROTOR_COUNT as KL7_DRUM_ROTOR_COUNT, MAX_MAZE_PASSES as KL7_MAX_MAZE_PASSES,
+    MOVABLE_ROTOR_SLOTS as KL7_MOVABLE_ROTOR_SLOTS,
+    STATIONARY_ROTOR_SLOT as KL7_STATIONARY_ROTOR_SLOT,
+    contact_to_plaintext as kl7_contact_to_plaintext,
+    decipher_text_with as kl7_decipher_text_with,
+    encipher_text_with as kl7_encipher_text_with,
+    evaluate_stepping as kl7_evaluate_stepping,
+    format_five_letter_groups as kl7_format_five_letter_groups,
+    plaintext_to_contact as kl7_plaintext_to_contact,
+    trace_maze as kl7_trace_maze,
+};
 
 
 pub trait Block {
@@ -82,5 +103,20 @@ impl Block for Sigaba {
 
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         sigaba::Block::decrypt(self, dst, src)
+    }
+}
+
+#[cfg(feature = "kl-7")]
+impl Block for Kl7 {
+    fn block_size(&self) -> usize {
+        kl_7::Block::block_size(self)
+    }
+
+    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        kl_7::Block::encrypt(self, dst, src)
+    }
+
+    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
+        kl_7::Block::decrypt(self, dst, src)
     }
 }

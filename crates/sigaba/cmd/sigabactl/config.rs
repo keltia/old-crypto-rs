@@ -93,7 +93,7 @@ pub fn parse_config_with_rotors(
     yaml: &str,
     rotor_set: RotorSet,
 ) -> Result<SigabaConfig, ConfigFileError> {
-    let raw: FileConfig = serde_yml::from_str(yaml)
+    let raw: FileConfig = noyalib::from_str(yaml)
         .map_err(|error| ConfigFileError(format!("invalid YAML configuration: {error}")))?;
 
     if let Some(expected) = raw.rotor_set.as_deref()

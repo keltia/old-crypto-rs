@@ -262,7 +262,7 @@ impl RotorSet {
     /// Returns [`RotorSetError`] if the YAML does not match the supported
     /// schema or any rotor definition is incomplete or non-bijective.
     pub fn from_yaml(source: &str) -> Result<Self, RotorSetError> {
-        let raw: RawRotorSet = serde_yml::from_str(source)
+        let raw: RawRotorSet = noyalib::from_str(source)
             .map_err(|error| RotorSetError::InvalidYaml(error.to_string()))?;
 
         if raw.schema_version != SUPPORTED_SCHEMA_VERSION {

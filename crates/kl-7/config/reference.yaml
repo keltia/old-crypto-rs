@@ -1,0 +1,46 @@
+# TSEC/KL-7 Reference Key Sheet (USS Beagle)
+date: "1964-02-18"
+rotors:
+  - "E"
+  - "H"
+  - "F"
+  - "L"
+  - "I"
+  - "A"
+  - "G"
+  - "B"
+alpha_ring_sets:
+  - "4"
+  - "28"
+  - "4"
+  - "16"
+  - "9"
+  - "32"
+  - "8"
+  - "11"
+notch_rings:
+  - 5
+  - 10
+  - 6
+  - 7
+  - 1
+  - 8
+  - 3
+notch_ring_sets:
+  - "C"
+  - "M+"
+  - "E"
+  - "B"
+  - "E+"
+  - "Y"
+  - "K"
+initial_positions:
+  - "X"
+  - "E"
+  - "G"
+  - "16"
+  - "B"
+  - "V"
+  - "E"
+  - "Q"
+mode: "Pollux"

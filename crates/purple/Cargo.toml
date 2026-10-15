@@ -10,8 +10,15 @@ readme = "README.md"
 keywords = ["cryptography", "purple", "cipher", "history"]
 categories = ["cryptography"]
 
+[[bin]]
+name = "purplectl"
+path = "cmd/purplectl/main.rs"
+
 [lints.rust]
 linker_messages = "allow"
 
 [dependencies]
 old-crypto-rs = { version = "0.11.0", path = "../..", default-features = false }
+clap = { version = "4.6", features = ["derive"] }
+noyalib = "0.0"
+serde = { version = "1", features = ["derive"] }

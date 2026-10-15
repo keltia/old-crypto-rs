@@ -1,0 +1,5 @@
+# Machine overall/base setting, not an operational historical daily key.
+series: polish3k
+# Omit rotors to use historical A..K body/core order, side 1,
+# and all zero-based core, ring, and rotor positions.
+# Omit commutator to use the identity punched-card permutation.

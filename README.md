@@ -98,6 +98,8 @@ handle Latin and Cyrillic letters. The M-125-3MN had separate typewheels for Lat
 three modes, single shift letters, double shift with letters and symbols, and digits only, for use with code books and 
 to superencrypt numeric ciphers.
 
+The `fialka` crate also supplies a binary called `fialkactl` to easily encrypt and decrypt messages.
+
 ### [SIGABA](https://en.wikipedia.org/wiki/SIGABA) or ECM Mark II
 
 The implementation interoperates with the Pekelney/Dunn reference model. The five index-rotor wirings are historical; 

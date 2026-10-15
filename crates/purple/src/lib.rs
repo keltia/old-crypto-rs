@@ -7,16 +7,20 @@
 
 mod alphabet;
 mod contact;
+mod config;
 mod core;
 mod motion;
 mod machine;
 pub mod data;
 mod position;
+mod public;
 mod switch;
 mod stepping;
 
 pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
 pub use core::PurpleCore;
+pub use config::PurpleConfig;
+pub use public::{Block, Purple};
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use motion::{MotionError, PurpleMotion};
 pub use machine::PurpleMachine;

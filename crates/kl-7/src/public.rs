@@ -12,12 +12,7 @@ use super::{
 };
 use core::fmt;
 
-/// Block trait adapter for block-oriented cipher consumers.
-pub trait Block {
-    fn block_size(&self) -> usize;
-    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-}
+use old_crypto_rs::Block; 
 
 /// Error type returned by KL-7 public encryption/decryption operations.
 #[derive(Clone, Debug, Eq, PartialEq)]

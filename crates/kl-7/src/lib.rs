@@ -36,7 +36,7 @@ pub use machine::Kl7Core;
 pub use maze::{trace_maze, MazeDirection, MazeError, MAX_MAZE_PASSES};
 pub use notch_ring::{NotchRing, NotchRingId};
 pub use permutation::{Permutation, PermutationError};
-pub use public::{Block, Kl7, Kl7Error};
+pub use public::{Kl7, Kl7Error};
 pub use rotor::{Rotor, RotorWiring};
 pub use stepping::{evaluate_stepping, RotorStepSet, DRUM_ROTOR_COUNT, STATIONARY_ROTOR_SLOT};
 pub use text::{

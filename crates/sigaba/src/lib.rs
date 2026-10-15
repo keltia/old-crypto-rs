@@ -41,9 +41,4 @@ pub use public::Sigaba;
 pub use rotor_set::{RotorKind, RotorSet, RotorSetError};
 pub use text::TextError as SigabaTextError;
 
-/// Compatibility interface for block-oriented cipher consumers.
-pub trait Block {
-    fn block_size(&self) -> usize;
-    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-}
+use old_crypto_rs::Block;

@@ -2,11 +2,12 @@ use std::hint::black_box;
 
 use divan::Bencher;
 use sigaba::{
-    Block, IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
+    IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
     LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, RotorSet,
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId,
     SigabaRotorPosition,
 };
+use old_crypto_rs::Block;
 
 const REFERENCE_ROTOR_YAML: &str =
     include_str!("../config/rotors/pekelney-reference.yaml");

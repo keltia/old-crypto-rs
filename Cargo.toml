@@ -12,7 +12,7 @@ repository = "https://github.com/keltia/old-crypto-rs"
 license = "MIT"
 readme = "README.md"
 description = "Rust implementation of my Go module called old-crypto."
-documentation = "https://docs.rs/cipher-rs"
+documentation = "https://docs.rs/old-crypto-rs"
 categories = ["command-line-utilities", "cryptography", "simulation"]
 
 [lints.rust]

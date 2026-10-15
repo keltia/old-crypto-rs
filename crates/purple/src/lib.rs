@@ -8,9 +8,11 @@
 mod contact;
 pub mod data;
 mod position;
+mod switch;
 
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};
+pub use switch::{SixesSwitch, TwentiesSwitch};
 pub use old_crypto_rs::helpers::{Permutation, PermutationError};
 
 /// Validated permutation for one position of the sixes switch.

@@ -5,13 +5,16 @@ use old_crypto_rs::{
 };
 
 use divan::Bencher;
+use fialka::{Block as _, Commutator as FialkaCommutator, Fialka, FialkaConfig, RotorSeries as FialkaRotorSeries};
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
-#[cfg(feature = "fialka")]
-use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
-#[cfg(feature = "sigaba")]
-use old_crypto_rs::{
-    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaIndexRotorSetting,
-    SigabaLargeRotorSetting, SigabaOrientation, SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+use sigaba::{
+    Block as _,
+    IndexRotorSetting as SigabaIndexRotorSetting,
+    LargeRotorSet as SigabaRotorSet,
+    LargeRotorSetting as SigabaLargeRotorSetting,
+    Orientation as SigabaOrientation,
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaRotorId, SigabaRotorPosition,
 };
 
 const CHAOS_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
@@ -30,7 +33,6 @@ fn main() {
 
 type BenchVic = VicCipher<LatinSC, Horizontal, English>;
 
-#[cfg(feature = "sigaba")]
 fn bench_sigaba() -> Sigaba {
     let large = |id: u8| {
         SigabaLargeRotorSetting::new(
@@ -57,7 +59,6 @@ fn bench_sigaba() -> Sigaba {
     )
 }
 
-#[cfg(feature = "fialka")]
 fn bench_fialka() -> Fialka {
     Fialka::new(FialkaConfig::overall_base(
         FialkaRotorSeries::Polish3K,
@@ -65,7 +66,6 @@ fn bench_fialka() -> Fialka {
     ))
 }
 
-#[cfg(feature = "fialka")]
 fn fialka_plaintext() -> Vec<u8> {
     PLAIN.bytes().map(|letter| letter - b'A').collect()
 }
@@ -236,7 +236,6 @@ mod b0_encryption {
         });
     }
 
-    #[cfg(feature = "sigaba")]
     #[divan::bench]
     fn b17_sigaba(bencher: Bencher) {
         let c = bench_sigaba();
@@ -247,7 +246,6 @@ mod b0_encryption {
         });
     }
 
-    #[cfg(feature = "fialka")]
     #[divan::bench]
     fn b18_fialka(bencher: Bencher) {
         let c = bench_fialka();
@@ -462,7 +460,6 @@ mod b1_decryption {
         });
     }
 
-    #[cfg(feature = "sigaba")]
     #[divan::bench]
     fn b17_sigaba(bencher: Bencher) {
         let c = bench_sigaba();
@@ -475,7 +472,6 @@ mod b1_decryption {
         });
     }
 
-    #[cfg(feature = "fialka")]
     #[divan::bench]
     fn b18_fialka(bencher: Bencher) {
         let c = bench_fialka();

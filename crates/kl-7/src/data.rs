@@ -88,8 +88,8 @@ pub const ROTOR_C_MAP: [u8; 36] = [
 
 /// Standard 0-indexed permutation mapping for Rotor Core D.
 pub const ROTOR_D_MAP: [u8; 36] = [
-    14, 25, 35, 12, 0, 30, 24, 32, 2, 31, 20, 22, 16, 28, 6, 21, 19, 23, 11, 9, 13, 29, 18, 27,
-    3, 34, 4, 7, 5, 8, 15, 26, 1, 10, 33, 17,
+    14, 25, 35, 12, 0, 30, 24, 32, 2, 31, 20, 22, 16, 28, 6, 21, 19, 23, 11, 9, 13, 29, 18, 27, 3,
+    34, 4, 7, 5, 8, 15, 26, 1, 10, 33, 17,
 ];
 
 /// Standard 0-indexed permutation mapping for Rotor Core E.
@@ -118,14 +118,14 @@ pub const ROTOR_H_MAP: [u8; 36] = [
 
 /// Standard 0-indexed permutation mapping for Rotor Core I.
 pub const ROTOR_I_MAP: [u8; 36] = [
-    24, 5, 34, 11, 20, 21, 18, 31, 19, 22, 29, 17, 0, 15, 30, 10, 23, 12, 32, 6, 35, 8, 33, 1,
-    9, 7, 25, 28, 14, 16, 3, 27, 13, 2, 26, 4,
+    24, 5, 34, 11, 20, 21, 18, 31, 19, 22, 29, 17, 0, 15, 30, 10, 23, 12, 32, 6, 35, 8, 33, 1, 9,
+    7, 25, 28, 14, 16, 3, 27, 13, 2, 26, 4,
 ];
 
 /// Standard 0-indexed permutation mapping for Rotor Core J.
 pub const ROTOR_J_MAP: [u8; 36] = [
-    7, 30, 0, 27, 19, 5, 31, 4, 32, 20, 29, 11, 3, 13, 14, 33, 6, 34, 15, 17, 28, 21, 24, 25,
-    35, 10, 22, 18, 2, 1, 12, 26, 23, 9, 16, 8,
+    7, 30, 0, 27, 19, 5, 31, 4, 32, 20, 29, 11, 3, 13, 14, 33, 6, 34, 15, 17, 28, 21, 24, 25, 35,
+    10, 22, 18, 2, 1, 12, 26, 23, 9, 16, 8,
 ];
 
 /// Standard 0-indexed permutation mapping for Rotor Core K.
@@ -218,10 +218,10 @@ pub const BASE_PLATE_TERMINALS: [BasePlateTerminal; 36] = [
 #[must_use]
 pub fn letter_to_pin(letter: Contact26) -> Contact36 {
     for (pin, terminal) in BASE_PLATE_TERMINALS.iter().enumerate() {
-        if let BasePlateTerminal::Letter(l) = terminal {
-            if *l == letter {
-                return Contact36::new(pin as u8).unwrap();
-            }
+        if let BasePlateTerminal::Letter(l) = terminal
+            && *l == letter
+        {
+            return Contact36::new(pin as u8).unwrap();
         }
     }
     unreachable!("All 26 letters are present on the baseplate");
@@ -231,10 +231,10 @@ pub fn letter_to_pin(letter: Contact26) -> Contact36 {
 #[must_use]
 pub fn reentry_to_pin(wire: ReentryWire) -> Contact36 {
     for (pin, terminal) in BASE_PLATE_TERMINALS.iter().enumerate() {
-        if let BasePlateTerminal::Reentry(w) = terminal {
-            if *w == wire {
-                return Contact36::new(pin as u8).unwrap();
-            }
+        if let BasePlateTerminal::Reentry(w) = terminal
+            && *w == wire
+        {
+            return Contact36::new(pin as u8).unwrap();
         }
     }
     unreachable!("All 10 reentry wires are present on the baseplate");

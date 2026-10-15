@@ -99,7 +99,7 @@ mod tests {
         let src = b"THEPURPLE";
         let mut short = [0u8; 4];
         assert_eq!(purple.encrypt(&mut short, src), 4);
-        assert_eq!(&short, &purple.encrypt_bytes(&src[..4]).unwrap());
+        assert_eq!(&short, &purple.encrypt_bytes(&src[..4]).unwrap().as_slice());
         let mut recovered = [0u8; 4];
         assert_eq!(purple.decrypt(&mut recovered, &short), 4);
         assert_eq!(&recovered, &src[..4]);

@@ -147,7 +147,9 @@ cargo run -p sigaba --bin sigabactl -- \
 ### KL-7 Cipher Machine
 
 This is an implementation of the KL-7 cipher machine, a US cipher machine created 
-to replace the SIGABA during Cold War.
+to replace the SIGABA during the Cold War.  It also provides the
+`kl7ctl` command-line utility.
+
 
 ### PURPLE Cipher Machine
 

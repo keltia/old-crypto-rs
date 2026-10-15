@@ -11,12 +11,14 @@ mod motion;
 pub mod data;
 mod position;
 mod switch;
+mod stepping;
 
 pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use motion::{MotionError, PurpleMotion};
 pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};
 pub use switch::{SixesSwitch, TwentiesSwitch};
+pub use stepping::PurpleStepping;
 pub use old_crypto_rs::helpers::{Permutation, PermutationError};
 
 /// Validated permutation for one position of the sixes switch.

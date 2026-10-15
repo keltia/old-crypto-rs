@@ -9,6 +9,8 @@
 //! `table[position][input]` is its decipher-direction output contact.
 //! Enciphering uses the inverse permutation, not these forward entries.
 
+use std::sync::LazyLock;
+
 use crate::{SixesPermutation, TwentiesPermutation};
 
 /// Figure 6, SIS decipher-direction, 25 historical positions.
@@ -126,6 +128,21 @@ pub const TWENTIES_3_WIRING: [[u8; 20]; 25] = [
     [7, 6, 4, 0, 14, 13, 8, 15, 10, 16, 17, 5, 18, 19, 2, 11, 3, 1, 9, 12],
     [12, 1, 16, 6, 13, 7, 2, 8, 19, 4, 15, 9, 5, 0, 11, 14, 10, 17, 3, 18],
 ];
+
+// Construct the historical permutations once, then share the immutable tables.
+// All rows are validated by the existing shared Permutation implementation.
+static SIXES_VALIDATED: LazyLock<[SixesPermutation; 25]> =
+    LazyLock::new(sixes_permutations);
+static TWENTIES_VALIDATED: LazyLock<[[TwentiesPermutation; 25]; 3]> =
+    LazyLock::new(twenties_permutations);
+
+pub(crate) fn cached_sixes_permutations() -> &'static [SixesPermutation; 25] {
+    &SIXES_VALIDATED
+}
+
+pub(crate) fn cached_twenties_permutations() -> &'static [[TwentiesPermutation; 25]; 3] {
+    &TWENTIES_VALIDATED
+}
 
 /// Validated historical sixes mappings at every switch position.
 #[must_use]

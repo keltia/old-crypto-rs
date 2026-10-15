@@ -4,20 +4,20 @@
 //! advances implicitly during a substitution: the future stepping mechanism
 //! is responsible for changing its position between characters.
 
-use crate::data::{sixes_permutations, twenties_permutations};
+use crate::data::{cached_sixes_permutations, cached_twenties_permutations};
 use crate::{SixesContact, SixesPermutation, SwitchPosition, TwentiesContact,
     TwentiesPermutation, TwentiesSwitchId};
 
 /// The six-contact switch at one of its 25 historical positions.
 pub struct SixesSwitch {
     position: SwitchPosition,
-    wiring: [SixesPermutation; 25],
+    wiring: &'static [SixesPermutation; 25],
 }
 
 impl SixesSwitch {
     /// Construct the switch at a validated historical position (1–25).
     pub fn new(position: SwitchPosition) -> Self {
-        Self { position, wiring: sixes_permutations() }
+        Self { position, wiring: cached_sixes_permutations() }
     }
 
     /// Current position in historical one-based notation.
@@ -47,14 +47,13 @@ impl SixesSwitch {
 pub struct TwentiesSwitch {
     id: TwentiesSwitchId,
     position: SwitchPosition,
-    wiring: [TwentiesPermutation; 25],
+    wiring: &'static [TwentiesPermutation; 25],
 }
 
 impl TwentiesSwitch {
     /// Construct physical switch #1, #2, or #3, independently of stepping speed.
     pub fn new(id: TwentiesSwitchId, position: SwitchPosition) -> Self {
-        let wiring = twenties_permutations().into_iter().nth(id.index())
-            .expect("physical switch ID is 1, 2, or 3");
+        let wiring = &cached_twenties_permutations()[id.index()];
         Self { id, position, wiring }
     }
 

@@ -8,6 +8,7 @@ mod fill;
 mod lang;
 mod mask;
 mod numeric;
+mod permutation;
 mod types;
 
 pub use alphabet::*;
@@ -17,6 +18,7 @@ pub use fill::*;
 pub use lang::*;
 pub use mask::*;
 pub use numeric::*;
+pub use permutation::*;
 pub use types::*;
 
 use std::collections::HashSet;

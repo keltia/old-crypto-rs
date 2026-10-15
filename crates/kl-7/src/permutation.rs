@@ -114,8 +114,8 @@ mod tests {
     #[test]
     fn identity_36_permutation() {
         let mut id = [0_u8; 36];
-        for i in 0..36 {
-            id[i] = i as u8;
+        for (i, val) in id.iter_mut().enumerate() {
+            *val = i as u8;
         }
         let p = Permutation::<36>::new(id).unwrap();
         for i in 0..36 {
@@ -127,8 +127,8 @@ mod tests {
     #[test]
     fn permutation_detects_duplicate() {
         let mut bad = [0_u8; 36];
-        for i in 0..36 {
-            bad[i] = i as u8;
+        for (i, val) in bad.iter_mut().enumerate() {
+            *val = i as u8;
         }
         bad[35] = 0; // duplicate 0
         assert!(matches!(
@@ -140,8 +140,8 @@ mod tests {
     #[test]
     fn permutation_detects_out_of_range() {
         let mut bad = [0_u8; 36];
-        for i in 0..36 {
-            bad[i] = i as u8;
+        for (i, val) in bad.iter_mut().enumerate() {
+            *val = i as u8;
         }
         bad[0] = 36;
         assert!(matches!(

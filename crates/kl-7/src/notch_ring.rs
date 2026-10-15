@@ -206,7 +206,7 @@ mod tests {
         for (idx, pattern) in NOTCH_RING_PATTERNS.iter().enumerate() {
             assert_eq!(pattern.len(), 36);
             let cams = pattern.iter().filter(|&&b| b).count();
-            assert!(cams >= 10 && cams <= 20, "Ring {} cams={}", idx + 1, cams);
+            assert!((10..=20).contains(&cams), "Ring {} cams={}", idx + 1, cams);
         }
     }
 

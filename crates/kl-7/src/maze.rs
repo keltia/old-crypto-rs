@@ -131,7 +131,7 @@ mod tests {
         for letter_idx in 0..26 {
             let input = Contact26::new(letter_idx).unwrap();
             let (ciphertext, enc_passes) = trace_maze(&drum, input, MazeDirection::Forward).unwrap();
-            assert!(enc_passes >= 1 && enc_passes <= 16, "Passes count: {}", enc_passes);
+            assert!((1..=16).contains(&enc_passes), "Passes count: {}", enc_passes);
 
             let (decrypted, dec_passes) = trace_maze(&drum, ciphertext, MazeDirection::Backward).unwrap();
             assert_eq!(decrypted, input, "Decryption mismatch for {}", input);

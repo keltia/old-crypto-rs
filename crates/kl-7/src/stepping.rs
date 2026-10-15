@@ -135,8 +135,8 @@ mod tests {
     fn rotor_4_is_always_stationary() {
         for bits in 0..128u8 {
             let mut states = [false; 7];
-            for i in 0..7 {
-                states[i] = (bits & (1 << i)) != 0;
+            for (i, val) in states.iter_mut().enumerate() {
+                *val = (bits & (1 << i)) != 0;
             }
             let actuators = ActuatorState::from_array(states);
             let steps = evaluate_stepping(&actuators);
@@ -148,8 +148,8 @@ mod tests {
     fn anti_stall_guarantee_exhaustive_test() {
         for bits in 0..128u8 {
             let mut states = [false; 7];
-            for i in 0..7 {
-                states[i] = (bits & (1 << i)) != 0;
+            for (i, val) in states.iter_mut().enumerate() {
+                *val = (bits & (1 << i)) != 0;
             }
             let actuators = ActuatorState::from_array(states);
             let steps = evaluate_stepping(&actuators);

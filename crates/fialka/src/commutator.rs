@@ -40,13 +40,13 @@ impl Commutator {
     /// Traverse the card reader from the keyboard towards the rotor drum.
     #[must_use]
     pub(crate) fn keyboard_to_drum(&self, input: Contact) -> Contact {
-        self.wiring.forward_contact(input)
+        Contact::new(self.wiring.forward(input.get())).unwrap()
     }
 
     /// Traverse the card reader from the rotor drum towards the output encoder.
     #[must_use]
     pub(crate) fn drum_to_output(&self, input: Contact) -> Contact {
-        self.wiring.inverse_contact(input)
+        Contact::new(self.wiring.inverse(input.get())).unwrap()
     }
 
     /// Zero-based keyboard-to-drum mapping, primarily for key-data tests.

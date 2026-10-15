@@ -45,13 +45,13 @@ impl KeyboardMapping {
     /// Traverse from a keyboard/print contact towards the punched-card reader.
     #[must_use]
     pub(crate) fn keyboard_to_card(&self, input: Contact) -> Contact {
-        self.wiring.forward_contact(input)
+        Contact::new(self.wiring.forward(input.get())).unwrap()
     }
 
     /// Traverse from the punched-card reader back towards the printer contact.
     #[must_use]
     pub(crate) fn card_to_keyboard(&self, input: Contact) -> Contact {
-        self.wiring.inverse_contact(input)
+        Contact::new(self.wiring.inverse(input.get())).unwrap()
     }
 }
 

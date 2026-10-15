@@ -87,13 +87,13 @@ impl RotorCore {
     /// Pass a signal from the input/right face to the output/left face.
     #[must_use]
     pub(crate) fn right_to_left(&self, input: Contact) -> Contact {
-        self.wiring.forward_contact(input)
+        Contact::new(self.wiring.forward(input.get())).unwrap()
     }
 
     /// Pass a signal from the output/left face back to the input/right face.
     #[must_use]
     pub(crate) fn left_to_right(&self, input: Contact) -> Contact {
-        self.wiring.inverse_contact(input)
+        Contact::new(self.wiring.inverse(input.get())).unwrap()
     }
 
     /// Right-to-left transform when this removable core is physically flipped

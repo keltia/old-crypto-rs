@@ -36,13 +36,13 @@ impl EntryDisc {
     /// Traverse from the card reader towards rotor 10.
     #[must_use]
     pub(crate) fn card_to_drum(&self, input: Contact) -> Contact {
-        self.wiring.forward_contact(input)
+        Contact::new(self.wiring.forward(input.get())).unwrap()
     }
 
     /// Traverse from rotor 10 back towards the card reader.
     #[must_use]
     pub(crate) fn drum_to_card(&self, input: Contact) -> Contact {
-        self.wiring.inverse_contact(input)
+        Contact::new(self.wiring.inverse(input.get())).unwrap()
     }
 
     /// Zero-based card-reader -> drum mapping, primarily for reference tests.

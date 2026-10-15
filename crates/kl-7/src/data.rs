@@ -214,30 +214,60 @@ pub const BASE_PLATE_TERMINALS: [BasePlateTerminal; 36] = [
     BasePlateTerminal::Reentry(ReentryWire::new(1).unwrap()), // 35: 1
 ];
 
+/// Precomputed mapping from letter contact (0..25) to baseplate pin (0..35).
+pub const LETTER_TO_PIN: [Contact36; 26] = [
+    Contact36::new(34).unwrap(), // A -> pin 34
+    Contact36::new(17).unwrap(), // B -> pin 17
+    Contact36::new(5).unwrap(),  // C -> pin 5
+    Contact36::new(31).unwrap(), // D -> pin 31
+    Contact36::new(33).unwrap(), // E -> pin 33
+    Contact36::new(4).unwrap(),  // F -> pin 4
+    Contact36::new(11).unwrap(), // G -> pin 11
+    Contact36::new(18).unwrap(), // H -> pin 18
+    Contact36::new(15).unwrap(), // I -> pin 15
+    Contact36::new(27).unwrap(), // J -> pin 27
+    Contact36::new(32).unwrap(), // K -> pin 32
+    Contact36::new(28).unwrap(), // L -> pin 28
+    Contact36::new(9).unwrap(),  // M -> pin 9
+    Contact36::new(3).unwrap(),  // N -> pin 3
+    Contact36::new(8).unwrap(),  // O -> pin 8
+    Contact36::new(1).unwrap(),  // P -> pin 1
+    Contact36::new(0).unwrap(),  // Q -> pin 0
+    Contact36::new(12).unwrap(), // R -> pin 12
+    Contact36::new(25).unwrap(), // S -> pin 25
+    Contact36::new(21).unwrap(), // T -> pin 21
+    Contact36::new(14).unwrap(), // U -> pin 14
+    Contact36::new(20).unwrap(), // V -> pin 20
+    Contact36::new(22).unwrap(), // W -> pin 22
+    Contact36::new(24).unwrap(), // X -> pin 24
+    Contact36::new(7).unwrap(),  // Y -> pin 7
+    Contact36::new(29).unwrap(), // Z -> pin 29
+];
+
+/// Precomputed mapping from re-entry wire (0..9) to baseplate pin (0..35).
+pub const REENTRY_TO_PIN: [Contact36; 10] = [
+    Contact36::new(2).unwrap(),  // 0 -> pin 2
+    Contact36::new(35).unwrap(), // 1 -> pin 35
+    Contact36::new(19).unwrap(), // 2 -> pin 19
+    Contact36::new(6).unwrap(),  // 3 -> pin 6
+    Contact36::new(26).unwrap(), // 4 -> pin 26
+    Contact36::new(30).unwrap(), // 5 -> pin 30
+    Contact36::new(23).unwrap(), // 6 -> pin 23
+    Contact36::new(16).unwrap(), // 7 -> pin 16
+    Contact36::new(13).unwrap(), // 8 -> pin 13
+    Contact36::new(10).unwrap(), // 9 -> pin 10
+];
+
 /// Get the endplate pin index for a letter contact (A=0..Z=25).
 #[must_use]
-pub fn letter_to_pin(letter: Contact26) -> Contact36 {
-    for (pin, terminal) in BASE_PLATE_TERMINALS.iter().enumerate() {
-        if let BasePlateTerminal::Letter(l) = terminal
-            && *l == letter
-        {
-            return Contact36::new(pin as u8).unwrap();
-        }
-    }
-    unreachable!("All 26 letters are present on the baseplate");
+pub const fn letter_to_pin(letter: Contact26) -> Contact36 {
+    LETTER_TO_PIN[letter.get() as usize]
 }
 
 /// Get the endplate pin index for a re-entry loop wire (0..9).
 #[must_use]
-pub fn reentry_to_pin(wire: ReentryWire) -> Contact36 {
-    for (pin, terminal) in BASE_PLATE_TERMINALS.iter().enumerate() {
-        if let BasePlateTerminal::Reentry(w) = terminal
-            && *w == wire
-        {
-            return Contact36::new(pin as u8).unwrap();
-        }
-    }
-    unreachable!("All 10 reentry wires are present on the baseplate");
+pub const fn reentry_to_pin(wire: ReentryWire) -> Contact36 {
+    REENTRY_TO_PIN[wire.get() as usize]
 }
 
 /// Get the baseplate terminal at a given endplate pin index (0..35).

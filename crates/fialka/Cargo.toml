@@ -8,9 +8,17 @@ repository = "https://github.com/keltia/old-crypto-rs"
 license = "MIT"
 keywords = ["cryptography", "fialka", "cipher", "history"]
 categories = ["cryptography"]
+default-run = "fialkactl"
+
+[[bin]]
+name = "fialkactl"
+path = "cmd/fialkactl/main.rs"
 
 [lints.rust]
 linker_messages = "allow"
 
 [dependencies]
+clap = { version = "4.6", features = ["derive"] }
+noyalib = "0.0"
 old-crypto-rs = { version = "0.11.0", path = "../..", default-features = false }
+serde = { version = "1", features = ["derive"] }

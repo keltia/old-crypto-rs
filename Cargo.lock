@@ -573,7 +573,10 @@ dependencies = [
 name = "fialka"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "noyalib",
  "old-crypto-rs",
+ "serde",
 ]
 
 [[package]]

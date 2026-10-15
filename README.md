@@ -51,8 +51,9 @@ It also implements simulation for some cipher devices/machines:
 - Chaocipher
 - Wheatstone cipher machine
 - Fialka M-125-3, with Polish 3K and Czechoslovak 6K adjustable rotor sets
-- SIGABA, a US cipher machine from WWII
-- TSEC/KL-7 (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
+- [SIGABA](crates/sigaba/README.md), a US cipher machine from WWII
+- [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
+- [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.  Some implementations were pretty
@@ -78,21 +79,13 @@ all ciphers; it also checks that you can decrypt back to the original plaintext.
 
     cargo run --example demo
 
-There will also be a TUI tool called `old-crypto` which can be used to encrypt/decrypt text.
+There will also be a TUI tool called `old-crypto-tui` which can be used to encrypt/decrypt text.
 
 To run the TUI:
 
-    cargo run --bin old-crypto
+    cargo run -p old-crypto-tui
 
-## Feature flags
-
-There are three main feature flags: `fialka`, `kl-7`, and `sigaba` for the cipher machines implementations.
-
-The first is for the implementation of the Russian device called Fialka, the second is for the TSEC/KL-7 Cold War machine, and the third one is for the ECM Mark II US machine
-from WWII.  Now that the SIGABA full rewrite is done, its feature flag has been made part of the default.
-
-The Fialka, KL-7, and SIGABA implementations are maintained as standalone workspace crates under `crates/fialka`, `crates/kl-7`, and
-`crates/sigaba`; this crate re-exports their public APIs when the corresponding feature is enabled.
+## Crypto Machines Simulators
 
 ### [Fialka](https://en.wikipedia.org/wiki/Fialka) (M-125)  
 
@@ -151,16 +144,24 @@ cargo run -p sigaba --bin sigabactl -- \
 
 ### KL-7 Cipher Machine
 
-This is an implementation of the KL-7 cipher machine, a US cipher machine created to replace the SIGABA during Cold War.
+This is an implementation of the KL-7 cipher machine, a US cipher machine created 
+to replace the SIGABA during Cold War.
 
+### PURPLE Cipher Machine
+
+The [PURPLE implementation](crates/purple/README.md) is a standalone workspace crate
+simulating the Japanese WWII diplomatic cipher machine, including the sixes and
+twenties switches and their historical stepping mechanism. It also provides the
+`purplectl` command-line utility.
+
+See the [technical documentation](crates/purple/docs/purple.md) for design details,
+historical wiring sources, and test vectors.
 
 ## Available demo
 
 ```sh
 cargo run --example demo
 ```
-
-You may want to add `--features sigaba` or `fialka` for the cipher machines.
 
 ## Benchmarks & Tests
 

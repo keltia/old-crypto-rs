@@ -1,16 +1,24 @@
-use old_crypto_rs::{ADFGVXCipher, Block, CaesarCipher, Chaocipher, Nihilist, PlayfairCipher, Solitaire, Transposition, VicCipher, Wheatstone, helpers, IrregularTransposition, SecomCipher, VigenereCipher, AutokeyCipher, AutocryptCipher, PolybiusCipher, EnglishStraddling};
-#[cfg(feature = "sigaba")]
-use old_crypto_rs::{
-    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
-    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
-    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+use fialka::{
+    Commutator as FialkaCommutator, Fialka, FialkaConfig, RotorSeries as FialkaRotorSeries,
 };
-#[cfg(feature = "kl-7")]
-use old_crypto_rs::{Kl7, Kl7Config};
-use old_crypto_rs::helpers::{shuffle, transp_shuffle, English, French, Horizontal, LatinSC, REGULAR_ALPHABET, output_as_block};
-
-#[cfg(feature = "fialka")]
-use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries};
+use kl_7::{Kl7, Kl7Config};
+use old_crypto_rs::helpers::{
+    English, French, Horizontal, LatinSC, REGULAR_ALPHABET, output_as_block, shuffle,
+    transp_shuffle,
+};
+use old_crypto_rs::{
+    ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block, CaesarCipher, Chaocipher,
+    EnglishStraddling, IrregularTransposition, Nihilist, PlayfairCipher, PolybiusCipher,
+    SecomCipher, Solitaire, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
+};
+use sigaba::{
+    IndexRotorSetting as SigabaIndexRotorSetting,
+    LargeRotorSet as SigabaRotorSet,
+    LargeRotorSetting as SigabaLargeRotorSetting,
+    Orientation as SigabaOrientation,
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaRotorId, SigabaRotorPosition,
+};
 
 use eyre::Result;
 
@@ -231,16 +239,12 @@ fn main() -> Result<()>{
         }
     }
 
-    #[cfg(feature = "fialka")]
     demo_fialka()?;
-    #[cfg(feature = "sigaba")]
     demo_sigaba()?;
-    #[cfg(feature = "kl-7")]
     demo_kl7()?;
     Ok(())
 }
 
-#[cfg(feature = "fialka")]
 fn demo_fialka() -> Result<()> {
     const FIALKA_PLAIN: &str = "СЕКРЕТНОЕСООБЩЕНИЕ";
 
@@ -288,7 +292,6 @@ fn demo_fialka() -> Result<()> {
 
 
 
-#[cfg(feature = "sigaba")]
 fn sigaba_reference_config() -> Result<SigabaConfig> {
     let large = |id: u8| -> Result<SigabaLargeRotorSetting> {
         Ok(SigabaLargeRotorSetting::new(
@@ -314,7 +317,6 @@ fn sigaba_reference_config() -> Result<SigabaConfig> {
     )?)
 }
 
-#[cfg(feature = "sigaba")]
 fn demo_sigaba() -> Result<()> {
     let sigaba = Sigaba::new(sigaba_reference_config()?);
 
@@ -346,7 +348,6 @@ fn demo_sigaba() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "kl-7")]
 fn demo_kl7() -> Result<()> {
     let kl7 = Kl7::new(Kl7Config::uss_beagle());
 
@@ -379,6 +380,6 @@ mod tests {
 
     #[test]
     fn test_main() {
-        main();
+        assert!(main().is_ok());
     }
 }

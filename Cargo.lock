@@ -572,6 +572,9 @@ dependencies = [
 [[package]]
 name = "fialka"
 version = "0.1.0"
+dependencies = [
+ "old-crypto-rs",
+]
 
 [[package]]
 name = "filedescriptor"
@@ -820,6 +823,7 @@ dependencies = [
  "clap",
  "divan",
  "noyalib",
+ "old-crypto-rs",
  "serde",
 ]
 
@@ -1062,12 +1066,9 @@ dependencies = [
  "dhat",
  "divan",
  "eyre",
- "fialka",
- "kl-7",
  "rand 0.10.3",
  "ratatui",
  "rstest",
- "sigaba",
  "smallvec",
  "thiserror 2.0.21",
 ]
@@ -1664,6 +1665,7 @@ dependencies = [
  "clap",
  "divan",
  "noyalib",
+ "old-crypto-rs",
  "serde",
 ]
 

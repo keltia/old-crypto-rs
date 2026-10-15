@@ -1310,7 +1310,10 @@ dependencies = [
 name = "purple"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "noyalib",
  "old-crypto-rs",
+ "serde",
 ]
 
 [[package]]

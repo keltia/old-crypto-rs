@@ -20,7 +20,7 @@ mod stepping;
 pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
 pub use core::PurpleCore;
 pub use config::PurpleConfig;
-pub use public::{Block, Purple};
+pub use public::Purple;
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use motion::{MotionError, PurpleMotion};
 pub use machine::PurpleMachine;

@@ -1,13 +1,7 @@
 //! Reset-per-call public PURPLE facade and byte-buffer compatibility trait.
 
+use old_crypto_rs::Block;
 use crate::{AlphabetError, PurpleConfig, PurpleMachine};
-
-/// One-byte cipher compatibility interface, matching the other machine crates.
-pub trait Block {
-    fn block_size(&self) -> usize;
-    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-}
 
 /// Reusable PURPLE configuration. Each operation starts at the configured positions.
 #[derive(Clone, Debug, Eq, PartialEq)]

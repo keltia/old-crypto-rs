@@ -12,3 +12,6 @@ categories = ["cryptography"]
 
 [lints.rust]
 linker_messages = "allow"
+
+[dependencies]
+old-crypto-rs = { version = "0.11.0", path = "../..", default-features = false }

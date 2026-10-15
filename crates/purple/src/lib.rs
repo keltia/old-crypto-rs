@@ -1,7 +1,7 @@
 //! Simulation of the Japanese PURPLE (Angooki Taipu B) cipher machine.
 //!
-//! Step 2 establishes typed contacts and switch positions. Historical wirings,
-//! stepping, configuration and the public cipher API come in later steps.
+//! Typed contacts, switch positions, and shared validated permutations are provided.
+//! Historical wirings, stepping and the public API will follow.
 
 #![forbid(unsafe_code)]
 
@@ -10,11 +10,50 @@ mod position;
 
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};
+pub use old_crypto_rs::helpers::{Permutation, PermutationError};
+
+/// Validated permutation for one position of the sixes switch.
+pub type SixesPermutation = Permutation<6>;
+/// Validated permutation for one position of a twenties switch.
+pub type TwentiesPermutation = Permutation<20>;
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn crate_smoke_test() {
         assert_eq!(env!("CARGO_PKG_NAME"), "purple");
+    }
+
+    #[test]
+    fn shared_sixes_permutation_round_trip() {
+        let mapping = [3, 0, 5, 1, 4, 2];
+        let permutation = SixesPermutation::new(mapping).unwrap();
+        assert_eq!(permutation.mapping(), &mapping);
+        for contact in 0..6 {
+            assert_eq!(permutation.inverse(permutation.forward(contact)), contact);
+        }
+    }
+
+    #[test]
+    fn shared_twenties_permutation_round_trip() {
+        let mapping = std::array::from_fn(|i| ((i + 7) % 20) as u8);
+        let permutation = TwentiesPermutation::new(mapping).unwrap();
+        for contact in 0..20 {
+            assert_eq!(permutation.inverse(permutation.forward(contact)), contact);
+        }
+    }
+
+    #[test]
+    fn shared_validation_rejects_duplicate_and_out_of_range() {
+        assert!(matches!(
+            SixesPermutation::new([0, 1, 2, 3, 4, 4]),
+            Err(PermutationError::Duplicate { .. })
+        ));
+        assert!(matches!(
+            SixesPermutation::new([0, 1, 2, 3, 4, 6]),
+            Err(PermutationError::OutOfRange { .. })
+        ));
     }
 }

@@ -7,12 +7,14 @@
 
 mod alphabet;
 mod contact;
+mod motion;
 pub mod data;
 mod position;
 mod switch;
 
 pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
 pub use contact::{ContactError, SixesContact, TwentiesContact};
+pub use motion::{MotionError, PurpleMotion};
 pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};
 pub use switch::{SixesSwitch, TwentiesSwitch};
 pub use old_crypto_rs::helpers::{Permutation, PermutationError};

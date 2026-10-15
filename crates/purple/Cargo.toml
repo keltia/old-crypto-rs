@@ -10,6 +10,10 @@ readme = "README.md"
 keywords = ["cryptography", "purple", "cipher", "history"]
 categories = ["cryptography"]
 
+[[bench]]
+name = "purple"
+harness = false
+
 [[bin]]
 name = "purplectl"
 path = "cmd/purplectl/main.rs"
@@ -22,3 +26,6 @@ old-crypto-rs = { version = "0.11.0", path = "../..", default-features = false }
 clap = { version = "4.6", features = ["derive"] }
 noyalib = "0.0"
 serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+divan = "0.1"

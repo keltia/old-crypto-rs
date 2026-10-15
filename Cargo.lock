@@ -1311,6 +1311,7 @@ name = "purple"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "divan",
  "noyalib",
  "old-crypto-rs",
  "serde",

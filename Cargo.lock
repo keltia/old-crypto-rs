@@ -1066,9 +1066,12 @@ dependencies = [
  "dhat",
  "divan",
  "eyre",
+ "fialka",
+ "kl-7",
  "rand 0.10.3",
  "ratatui",
  "rstest",
+ "sigaba",
  "smallvec",
  "thiserror 2.0.21",
 ]

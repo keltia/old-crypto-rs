@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fialka", "crates/kl-7", "crates/sigaba", "crates/purple", "cmd/old-crypto"]
+members = ["crates/fialka", "crates/kl-7", "crates/sigaba", "crates/purple", "crates/old-crypto-tui"]
 resolver = "3"
 
 [package]
@@ -62,3 +62,4 @@ fialka = { version = "0.1.0", path = "crates/fialka" }
 kl-7 = { version = "0.1.0", path = "crates/kl-7" }
 rstest = "0.27"
 sigaba = { version = "0.2.0", path = "crates/sigaba" }
+purple = { version = "0.1.0", path = "crates/purple" }

@@ -1,5 +1,5 @@
 [package]
-name = "old-crypto"
+name = "old-crypto-tui"
 version = "0.11.0"
 edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
@@ -7,13 +7,13 @@ license = "MIT"
 description = "TUI client for old-crypto-rs and historical cipher machines."
 
 [[bin]]
-name = "old-crypto"
+name = "old-crypto-tui"
 path = "main.rs"
 
 [dependencies]
 crossterm = "0.29"
-fialka = { version = "0.1.0", path = "../../crates/fialka" }
-kl-7 = { version = "0.1.0", path = "../../crates/kl-7" }
+fialka = { version = "0.1.0", path = "../fialka" }
+kl-7 = { version = "0.1.0", path = "../kl-7" }
 old-crypto-rs = { version = "0.11.0", path = "../.." }
 ratatui = "0.30"
-sigaba = { version = "0.2.0", path = "../../crates/sigaba" }
+sigaba = { version = "0.2.0", path = "../sigaba" }

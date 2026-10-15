@@ -9,6 +9,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cryptography", "sigaba", "cipher", "history"]
 categories = ["cryptography"]
+default-run = "sigabactl"
 
 [lints.rust]
 linker_messages = "allow"

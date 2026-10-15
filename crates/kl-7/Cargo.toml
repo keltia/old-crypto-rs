@@ -9,6 +9,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cryptography", "kl-7", "kl7", "cipher", "history"]
 categories = ["cryptography"]
+default-run = "kl7ctl"
 
 [lints.rust]
 linker_messages = "allow"

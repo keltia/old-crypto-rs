@@ -9,6 +9,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cryptography", "purple", "cipher", "history"]
 categories = ["cryptography"]
+default-run = "purplectl"
 
 [[bench]]
 name = "purple"

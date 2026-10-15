@@ -5,6 +5,7 @@ edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
 license = "MIT"
 description = "TUI client for old-crypto-rs and historical cipher machines."
+default-run = "old-crypto-tui"
 
 [[bin]]
 name = "old-crypto-tui"

@@ -1,12 +1,13 @@
 //! Simulation of the Japanese PURPLE (Angooki Taipu B) cipher machine.
 //!
 //! Typed contacts, switch positions, and shared validated permutations are provided.
-//! Stepping and the public API will follow.
+//! Stateful message operation and the public API will follow.
 
 #![forbid(unsafe_code)]
 
 mod alphabet;
 mod contact;
+mod core;
 mod motion;
 pub mod data;
 mod position;
@@ -14,6 +15,7 @@ mod switch;
 mod stepping;
 
 pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
+pub use core::PurpleCore;
 pub use contact::{ContactError, SixesContact, TwentiesContact};
 pub use motion::{MotionError, PurpleMotion};
 pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};

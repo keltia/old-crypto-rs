@@ -50,7 +50,7 @@ It currently implements a few more compared to the Go/Ruby code, namely:
 It also implements simulation for some cipher devices/machines:
 - Chaocipher
 - Wheatstone cipher machine
-- Fialka M-125-3, with Polish 3K and Czechoslovak 6K adjustable rotor sets
+- [Fialka M-125-3](crates/fialka/README.md), with Polish 3K and Czechoslovak 6K adjustable rotor sets
 - [SIGABA](crates/sigaba/README.md), a US cipher machine from WWII
 - [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
 - [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze

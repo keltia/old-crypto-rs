@@ -141,10 +141,17 @@ impl From<Kl7Config> for Kl7 {
 }
 
 impl Block for Kl7 {
+    /// KL-7 is a stream-like cipher machine; the compatibility block size is one byte.
     fn block_size(&self) -> usize {
         1
     }
 
+    /// Fixed-length compatibility encryption.
+    ///
+    /// Processing is bounded by `min(src.len(), dst.len())`. ASCII letters (`A..=Z`, `a..=z`)
+    /// are enciphered through the rotor drum and advance the stepping state. Non-ASCII or
+    /// unsupported bytes are passed through untouched and do not advance the machine state.
+    ///
     fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
         let mut core = self.initial.clone();
@@ -165,6 +172,12 @@ impl Block for Kl7 {
         n
     }
 
+    /// Fixed-length compatibility decryption.
+    ///
+    /// Processing is bounded by `min(src.len(), dst.len())`. ASCII letters (`A..=Z`, `a..=z`)
+    /// are deciphered through the rotor drum in reverse and advance the stepping state. Non-ASCII
+    /// or unsupported bytes are passed through untouched and do not advance the machine state.
+    ///
     fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize {
         let n = src.len().min(dst.len());
         let mut core = self.initial.clone();
@@ -217,6 +230,23 @@ mod tests {
 
         let count_dec = kl7.decrypt(&mut dec, &cipher);
         assert_eq!(count_dec, 9);
+        assert_eq!(&dec, plain);
+    }
+
+    #[test]
+    fn block_trait_passthrough_non_ascii_and_unsupported_bytes() {
+        let kl7 = Kl7::new(Kl7Config::uss_beagle());
+        let plain = b"TOP SECRET 123!";
+        let mut cipher = [0u8; 15];
+        let mut dec = [0u8; 15];
+
+        let count = kl7.encrypt(&mut cipher, plain);
+        assert_eq!(count, 15);
+        assert_eq!(cipher[3], b' ');
+        assert_eq!(&cipher[10..15], b" 123!");
+
+        let count_dec = kl7.decrypt(&mut dec, &cipher);
+        assert_eq!(count_dec, 15);
         assert_eq!(&dec, plain);
     }
 }

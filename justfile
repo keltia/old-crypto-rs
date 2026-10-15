@@ -26,6 +26,7 @@ tidy:
 
 # Install the 3 binaries (old-crypto, sigabactl and kl7ctl)
 install:
-	cargo install --path cmd/old-crypto
+	cargo install --path crates/old-crypto-tui
 	cargo install --path crates/sigaba
 	cargo install --path crates/kl-7
+	cargo install --path crates/purple

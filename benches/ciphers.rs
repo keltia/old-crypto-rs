@@ -11,7 +11,7 @@ use fialka::{
 };
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
 use sigaba::{
-    Block as _, IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
+    IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
     LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, Sigaba,
     SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
 };

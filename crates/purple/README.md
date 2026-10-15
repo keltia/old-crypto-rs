@@ -49,8 +49,12 @@ Use `purplectl --help` and `purplectl encrypt --help` for argument details.
 
 ## Testing
 
+The CLI integration tests run the compiled `purplectl` executable (no network or Python required).
+
+
 ```sh
-cargo test -p purple
+cargo test -p purple --all-targets
+cargo clippy -p purple --all-targets -- -D warnings
 cargo test --workspace
 ```
 
@@ -62,23 +66,7 @@ Historical references:
 - Brian Neal's independent Python simulator and worked README vector:
   https://github.com/gremmie/purple
 
-## CLI (`purplectl`)
+## Machine architecture and historical sources
 
-The command interface follows `sigabactl` and `kl7ctl`, using `clap`
-subcommands and optional YAML key sheets. Input comes from positional
-`TEXT` arguments or standard input when no text is supplied. Text is strict
-uppercase ASCII; spaces and punctuation are not silently removed.
-
-```sh
-cargo run -p purple --bin purplectl -- encrypt THEPURPLEMACHINEISNOWONLINE
-cargo run -p purple --bin purplectl -- decrypt OGIVTSIAAHMWMHTVIBYYJUOJFUE
-cargo run -p purple --bin purplectl -- --config crates/purple/config/reference.yaml encrypt HELLO
-printf 'THEPURPLEMACHINEISNOWONLINE\n' | cargo run -p purple --bin purplectl -- encrypt
-```
-
-The optional `--config FILE` takes YAML with `alphabet` (26 distinct
-uppercase letters), `sixes` (1–25), `twenties` (three positions, physical
-switch order 1–3), and `motion` (fast/middle/slow switch identities).
-See `config/reference.yaml`. Without `--config`, that reference setup is used.
-
-Use `purplectl --help` and `purplectl encrypt --help` for argument details.
+See [docs/purple.md](docs/purple.md) for the signal path, switch motion,
+historical wiring provenance, testing approach, and usage limitations.

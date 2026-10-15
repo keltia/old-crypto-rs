@@ -71,7 +71,7 @@ impl RotorSlot {
 
     #[must_use]
     pub(crate) const fn direction(self) -> RotationDirection {
-        if self.number() % 2 == 0 {
+        if self.number().is_multiple_of(2) {
             RotationDirection::AwayFromKeyboard
         } else {
             RotationDirection::TowardsKeyboard

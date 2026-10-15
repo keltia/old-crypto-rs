@@ -16,6 +16,6 @@ purple = { path = "../purple" }
 crossterm = "0.29"
 fialka = { version = "0.1.0", path = "../fialka" }
 kl-7 = { version = "0.1.0", path = "../kl-7" }
-old-crypto-rs = { version = "0.11.0", path = "../.." }
+old-crypto-rs = { version = "0.12", path = "../.." }
 ratatui = "0.30"
 sigaba = { version = "0.2.0", path = "../sigaba" }

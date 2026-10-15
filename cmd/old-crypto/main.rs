@@ -3,23 +3,25 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use old_crypto_rs::helpers::{self, English, EnglishExt, Horizontal, LatinSC};
-#[cfg(feature = "sigaba")]
-use old_crypto_rs::{
-    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
-    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
-    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+use fialka::{
+    Commutator as FialkaCommutator, Fialka, FialkaConfig, RotorSeries as FialkaRotorSeries,
 };
-#[cfg(feature = "kl-7")]
-use old_crypto_rs::{Kl7, Kl7Config, Kl7Position36 as Position36};
+use kl_7::{Kl7, Kl7Config, Position36};
+use old_crypto_rs::helpers::{self, English, EnglishExt, Horizontal, LatinSC};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
     EnglishStraddling, Nihilist,
     NullCipher, PlayfairCipher, PolybiusCipher, SecomCipher, Solitaire, Transposition, VicCipher,
     VigenereCipher, Wheatstone, 
 };
-#[cfg(feature = "fialka")]
-use old_crypto_rs::{Fialka, FialkaCommutator, FialkaConfig, FialkaRotorSeries, };
+use sigaba::{
+    IndexRotorSetting as SigabaIndexRotorSetting,
+    LargeRotorSet as SigabaRotorSet,
+    LargeRotorSetting as SigabaLargeRotorSetting,
+    Orientation as SigabaOrientation,
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaRotorId, SigabaRotorPosition,
+};
 
 use ratatui::{
     prelude::*,
@@ -235,7 +237,6 @@ impl App {
                     Err(e) => self.result = format!("Error: {}", e),
                 }
             }
-            #[cfg(feature = "fialka")]
             "Fialka" => {
                 let series = match self.key1.trim().to_ascii_uppercase().as_str() {
                     "" | "3K" => FialkaRotorSeries::Polish3K,
@@ -252,7 +253,6 @@ impl App {
                     Err(e) => self.result = format!("Error: {e}"),
                 }
             }
-            #[cfg(feature = "sigaba")]
             "Sigaba" => match sigaba_reference_config() {
                 Ok(config) => {
                     let cipher = Sigaba::new(config);
@@ -263,11 +263,6 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {e}"),
             },
-            #[cfg(not(feature = "sigaba"))]
-            "Sigaba" => {
-                self.result = "SIGABA support requires --features sigaba".to_string();
-            }
-            #[cfg(feature = "kl-7")]
             "KL-7" => {
                 let config = if self.key1.trim().is_empty() {
                     Kl7Config::uss_beagle()
@@ -310,21 +305,9 @@ impl App {
                     Err(e) => self.result = format!("Error: {e}"),
                 }
             }
-            #[cfg(not(feature = "kl-7"))]
-            "KL-7" => {
-                self.result = "KL-7 support requires --features kl-7".to_string();
-            }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
-        let mut skip_block_output = false;
-        #[cfg(feature = "fialka")]
-        if cipher_name == "Fialka" {
-            skip_block_output = true;
-        }
-        #[cfg(feature = "kl-7")]
-        if cipher_name == "KL-7" {
-            skip_block_output = true;
-        }
+        let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7";
         if !skip_block_output {
             self.result = helpers::output_as_block(self.result.as_str());
         }
@@ -332,7 +315,6 @@ impl App {
 }
 
 
-#[cfg(feature = "sigaba")]
 fn sigaba_reference_config() -> Result<SigabaConfig, String> {
     let large = |id: u8| -> Result<SigabaLargeRotorSetting, String> {
         Ok(SigabaLargeRotorSetting::new(
@@ -522,11 +504,8 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Plain Key", &app.key2),
             ("Cipher Key", &app.key3),
         ],
-        #[cfg(feature = "fialka")]
         "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
-        #[cfg(feature = "sigaba")]
         "Sigaba" => vec![],
-        #[cfg(feature = "kl-7")]
         "KL-7" => vec![("Initial Positions (8 labels / YAML; blank = USS Beagle)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };

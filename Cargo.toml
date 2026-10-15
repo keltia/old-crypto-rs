@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fialka", "crates/kl-7", "crates/sigaba"]
+members = ["crates/fialka", "crates/kl-7", "crates/sigaba", "cmd/old-crypto"]
 resolver = "3"
 
 [package]
@@ -30,9 +30,6 @@ harness = false
 name = "transposition"
 harness = false
 
-[[bin]]
-name = "old-crypto"
-path = "cmd/old-crypto/main.rs"
 
 [package.metadata.docs.rs]
 all-features = true

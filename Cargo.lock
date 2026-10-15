@@ -1309,6 +1309,9 @@ dependencies = [
 [[package]]
 name = "purple"
 version = "0.1.0"
+dependencies = [
+ "old-crypto-rs",
+]
 
 [[package]]
 name = "quote"

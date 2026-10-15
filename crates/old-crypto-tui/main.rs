@@ -23,6 +23,9 @@ use sigaba::{
     SigabaRotorId, SigabaRotorPosition,
 };
 
+use purple::{
+    Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
+};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -92,6 +95,7 @@ impl App {
                 "Fialka",
                 "Sigaba",
                 "KL-7",
+                "PURPLE",
             ],
             cipher_list_state,
             selected_cipher_index: 0,
@@ -305,15 +309,133 @@ impl App {
                     Err(e) => self.result = format!("Error: {e}"),
                 }
             }
+            "PURPLE" => match purple_tui_config(
+                &self.key1,
+                &self.key2,
+                &self.key3,
+                &self.key4,
+            ) {
+                Ok(config) => {
+                    let cipher = Purple::new(config);
+                    match cipher.encrypt_text(&self.cleartext) {
+                        Ok(result) => self.result = result,
+                        Err(e) => self.result = format!("Error: {e}"),
+                    }
+                }
+                Err(e) => self.result = format!("Error: {e}"),
+            },
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
-        let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7";
+        let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7" || cipher_name == "PURPLE";
         if !skip_block_output {
             self.result = helpers::output_as_block(self.result.as_str());
         }
     }
 }
 
+
+
+/// A comma- or whitespace-separated triplet, with strict cardinality.
+fn purple_triplet(value: &str, label: &str) -> Result<[u8; 3], String> {
+    let parts: Vec<_> = value
+        .split([',', ' ', '\t'])
+        .filter(|item| !item.is_empty())
+        .collect();
+    if parts.len() != 3 {
+        return Err(format!("{label} requires exactly three numbers"));
+    }
+    let parse = |part: &str| {
+        part.parse::<u8>()
+            .map_err(|_| format!("invalid {label} value: {part}"))
+    };
+    Ok([parse(parts[0])?, parse(parts[1])?, parse(parts[2])?])
+}
+
+fn purple_tui_config(
+    alphabet: &str,
+    sixes: &str,
+    twenties: &str,
+    motion: &str,
+) -> Result<PurpleConfig, String> {
+    let alpha = if alphabet.trim().is_empty() {
+        "NOKTYUXEQLHBRMPDICJASVWGZF"
+    } else {
+        alphabet.trim()
+    };
+    let alpha = PurpleAlphabet::new(alpha).map_err(|e| e.to_string())?;
+
+    let sixes = if sixes.trim().is_empty() {
+        9
+    } else {
+        sixes.trim().parse::<u8>()
+            .map_err(|_| "invalid sixes position".to_string())?
+    };
+    let sixes = SwitchPosition::new(sixes)
+        .map_err(|e| e.to_string())?;
+
+    let twenties = if twenties.trim().is_empty() {
+        [1, 24, 6]
+    } else {
+        purple_triplet(twenties, "twenties positions")?
+    };
+    let twenties = twenties.map(|n| {
+        SwitchPosition::new(n)
+            .map_err(|e| e.to_string())
+    });
+    let [p1, p2, p3] = twenties;
+
+    let motion = if motion.trim().is_empty() {
+        [2, 3, 1]
+    } else {
+        purple_triplet(motion, "motion")?
+    };
+    let switch_id = |n| match n {
+        1 => Ok(TwentiesSwitchId::One),
+        2 => Ok(TwentiesSwitchId::Two),
+        3 => Ok(TwentiesSwitchId::Three),
+        _ => Err(format!("motion switch {n} must be 1, 2 or 3")),
+    };
+    let [fast, middle, slow] = motion;
+    let motion = PurpleMotion::new(switch_id(fast)?, switch_id(middle)?, switch_id(slow)?)
+        .map_err(|e| e.to_string())?;
+    Ok(PurpleConfig::new(alpha, sixes, [p1?, p2?, p3?], motion))
+}
+
+#[cfg(test)]
+mod purple_tui_tests {
+    use super::*;
+
+    #[test]
+    fn reference_vector() {
+        let config = purple_tui_config("", "", "", "").unwrap();
+        let cipher = Purple::new(config);
+        assert_eq!(
+            cipher.encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
+            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
+        );
+    }
+
+    #[test]
+    fn explicit_reference_settings() {
+        let config = purple_tui_config(
+            "NOKTYUXEQLHBRMPDICJASVWGZF", "9", "1, 24, 6", "2 3 1"
+        ).unwrap();
+        assert_eq!(
+            Purple::new(config).encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
+            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
+        );
+    }
+
+    #[test]
+    fn rejects_bad_settings() {
+        assert!(purple_tui_config("A", "", "", "").is_err());
+        assert!(purple_tui_config("", "26", "", "").is_err());
+        assert!(purple_tui_config("", "", "1,2", "").is_err());
+        assert!(purple_tui_config("", "", "1,0,6", "").is_err());
+        assert!(purple_tui_config("", "", "", "2,2,1").is_err());
+        assert!(purple_tui_config("", "", "", "4,2,1").is_err());
+    }
+}
 
 fn sigaba_reference_config() -> Result<SigabaConfig, String> {
     let large = |id: u8| -> Result<SigabaLargeRotorSetting, String> {
@@ -506,6 +628,12 @@ fn ui(f: &mut Frame, app: &mut App) {
         ],
         "Fialka" => vec![("Rotor Series (3K or 6K; blank = 3K)", &app.key1)],
         "Sigaba" => vec![],
+        "PURPLE" => vec![
+            ("Alphabet (26 letters; blank = reference)", &app.key1),
+            ("Sixes position (1-25; blank = 9)", &app.key2),
+            ("Twenties #1,#2,#3 (blank = 1,24,6)", &app.key3),
+            ("Motion fast,middle,slow (blank = 2,3,1)", &app.key4),
+        ],
         "KL-7" => vec![("Initial Positions (8 labels / YAML; blank = USS Beagle)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };

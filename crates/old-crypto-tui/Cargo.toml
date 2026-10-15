@@ -11,6 +11,7 @@ name = "old-crypto-tui"
 path = "main.rs"
 
 [dependencies]
+purple = { path = "../purple" }
 crossterm = "0.29"
 fialka = { version = "0.1.0", path = "../fialka" }
 kl-7 = { version = "0.1.0", path = "../kl-7" }

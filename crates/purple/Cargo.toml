@@ -1,0 +1,14 @@
+[package]
+name = "purple"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ollivier Robert <roberto@keltia.net>"]
+description = "A simulation of the Japanese PURPLE (Angooki Taipu B) cipher machine."
+repository = "https://github.com/keltia/old-crypto-rs"
+license = "MIT"
+readme = "README.md"
+keywords = ["cryptography", "purple", "cipher", "history"]
+categories = ["cryptography"]
+
+[lints.rust]
+linker_messages = "allow"

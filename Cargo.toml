@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fialka", "crates/kl-7", "crates/sigaba", "cmd/old-crypto"]
+members = ["crates/fialka", "crates/kl-7", "crates/sigaba", "crates/purple", "cmd/old-crypto"]
 resolver = "3"
 
 [package]

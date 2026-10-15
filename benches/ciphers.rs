@@ -1,20 +1,19 @@
 use old_crypto_rs::{
-    ADFGVXCipher, Block, CaesarCipher, Chaocipher, IrregularTransposition, Nihilist, PlayfairCipher,
-    SecomCipher, SquareCipher, Straddling, Transposition, VicCipher, VigenereCipher,
-    Wheatstone, AutokeyCipher, AutocryptCipher, helpers, Solitaire,
+    ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block, CaesarCipher, Chaocipher,
+    IrregularTransposition, Nihilist, PlayfairCipher, SecomCipher, Solitaire, SquareCipher,
+    Straddling, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
 };
 
 use divan::Bencher;
-use fialka::{Block as _, Commutator as FialkaCommutator, Fialka, FialkaConfig, RotorSeries as FialkaRotorSeries};
+use fialka::{
+    Block as _, Commutator as FialkaCommutator, Fialka, FialkaConfig,
+    RotorSeries as FialkaRotorSeries,
+};
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
 use sigaba::{
-    Block as _,
-    IndexRotorSetting as SigabaIndexRotorSetting,
-    LargeRotorSet as SigabaRotorSet,
-    LargeRotorSetting as SigabaLargeRotorSetting,
-    Orientation as SigabaOrientation,
-    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
-    SigabaRotorId, SigabaRotorPosition,
+    Block as _, IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
+    LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, Sigaba,
+    SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
 };
 
 const CHAOS_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
@@ -70,10 +69,27 @@ fn fialka_plaintext() -> Vec<u8> {
     PLAIN.bytes().map(|letter| letter - b'A').collect()
 }
 
+use purple::{
+    Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
+};
+fn bench_purple() -> Purple {
+    use TwentiesSwitchId::{One, Three, Two};
+
+    let position = |n| SwitchPosition::new(n).unwrap();
+    let config = PurpleConfig::new(
+        PurpleAlphabet::new("NOKTYUXEQLHBRMPDICJASVWGZF").unwrap(),
+        position(9),
+        [position(1), position(24), position(6)],
+        PurpleMotion::new(Two, Three, One).unwrap(),
+    );
+
+    Purple::new(config)
+}
+
 #[divan::bench_group]
 mod b0_encryption {
-    use old_crypto_rs::helpers::{English, LatinSC, Latin36, Numeric6, Horizontal};
     use super::*;
+    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
 
     #[divan::bench]
     fn b01_caesar(bencher: Bencher) {
@@ -255,12 +271,22 @@ mod b0_encryption {
             c.encrypt(&mut dst, &src);
         });
     }
+
+    #[divan::bench]
+    fn b19_purple(bencher: Bencher) {
+        let c = bench_purple();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+        bencher.bench_local(|| {
+            c.encrypt(&mut dst, src);
+        });
+    }
 }
 
 #[divan::bench_group]
 mod b1_decryption {
-    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
     use super::*;
+    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {
@@ -340,7 +366,7 @@ mod b1_decryption {
 
     #[divan::bench]
     fn b05_square(bencher: Bencher) {
-        let c = SquareCipher::<Numeric6,Latin36>::new(KEY2).unwrap();
+        let c = SquareCipher::<Numeric6, Latin36>::new(KEY2).unwrap();
         let src = PLAIN.as_bytes();
         let mut ct = vec![0u8; src.len() * 2];
         c.encrypt(&mut ct, src);
@@ -481,6 +507,18 @@ mod b1_decryption {
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.decrypt(&mut dst, &ct);
+        });
+    }
+
+    #[divan::bench]
+    fn b19_purple(bencher: Bencher) {
+        let c = bench_purple();
+        let src = PLAIN.as_bytes();
+        let mut ct = vec![0u8; src.len()];
+        let written = c.encrypt(&mut ct, src);
+        let mut dst = vec![0u8; written];
+        bencher.bench_local(|| {
+            c.decrypt(&mut dst, &ct[..written]);
         });
     }
 }

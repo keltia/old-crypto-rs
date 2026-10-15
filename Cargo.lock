@@ -1058,18 +1058,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "old-crypto"
-version = "0.11.0"
-dependencies = [
- "crossterm",
- "fialka",
- "kl-7",
- "old-crypto-rs",
- "ratatui",
- "sigaba",
-]
-
-[[package]]
 name = "old-crypto-rs"
 version = "0.11.0"
 dependencies = [
@@ -1080,12 +1068,25 @@ dependencies = [
  "eyre",
  "fialka",
  "kl-7",
+ "purple",
  "rand 0.10.3",
  "ratatui",
  "rstest",
  "sigaba",
  "smallvec",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "old-crypto-tui"
+version = "0.11.0"
+dependencies = [
+ "crossterm",
+ "fialka",
+ "kl-7",
+ "old-crypto-rs",
+ "ratatui",
+ "sigaba",
 ]
 
 [[package]]

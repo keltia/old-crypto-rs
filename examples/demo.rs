@@ -11,6 +11,9 @@ use old_crypto_rs::{
     EnglishStraddling, IrregularTransposition, Nihilist, PlayfairCipher, PolybiusCipher,
     SecomCipher, Solitaire, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
 };
+use purple::{
+    Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
+};
 use sigaba::{
     IndexRotorSetting as SigabaIndexRotorSetting,
     LargeRotorSet as SigabaRotorSet,
@@ -242,6 +245,7 @@ fn main() -> Result<()>{
     demo_fialka()?;
     demo_sigaba()?;
     demo_kl7()?;
+    demo_purple()?;
     Ok(())
 }
 
@@ -369,6 +373,39 @@ fn demo_kl7() -> Result<()> {
     println!("==> TSEC/KL-7 (USS Beagle reference key)");
     println!("Plain:  {REFPLAIN}");
     println!("Cipher: {ciphertext}");
+    assert_eq!(recovered, REFPLAIN);
+    println!("decrypt ok\n");
+    Ok(())
+}
+
+fn demo_purple() -> eyre::Result<()> {
+    use TwentiesSwitchId::{One, Three, Two};
+
+    let position = |n| SwitchPosition::new(n).unwrap();
+    let config = PurpleConfig::new(
+        PurpleAlphabet::new("NOKTYUXEQLHBRMPDICJASVWGZF")?,
+        position(9),
+        [position(1), position(24), position(6)],
+        PurpleMotion::new(Two, Three, One)?,
+    );
+    let purple = Purple::new(config);
+
+    println!("==> PURPLE (December 1941 reference key)");
+    let ciphertext = purple.encrypt_text(PLAIN)?;
+    let recovered = purple.decrypt_text(&ciphertext)?;
+    println!("Plain:  {PLAIN}");
+    println!("Cipher: {}", output_as_block(&ciphertext));
+    assert_eq!(recovered, PLAIN);
+    println!("decrypt ok\n");
+
+    const REFPLAIN: &str = "THEPURPLEMACHINEISNOWONLINE";
+    const EXPECTED: &str = "OGIVTSIAAHMWMHTVIBYYJUOJFUE";
+    let ciphertext = purple.encrypt_text(REFPLAIN)?;
+    let recovered = purple.decrypt_text(&ciphertext)?;
+    println!("==> PURPLE (independent known-answer vector)");
+    println!("Plain:  {REFPLAIN}");
+    println!("Cipher: {ciphertext}");
+    assert_eq!(ciphertext, EXPECTED);
     assert_eq!(recovered, REFPLAIN);
     println!("decrypt ok\n");
     Ok(())

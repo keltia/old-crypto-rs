@@ -1085,6 +1085,7 @@ dependencies = [
  "fialka",
  "kl-7",
  "old-crypto-rs",
+ "purple",
  "ratatui",
  "sigaba",
 ]

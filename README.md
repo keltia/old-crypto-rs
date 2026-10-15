@@ -203,6 +203,8 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Cipher Machines and Cryptology](https://www.ciphermachinesandcryptology.com/index.htm)
 - [SIGINT Chatter](https://rijmenants.blogspot.com/) — Dirk Rijmenants
 - [KL-7 US Cipher Machine](https://www.cryptomuseum.com/crypto/usa/kl7/index.htm)
+- [PURPLE Specs](https://cryptocellar.org/pubs/purple-revealed.pdf)
+- [PURPLE Machine Archive](https://cryptocellar.org/simula/purple/)
 - [SIGABA Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 - [Solitaire](https://www.schneier.com/academic/solitaire/) - Bruce Schneier
 
@@ -220,6 +222,7 @@ Please see CONTRIBUTING.md for some simple rules.
 - [SECOM](http://www.ciphermachinesandcryptology.com/en/secom.htm)
 - [Fialka](https://en.wikipedia.org/wiki/Fialka)
 - [SIGABA cipher machine](https://en.wikipedia.org/wiki/SIGABA)
+- [PURPLE](https://en.wikipedia.org/wiki/PURPLE_(cipher))
 - [KL-7 cipher machine](https://en.wikipedia.org/wiki/KL-7)
 - [Solitaire](https://en.wikipedia.org/wiki/Solitaire_(cipher))
 - [Straddling checkerboard](https://en.wikipedia.org/wiki/Straddling_checkerboard)

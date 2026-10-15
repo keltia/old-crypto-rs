@@ -22,8 +22,11 @@
 //! `R * P^-1 * R`; its return mapping is `R * P * R`.
 
 use super::{
-    Contact, CoreSetting, RingSetting, RotorBody, RotorBodyId, RotorCore, RotorId, RotorPosition,
+    Contact, CoreSetting, RingSetting, RotorBody, RotorCore, RotorPosition,
 };
+
+#[cfg(test)]
+use super::{RotorBodyId, RotorId};
 
 /// Which face of a removable PROTON-2 wiring core is visible from the left
 /// (flat-contact) side of the assembled wheel.
@@ -77,6 +80,7 @@ impl Proton2Rotor {
 
     /// Mechanical wheel-body identity (the owner of the blocking-pin pattern).
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn body_id(&self) -> RotorBodyId {
         self.body.id()
     }
@@ -89,22 +93,26 @@ impl Proton2Rotor {
 
     /// Physical advance-blocking pin pattern of the body in base coordinates.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn blocking_pins(&self) -> super::BlockingPins {
         self.body.blocking_pins()
     }
 
     /// Identity of the electrical wiring core currently installed in the body.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn core_id(&self) -> RotorId {
         self.core.id()
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn core_side(&self) -> CoreSide {
         self.core_side
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn core_setting(&self) -> CoreSetting {
         self.core_setting
     }

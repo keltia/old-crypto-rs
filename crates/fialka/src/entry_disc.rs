@@ -47,6 +47,7 @@ impl EntryDisc {
 
     /// Zero-based card-reader -> drum mapping, primarily for reference tests.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn as_array(&self) -> &[u8; CONTACT_COUNT] {
         self.wiring.as_array()
     }

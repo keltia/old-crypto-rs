@@ -32,12 +32,14 @@ impl RotorPosition {
     ///
     /// At position `p`, machine contact `x` meets rotor contact `x + p`.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn to_rotor_frame(self, contact: Contact) -> Contact {
         contact.offset(i16::from(self.get()))
     }
 
     /// Convert a rotor-local contact back into the fixed machine frame.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn to_machine_frame(self, contact: Contact) -> Contact {
         contact.offset(-i16::from(self.get()))
     }

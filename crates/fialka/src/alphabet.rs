@@ -33,6 +33,7 @@ pub(crate) const RUSSIAN_LETTERS: [char; CONTACT_COUNT] = [
 
 /// The operator-selectable text mode of an M-125-3M.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg(test)]
 pub(crate) enum TextMode {
     /// Б — Буквы: all 30 contacts are Cyrillic letters.
     Letters,
@@ -44,6 +45,7 @@ pub(crate) enum TextMode {
 
 /// Active register while the machine is in mixed text mode.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg(test)]
 pub(crate) enum MixedRegister {
     Letters,
     Figures,
@@ -51,6 +53,7 @@ pub(crate) enum MixedRegister {
 
 /// Result of interpreting one contact through the Russian text-mode layer.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg(test)]
 pub(crate) enum RussianSymbol {
     Letter(char),
     ShiftToFigures,
@@ -95,10 +98,12 @@ impl RussianAlphabet {
         RUSSIAN_LETTERS[contact.get() as usize]
     }
 
+    #[cfg(test)]
     pub(crate) fn figures_shift_contact() -> Contact {
         Self::encode('Ф').expect("Ф is part of the Fialka alphabet")
     }
 
+    #[cfg(test)]
     pub(crate) fn letters_shift_contact() -> Contact {
         Self::encode('Ж').expect("Ж is part of the Fialka alphabet")
     }
@@ -109,11 +114,13 @@ impl RussianAlphabet {
 /// Cipher/decipher mode is deliberately separate; this type models only the
 /// Б/С/Ц text selector and mixed-mode register state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg(test)]
 pub(crate) struct RussianTextState {
     mode: TextMode,
     register: MixedRegister,
 }
 
+#[cfg(test)]
 impl RussianTextState {
     pub(crate) const fn new(mode: TextMode) -> Self {
         Self {

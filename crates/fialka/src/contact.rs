@@ -16,9 +16,11 @@ impl Contact {
     pub(crate) const ZERO: Self = Self(0);
 
     /// Smallest valid contact number.
+    #[cfg(test)]
     pub(crate) const MIN: u8 = 0;
 
     /// Largest valid contact number.
+    #[cfg(test)]
     pub(crate) const MAX: u8 = CONTACT_COUNT as u8 - 1;
 
     /// Construct a checked contact number.

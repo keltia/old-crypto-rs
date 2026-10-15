@@ -4,7 +4,9 @@
 //! kept out of this type.  At this stage a rotor is only a named 30-contact
 //! electrical permutation.
 
-use super::{Contact, Permutation, PermutationError, RotorPosition};
+use super::{Contact, Permutation, PermutationError};
+#[cfg(test)]
+use super::RotorPosition;
 
 /// Identity of one of the ten Fialka rotor wirings.
 ///
@@ -80,6 +82,7 @@ impl RotorCore {
 
     /// Return the historical identity of this rotor wiring.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn id(&self) -> RotorId {
         self.id
     }
@@ -130,34 +133,23 @@ fn reflect_contact(contact: Contact) -> Contact {
 /// deliberately contains no stepping direction, blocking pins, ring setting,
 /// or PROTON-2 core adjustment.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg(test)]
 pub(crate) struct PositionedRotor {
     core: RotorCore,
     position: RotorPosition,
 }
 
+#[cfg(test)]
 impl PositionedRotor {
     /// Mount a rotor core at a fixed angular position.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn new(core: RotorCore, position: RotorPosition) -> Self {
         Self { core, position }
     }
 
-    /// Rotor wiring identity.
-    #[must_use]
-    pub(crate) const fn id(&self) -> RotorId {
-        self.core.id()
-    }
 
-    /// Current static rotor position.
-    #[must_use]
-    pub(crate) const fn position(&self) -> RotorPosition {
-        self.position
-    }
 
-    /// Change the static rotor position.
-    pub(crate) fn set_position(&mut self, position: RotorPosition) {
-        self.position = position;
-    }
 
     /// Pass a signal from the machine's right side to its left side.
     ///
@@ -165,6 +157,7 @@ impl PositionedRotor {
     /// local coordinate frame, passed through the published right-to-left
     /// wiring, then converted back to the fixed machine frame.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn right_to_left(&self, input: Contact) -> Contact {
         let local_input = self.position.to_rotor_frame(input);
         let local_output = self.core.right_to_left(local_input);
@@ -173,6 +166,7 @@ impl PositionedRotor {
 
     /// Pass a signal from the machine's left side back to its right side.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn left_to_right(&self, input: Contact) -> Contact {
         let local_input = self.position.to_rotor_frame(input);
         let local_output = self.core.left_to_right(local_input);

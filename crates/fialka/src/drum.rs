@@ -49,6 +49,7 @@ impl RotorSlot {
 
     /// Construct from a zero-based slot index.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn new(index: u8) -> Option<Self> {
         if index < ROTOR_COUNT as u8 {
             Some(Self(index))
@@ -108,6 +109,7 @@ impl RotorStepSet {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn bits(self) -> u16 {
         self.0
     }
@@ -134,6 +136,7 @@ impl RotorDrum {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn positions(&self) -> [RotorPosition; ROTOR_COUNT] {
         std::array::from_fn(|index| self.rotors[index].position())
     }

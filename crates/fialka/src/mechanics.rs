@@ -17,7 +17,6 @@ use super::{Contact, RotorId};
 pub(crate) struct BlockingPins(u32);
 
 impl BlockingPins {
-    const VALID_MASK: u32 = (1_u32 << 30) - 1;
 
     /// Build a physical pin set from source-table positions numbered 1..=30.
     ///
@@ -51,21 +50,18 @@ impl BlockingPins {
 
     /// Number of physical advance-blocking pins on the wheel body.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn len(self) -> u32 {
         self.0.count_ones()
     }
 
     /// Whether this body has no blocking pins.
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn is_empty(self) -> bool {
         self.0 == 0
     }
 
-    /// Raw low-30-bit representation, useful for exact fixture comparisons.
-    #[must_use]
-    pub(crate) const fn bits(self) -> u32 {
-        self.0 & Self::VALID_MASK
-    }
 }
 
 /// Identity of a mechanical Fialka wheel body.
@@ -84,6 +80,7 @@ impl RotorBodyId {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn rotor_id(self) -> RotorId {
         self.0
     }
@@ -109,11 +106,13 @@ impl RotorBody {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn id(self) -> RotorBodyId {
         self.id
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn blocking_pins(self) -> BlockingPins {
         self.blocking_pins
     }

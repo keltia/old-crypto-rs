@@ -23,14 +23,14 @@ mod reflector;
 mod rotor;
 mod settings;
 
-pub(crate) use alphabet::{
-    MixedRegister, RussianAlphabet, RussianSymbol, RussianTextState, TextMode,
-};
+pub(crate) use alphabet::RussianAlphabet;
+#[cfg(test)]
+pub(crate) use alphabet::{MixedRegister, RussianSymbol, RussianTextState, TextMode};
 pub use alphabet::UnsupportedRussianLetter;
 pub use commutator::Commutator;
 pub use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
 pub(crate) use contact::{CONTACT_COUNT, Contact};
-pub(crate) use drum::{RotationDirection, RotorDrum, RotorSlot, RotorStepSet};
+pub(crate) use drum::{RotorDrum, RotorSlot};
 pub(crate) use entry_disc::EntryDisc;
 pub(crate) use keyboard::KeyboardMapping;
 pub use latin::UnsupportedLatinSymbol;
@@ -46,7 +46,9 @@ pub use proton2::CoreSide;
 pub(crate) use proton2::Proton2Rotor;
 pub(crate) use reflector::{CipherDirection, ReflectorResult, ReflectorUnit};
 pub use rotor::RotorId;
-pub(crate) use rotor::{PositionedRotor, RotorCore};
+pub(crate) use rotor::RotorCore;
+#[cfg(test)]
+pub(crate) use rotor::PositionedRotor;
 pub use settings::{CoreSetting, RingSetting};
 
 /// Compatibility interface for block-oriented cipher consumers.

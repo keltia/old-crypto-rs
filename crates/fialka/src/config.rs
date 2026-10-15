@@ -7,8 +7,11 @@
 
 use std::{error::Error, fmt};
 
+#[cfg(test)]
+use super::FialkaCore;
+
 use super::{
-    Commutator, CoreSetting, CoreSide, FialkaCore, FialkaMachine, Proton2Rotor, RingSetting,
+    Commutator, CoreSetting, CoreSide, FialkaMachine, Proton2Rotor, RingSetting,
     RotorDrum, RotorId, RotorPosition,
 };
 
@@ -235,6 +238,7 @@ impl FialkaConfig {
 
     /// Assemble an immutable/frozen electrical core from this key.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn build_core(&self) -> FialkaCore {
         FialkaCore::new(self.build_drum(), self.commutator.clone())
     }

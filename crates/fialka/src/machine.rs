@@ -43,12 +43,14 @@ impl FialkaCore {
 
     /// Process one contact in coding mode without stepping the drum.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn encode_contact(&self, input: Contact) -> Contact {
         self.process_contact(input, CipherDirection::Encode)
     }
 
     /// Process one contact in decoding mode without stepping the drum.
     #[must_use]
+    #[cfg(test)]
     pub(crate) fn decode_contact(&self, input: Contact) -> Contact {
         self.process_contact(input, CipherDirection::Decode)
     }
@@ -178,6 +180,7 @@ impl FialkaCore {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn drum(&self) -> &RotorDrum {
         &self.drum
     }
@@ -203,11 +206,13 @@ impl FialkaMachine {
     }
 
     /// Process one contact in coding mode, then advance the drum once.
+    #[cfg(test)]
     pub(crate) fn encode_contact(&mut self, input: Contact) -> Contact {
         self.process_contact(input, CipherDirection::Encode)
     }
 
     /// Process one contact in decoding mode, then advance the drum once.
+    #[cfg(test)]
     pub(crate) fn decode_contact(&mut self, input: Contact) -> Contact {
         self.process_contact(input, CipherDirection::Decode)
     }
@@ -237,6 +242,7 @@ impl FialkaMachine {
     }
 
     #[must_use]
+    #[cfg(test)]
     pub(crate) const fn drum(&self) -> &RotorDrum {
         self.core.drum()
     }

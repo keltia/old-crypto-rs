@@ -8,7 +8,7 @@
 use std::{error::Error, fmt};
 
 #[cfg(test)]
-use super::FialkaCore;
+use super::machine::FialkaCore;
 
 use super::{
     Commutator, CoreSetting, CoreSide, FialkaMachine, Proton2Rotor, RingSetting,

@@ -37,7 +37,6 @@ mod shuffle {
 
 #[divan::bench_group]
 mod condense {
-    use std::collections::HashSet;
     use ahash::AHashSet;
     use super::*;
 
@@ -185,7 +184,7 @@ mod chainadd {
     fn test_chainadd_inplace(bencher: Bencher) {
         let mut a = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
         bencher.bench_local(|| {
-            black_box(chainadd_inplace(&mut a));
+            chainadd_inplace(&mut a);
         });
     }
 
@@ -203,7 +202,6 @@ mod smallv {
     use super::*;
     use smallvec::SmallVec;
 
-    type Digits10 = SmallVec<[u8; 10]>;
     type Digits16 = SmallVec<[u8; 16]>;
     type Order16 = SmallVec<[usize; 16]>;
 

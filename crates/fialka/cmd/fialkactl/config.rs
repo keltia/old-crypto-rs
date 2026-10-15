@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn rejects_unknown_fields_and_bad_permutations() {
         assert!(parse_config("series: polish3k\nunknown: true\n").is_err());
-        let bad = format!("series: polish3k\ncommutator: [{}]\n", vec![0; 30].iter().map(u8::to_string).collect::<Vec<_>>().join(", "));
+        let bad = format!("series: polish3k\ncommutator: [{}]\n", [0; 30].iter().map(u8::to_string).collect::<Vec<_>>().join(", "));
         assert!(parse_config(&bad).is_err());
     }
 }

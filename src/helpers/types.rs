@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn test_enc_entry_new() {
-        let entry = EncEntry::new(2, [b'1', b'5']);
+        let entry = EncEntry::new(2, *b"15");
         assert_eq!(entry.len(), 2);
         assert_eq!(entry.bytes(0), b'1');
         assert_eq!(entry.bytes(1), b'5');
@@ -69,7 +69,7 @@ mod tests {
         let entry1 = EncEntry::new(1, [b'3', 0]);
         assert_eq!(entry1.len(), 1);
 
-        let entry2 = EncEntry::new(2, [b'4', b'7']);
+        let entry2 = EncEntry::new(2, *b"47");
         assert_eq!(entry2.len(), 2);
 
         let entry0 = EncEntry::new(0, [0, 0]);
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_enc_entry_bytes() {
-        let entry = EncEntry::new(2, [b'9', b'2']);
+        let entry = EncEntry::new(2, *b"92");
         assert_eq!(entry.bytes(0), b'9');
         assert_eq!(entry.bytes(1), b'2');
     }
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn test_enc_entry_debug_full() {
-        let entry = EncEntry::new(2, [b'4', b'8']);
+        let entry = EncEntry::new(2, *b"48");
         assert_eq!(format!("{:?}", entry), "48");
     }
 

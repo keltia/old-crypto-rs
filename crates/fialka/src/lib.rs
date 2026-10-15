@@ -24,8 +24,6 @@ mod rotor;
 mod settings;
 
 pub(crate) use alphabet::RussianAlphabet;
-#[cfg(test)]
-pub(crate) use alphabet::{MixedRegister, RussianSymbol, RussianTextState, TextMode};
 pub use alphabet::UnsupportedRussianLetter;
 pub use commutator::Commutator;
 pub use config::{FialkaConfig, FialkaConfigError, RotorConfig, RotorSeries};
@@ -36,7 +34,7 @@ pub(crate) use keyboard::KeyboardMapping;
 pub use latin::UnsupportedLatinSymbol;
 pub use machine::Fialka;
 pub use numeric::NumericModeError;
-pub(crate) use machine::{FialkaCore, FialkaMachine};
+pub(crate) use machine::FialkaMachine;
 pub(crate) use numeric::{NumericAlphabet, ReductionSwitch};
 pub(crate) use mechanics::{BlockingPins, RotorBody, RotorBodyId};
 pub use permutation::PermutationError;
@@ -51,9 +49,5 @@ pub(crate) use rotor::RotorCore;
 pub(crate) use rotor::PositionedRotor;
 pub use settings::{CoreSetting, RingSetting};
 
-/// Compatibility interface for block-oriented cipher consumers.
-pub trait Block {
-    fn block_size(&self) -> usize;
-    fn encrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-    fn decrypt(&self, dst: &mut [u8], src: &[u8]) -> usize;
-}
+pub use old_crypto_rs::Block;
+

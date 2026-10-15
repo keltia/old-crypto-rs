@@ -6,7 +6,7 @@ use old_crypto_rs::{
 
 use divan::Bencher;
 use fialka::{
-    Block as _, Commutator as FialkaCommutator, Fialka, FialkaConfig,
+    Commutator as FialkaCommutator, Fialka, FialkaConfig,
     RotorSeries as FialkaRotorSeries,
 };
 use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
@@ -89,7 +89,7 @@ fn bench_purple() -> Purple {
 #[divan::bench_group]
 mod b0_encryption {
     use super::*;
-    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
+    use old_crypto_rs::helpers::{English, Latin36, LatinSC, Numeric6};
 
     #[divan::bench]
     fn b01_caesar(bencher: Bencher) {
@@ -286,7 +286,7 @@ mod b0_encryption {
 #[divan::bench_group]
 mod b1_decryption {
     use super::*;
-    use old_crypto_rs::helpers::{English, Horizontal, Latin36, LatinSC, Numeric6};
+    use old_crypto_rs::helpers::{English, Latin36, LatinSC, Numeric6};
 
     #[divan::bench]
     fn b12_vic(bencher: Bencher) {

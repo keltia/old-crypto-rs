@@ -401,42 +401,6 @@ fn purple_tui_config(
     Ok(PurpleConfig::new(alpha, sixes, [p1?, p2?, p3?], motion))
 }
 
-#[cfg(test)]
-mod purple_tui_tests {
-    use super::*;
-
-    #[test]
-    fn reference_vector() {
-        let config = purple_tui_config("", "", "", "").unwrap();
-        let cipher = Purple::new(config);
-        assert_eq!(
-            cipher.encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
-            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
-        );
-    }
-
-    #[test]
-    fn explicit_reference_settings() {
-        let config = purple_tui_config(
-            "NOKTYUXEQLHBRMPDICJASVWGZF", "9", "1, 24, 6", "2 3 1"
-        ).unwrap();
-        assert_eq!(
-            Purple::new(config).encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
-            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
-        );
-    }
-
-    #[test]
-    fn rejects_bad_settings() {
-        assert!(purple_tui_config("A", "", "", "").is_err());
-        assert!(purple_tui_config("", "26", "", "").is_err());
-        assert!(purple_tui_config("", "", "1,2", "").is_err());
-        assert!(purple_tui_config("", "", "1,0,6", "").is_err());
-        assert!(purple_tui_config("", "", "", "2,2,1").is_err());
-        assert!(purple_tui_config("", "", "", "4,2,1").is_err());
-    }
-}
-
 fn sigaba_reference_config() -> Result<SigabaConfig, String> {
     let large = |id: u8| -> Result<SigabaLargeRotorSetting, String> {
         Ok(SigabaLargeRotorSetting::new(
@@ -775,4 +739,40 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+#[cfg(test)]
+mod purple_tui_tests {
+    use super::*;
+
+    #[test]
+    fn reference_vector() {
+        let config = purple_tui_config("", "", "", "").unwrap();
+        let cipher = Purple::new(config);
+        assert_eq!(
+            cipher.encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
+            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
+        );
+    }
+
+    #[test]
+    fn explicit_reference_settings() {
+        let config = purple_tui_config(
+            "NOKTYUXEQLHBRMPDICJASVWGZF", "9", "1, 24, 6", "2 3 1"
+        ).unwrap();
+        assert_eq!(
+            Purple::new(config).encrypt_text("THEPURPLEMACHINEISNOWONLINE").unwrap(),
+            "OGIVTSIAAHMWMHTVIBYYJUOJFUE"
+        );
+    }
+
+    #[test]
+    fn rejects_bad_settings() {
+        assert!(purple_tui_config("A", "", "", "").is_err());
+        assert!(purple_tui_config("", "26", "", "").is_err());
+        assert!(purple_tui_config("", "", "1,2", "").is_err());
+        assert!(purple_tui_config("", "", "1,0,6", "").is_err());
+        assert!(purple_tui_config("", "", "", "2,2,1").is_err());
+        assert!(purple_tui_config("", "", "", "4,2,1").is_err());
+    }
 }

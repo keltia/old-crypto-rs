@@ -31,3 +31,4 @@ install:
 	cargo install --path crates/kl-7
 	cargo install --path crates/purple
 	cargo install --path crates/fialka
+	cargo install --path crates/m209

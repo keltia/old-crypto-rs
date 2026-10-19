@@ -3,18 +3,9 @@ use old_crypto_rs::{
     IrregularTransposition, Nihilist, PlayfairCipher, SecomCipher, Solitaire, SquareCipher,
     Straddling, Transposition, VicCipher, VigenereCipher, Wheatstone, helpers,
 };
+use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
 
 use divan::Bencher;
-use fialka::{
-    Commutator as FialkaCommutator, Fialka, FialkaConfig,
-    RotorSeries as FialkaRotorSeries,
-};
-use old_crypto_rs::helpers::{English, Horizontal, LatinSC};
-use sigaba::{
-    IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
-    LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, Sigaba,
-    SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
-};
 
 const CHAOS_PLAIN: &str = "PTLNBQDEOYSFAVZKGJRIHWXUMC";
 const CHAOS_CIPHER: &str = "HXUCZVAMDSLKPEFJRIGTWOBNYQ";
@@ -32,7 +23,13 @@ fn main() {
 
 type BenchVic = VicCipher<LatinSC, Horizontal, English>;
 
-fn bench_sigaba() -> Sigaba {
+fn bench_sigaba() -> sigaba::Sigaba {
+    use sigaba::{
+    IndexRotorSetting as SigabaIndexRotorSetting, LargeRotorSet as SigabaRotorSet,
+    LargeRotorSetting as SigabaLargeRotorSetting, Orientation as SigabaOrientation, Sigaba,
+    SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId, SigabaRotorId, SigabaRotorPosition,
+};
+
     let large = |id: u8| {
         SigabaLargeRotorSetting::new(
             SigabaRotorId::new(id).unwrap(),
@@ -58,7 +55,12 @@ fn bench_sigaba() -> Sigaba {
     )
 }
 
-fn bench_fialka() -> Fialka {
+fn bench_fialka() -> fialka::Fialka {
+    use fialka::{
+        Commutator as FialkaCommutator, Fialka, FialkaConfig,
+        RotorSeries as FialkaRotorSeries,
+    };
+
     Fialka::new(FialkaConfig::overall_base(
         FialkaRotorSeries::Polish3K,
         FialkaCommutator::identity(),
@@ -69,10 +71,11 @@ fn fialka_plaintext() -> Vec<u8> {
     PLAIN.bytes().map(|letter| letter - b'A').collect()
 }
 
-use purple::{
-    Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
-};
-fn bench_purple() -> Purple {
+fn bench_purple() -> purple::Purple {
+    use purple::{
+        Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
+    };
+
     use TwentiesSwitchId::{One, Three, Two};
 
     let position = |n| SwitchPosition::new(n).unwrap();

@@ -25,7 +25,10 @@ pub fn parse_key(contents: &str) -> Result<M209Config, Box<dyn std::error::Error
     let bars: [DrumBar; DRUM_BAR_COUNT] = key.lugs
         .into_iter()
         .map(|[left, right]| {
-            Ok(DrumBar::new(Lug::new(left)?, Lug::new(right)?))
+            let left = Lug::new(left).ok_or(m209::KeyError::InvalidLug(left))?;
+            let right = Lug::new(right).ok_or(m209::KeyError::InvalidLug(right))?;
+
+            Ok(DrumBar::new(left, right))
         })
         .collect::<Result<Vec<_>, m209::KeyError>>()?
         .try_into()
@@ -46,6 +49,15 @@ pub fn load_key(path: &Path) -> Result<M209Config, Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rejects_out_of_range_lugs() {
+        let valid = include_str!("../../config/reference.yaml");
+        let invalid = valid.replacen("- [3, 6]", "- [7, 6]", 1);
+        let error = parse_key(&invalid).unwrap_err();
+
+        assert!(error.to_string().contains("lug 7"));
+    }
 
     #[test]
     fn rejects_incomplete_and_unknown_keys() {

@@ -3,44 +3,14 @@
 //! Encryption appends unenciphered `X` padding; receiving cannot determine
 //! how much of a transmitted final group is padding. Do not strip it silently.
 
-use thiserror::Error;
-
 use crate::{
-    IndicatorError, KeyId, KeyListError, KeyStore, M209Config, TextError,
+    KeyId, KeyStore, M209Config, MessageError,
     decrypt_text_raw, derive_internal_indicator, display_plaintext, encrypt_text,
     group_five, ungroup_ciphertext,
 };
 
 const INDICATOR_GROUP_LEN: usize = 5;
 const ENVELOPE_INDICATOR_LEN: usize = 2 * INDICATOR_GROUP_LEN;
-
-/// Invalid messages and missing keys are reported without guessing defaults.
-#[derive(Debug, Error)]
-pub enum MessageError {
-    #[error("invalid message characters: {0}")]
-    Text(#[from] TextError),
-
-    #[error("invalid key list: {0}")]
-    Key(#[from] KeyListError),
-
-    #[error("invalid message indicator: {0}")]
-    Indicator(#[from] IndicatorError),
-
-    #[error("a message must contain two opening groups, body, and two closing groups")]
-    TooShort,
-
-    #[error("ciphertext body must contain complete five-letter groups")]
-    IncompleteBodyGroup,
-
-    #[error("the closing indicator groups differ from the opening groups")]
-    MismatchedIndicators,
-
-    #[error("the two system-indicator letters must match")]
-    InvalidSystemIndicator,
-
-    #[error("ciphertext body must not be empty")]
-    EmptyBody,
-}
 
 /// Parsed transmitted message. The body includes any ambiguous final Xs.
 #[derive(Debug, Clone, PartialEq, Eq)]

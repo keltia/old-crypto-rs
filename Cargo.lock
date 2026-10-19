@@ -577,6 +577,7 @@ dependencies = [
  "noyalib",
  "old-crypto-rs",
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -817,6 +818,7 @@ dependencies = [
  "noyalib",
  "old-crypto-rs",
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1323,6 +1325,7 @@ dependencies = [
  "noyalib",
  "old-crypto-rs",
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1701,6 +1704,7 @@ dependencies = [
  "noyalib",
  "old-crypto-rs",
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

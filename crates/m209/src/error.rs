@@ -21,6 +21,8 @@ pub enum KeyError {
     InvalidPinBits { wheel: WheelId, bits: u32 },
     #[error("wheel identity mismatch: expected {expected:?}, got {actual:?}")]
     WheelMismatch { expected: WheelId, actual: WheelId },
+    #[error("M-209 indicator must contain exactly six ASCII letters (got {0} bytes)")]
+    InvalidIndicatorLength(usize),
     #[error("M-209 lug {0} is outside 0..=6")]
     InvalidLug(u8),
 }

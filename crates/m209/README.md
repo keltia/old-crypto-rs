@@ -71,3 +71,12 @@ pairs to 27 physical bars by filling the remaining seventeen with neutral
 
 Space-to-`Z` conversion and five-letter grouping are expressed explicitly in
 the test. The historical text-handling API is deferred to Step 13.
+
+### Step 11: Validated machine configuration
+
+`M209Config` accepts typed pin patterns, wheel positions and 27 ordered lug
+pairs, validating physical wheel identities through the existing `WheelBank`
+constructor. `from_letters` parses six effective-pin strings and six indicator
+letters using each wheel's historical alphabet. `build_core` and
+`build_machine` produce independent instances without coupling key validation
+to the stateful cipher logic. Message-procedure parsing is deferred.

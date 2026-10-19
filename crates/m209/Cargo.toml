@@ -1,0 +1,17 @@
+[package]
+name = "m209"
+version = "0.1.0"
+edition = "2024"
+authors = ["Ollivier Robert <roberto@keltia.net>"]
+description = "A historically grounded simulation of the Hagelin M-209 cipher machine."
+repository = "https://github.com/keltia/old-crypto-rs"
+license = "MIT"
+readme = "README.md"
+keywords = ["cryptography", "m209", "hagelin", "cipher", "history"]
+categories = ["cryptography"]
+
+[lints.rust]
+linker_messages = "allow"
+
+[dependencies]
+old-crypto-rs = { version = "0.11.0", path = "../..", default-features = false }

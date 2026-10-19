@@ -1,118 +1,71 @@
 # M-209
 
-A Rust implementation of the U.S. Army **Hagelin M-209** mechanical cipher machine, in the `old-crypto-rs` workspace.
+Historically grounded Rust simulation of the U.S. Army Hagelin **M-209** mechanical cipher machine, built within `old-crypto-rs`.
 
-**Status:** Step 3 — validated contacts, wheel identities and visible positions, pin bitsets, and ordered lug pairs. No encryption/decryption implementation exists yet.
+**Implementation status (Step 15):** Six pin wheels, 27-bar lug drum, frozen and stateful machine, verified 1944 and independent Python known-answer tests, validated key configuration, shared `old_crypto_rs::Block` facade, historical text conventions, and the `m209ctl` CLI. **Wartime message envelopes and indicator/key-list procedures are not implemented.**
 
-The historical specification, cited sources, known-answer fixtures and 17-step implementation plan are in [`docs/m209.md`](docs/m209.md), created in Step 1.
+The [technical specification](docs/m209.md) records the original sources, fixture provenance, mechanical conventions, implementation plan, and verification boundaries.
 
-## Check
+## Building and checking
 
 From the workspace root:
 
 ```sh
-cargo test -p m209
+cargo fmt --all --check
+cargo test -p m209 --all-targets
 cargo clippy -p m209 --all-targets -- -D warnings
 ```
 
-Future work will reuse core-library helpers where practical and the canonical `old_crypto_rs::Block` trait, without defining another local trait.
+## Command-line usage
 
-## Step 5 — mechanical pin wheels
-
-`PinWheel` and `WheelBank` model the independently advancing wheels and
-their guide-arm pin sensing. The displayed wheel letters `AAAAAA` sense
-`PONMLK`, and after one advancement `BBBBBB` senses `QPONML`. The
-1944 example key initially activates wheels 2, 3, 4, and 6.
-
-The drum and printable substitution are not yet implemented.
-
-### Step 6: 27-bar drum
-
-`LugDrum` holds all 27 ordered pairs of adjustable lugs. Given a wheel-bank
-six-bit effective-wheel mask, each bar engages when either non-neutral lug
-addresses an effective wheel. The bar is counted **once** even when both lugs
-engage. `engaged_bar_mask()` exposes physical bar indices for tests and
-`displacement()` returns the unreduced tooth count (0–27).
-
-For the original 1944 manual's sample key, wheels 2, 3, 4 and 6 are active
-at `AAAAAA`; exactly bars 1–3 and 5–21 engage, producing 20 teeth.
-This is a drum fixture only, **not yet a ciphertext known-answer test**.
-
-Step 7 adds `M209Core`, which converts a letter at fixed wheel positions using the reciprocal M-209 substitution. It never advances the wheels; stateful cycling is introduced in Step 8.
-
-
-### Step 8: Stateful machine
-
-`M209Machine` wraps `M209Core`, preserving the initial state for `reset()`.
-Each `convert_contact` converts using the current wheel positions and **then**
-advances all six wheels once. `convert_contacts` supports streaming slices
-without implicit resets. At the 1944 sample key's `AAAAAA` starting state,
-the first `A` converts to `T` and the visible wheels then read `BBBBBB`.
-
-The full 26-character historical verification string remains a Step 9 test;
-message formatting, indicators and the shared `Block` adapter are later stages.
-
-### Step 9: Original 1944 full-machine check
-
-`tests/historical_1944.rs` exercises the original War Department TM 11-380
-Table I and Table II setup (visible wheels `AAAAAA`), converting 26 `A`s
-into the literal published check `TNJUWAUQTKCZKNUTOTBCWARMIO`.
-The integration tests also verify reciprocal decipherment, streaming, reset,
-and the wheel positions after 26 steps. This is a historical key fixture,
-not a factory-fixed key. The Python interoperability fixture is Step 10.
-
-### Step 10 — Independent interoperability vector
-
-`tests/python_interoperability.rs` checks Brian Neal's separately published
-Python M-209 example at `FFEGJP`, including the exact ciphertext, raw
-decipherment, chunked processing, and reset. It expands the ten specified lug
-pairs to 27 physical bars by filling the remaining seventeen with neutral
-`0-0` pairs; see the [published key-list notation](https://m209.readthedocs.io/en/latest/keylist.html).
-
-Space-to-`Z` conversion and five-letter grouping are expressed explicitly in
-the test. The historical text-handling API is deferred to Step 13.
-
-### Step 11: Validated machine configuration
-
-`M209Config` accepts typed pin patterns, wheel positions and 27 ordered lug
-pairs, validating physical wheel identities through the existing `WheelBank`
-constructor. `from_letters` parses six effective-pin strings and six indicator
-letters using each wheel's historical alphabet. `build_core` and
-`build_machine` produce independent instances without coupling key validation
-to the stateful cipher logic. Message-procedure parsing is deferred.
-
-### Step 12: Shared `Block` facade
-
-`M209::new(config)` provides `old_crypto_rs::Block` integration. Every
-`encrypt` or `decrypt` call begins at the validated initial positions and
-writes at most the smaller of the input and output slice lengths. ASCII
-letters are uppercased; other bytes pass through without advancing wheels.
-Use `M209Machine` for continuous stateful streams. Historical text formatting
-and message indicators remain Step 13.
-
-### Step 13: Historical text conventions
-
-`encrypt_text` converts ASCII letters and spaces (mapped to `Z`) before
-stepping and can group ciphertext into five-letter groups. `decrypt_text_raw`
-returns the exact machine letters; `decrypt_text` displays `Z` as spaces,
-which **loses genuine `Z` characters**, as in the published PIZZA example.
-`ungroup_ciphertext` ignores only ASCII whitespace. No padding or message
-indicators are silently inserted or removed. Full Army message framing and
-indicators are reserved for a separate procedure layer.
-
-
-## Step 14 — `m209ctl`
-
-The command-line tool accepts `encrypt` and `decrypt` subcommands and requires a
-complete YAML key. See `config/reference.yaml` for the 1944 sample key.
+The included [`config/reference.yaml`](config/reference.yaml) is the *example key* from U.S. War Department TM 11-380 (1944), **not a universal M-209 key**. A CLI invocation requires `--config` and starts from the indicators supplied in that file.
 
 ```sh
-cargo run -p m209 -- --config crates/m209/config/reference.yaml encrypt --grouped "AAAAAA"
-cargo run -p m209 -- --config crates/m209/config/reference.yaml decrypt "TNJUW"
+# Historical check string, ungrouped (26 letters)
+cargo run -p m209 -- --config crates/m209/config/reference.yaml --mode raw encrypt AAAAAAAAAAAAAAAAAAAAAAAAAA
+# TNJUWAUQTKCZKNUTOTBCWARMIO
+
+# Reciprocal raw conversion
+cargo run -p m209 -- --config crates/m209/config/reference.yaml --mode raw decrypt TNJUWAUQTKCZKNUTOTBCWARMIO
+# AAAAAAAAAAAAAAAAAAAAAAAAAA
+
+# Grouped text-mode output (without padding)
+cargo run -p m209 -- --config crates/m209/config/reference.yaml encrypt --grouped AAAAAAAAAAAAAAAAAAAAAAAAAA
+# TNJUW AUQTK CZKNU TOTBC WARMI O
 ```
 
-The default `--mode text` interprets spaces as Z on encryption and decoded Z
-as spaces on decryption. `--mode raw` accepts A–Z contacts only and preserves Z.
-Each invocation starts from the specified wheel indicators. Complete wartime
-message indicators, padding, and key-list selection are not yet implemented;
-this CLI operates on individual message bodies only.
+`--grouped` never pads the final group.
+
+Input can also be read from standard input when the text argument is omitted. In `--mode raw`, only ASCII letters are accepted; letters are normalized to uppercase. In `--mode text` (the default), plaintext spaces become machine `Z`, and displayed decrypted `Z` becomes a space. Because the letter `Z` and a word-space share the same raw contact, display decoding can be lossy. Use `decrypt --raw-output` to preserve the raw contacts. Grouping spaces in ciphertext are ignored only in text mode.
+
+## YAML key format
+
+`pins` contains six wheel-specific effective-pin strings in physical wheel order, `indicators` contains six initial window letters, and `lugs` contains **exactly 27** ordered `[left, right]` pairs. A lug value from 1 to 6 addresses a wheel; 0 is neutral. The parser rejects missing or extra bars, invalid lug values, invalid pin letters, incorrect indicators, and unknown YAML fields.
+
+The CLI uses `noyalib` and Serde for YAML parsing; the mechanical key is validated by the existing typed `M209Config` constructors. No general-purpose wheel or validation implementation is duplicated in the CLI.
+
+## Library usage
+
+`M209Config::from_letters` constructs a validated key. Use `config.build_machine()` for **continuous stateful contact processing** (`M209Machine`), or `M209::new(config)` for the canonical `old_crypto_rs::Block` interface. The `Block` adapter begins each call at its configured initial state, writes no more than `min(src.len(), dst.len())`, and passes unsupported bytes through *without advancing* the wheels.
+
+Historical string operations (`encrypt_text`, `decrypt_text_raw`, and `decrypt_text`) are distinct from raw contact processing and the `Block` adapter. Grouping delegates to the existing `old_crypto_rs::helpers::output_as_block` implementation.
+
+## Independent verification
+
+| Reference | Initial indicators | Input | Expected output |
+| --- | --- | --- | --- |
+| TM 11-380 (1944), Tables I–II | `AAAAAA` | `AAAAAAAAAAAAAAAAAAAAAAAAAA` | `TNJUWAUQTKCZKNUTOTBCWARMIO` |
+| [Brian Neal Python M-209 example](https://m209.readthedocs.io/en/latest/m209.html) | `FFEGJP` | `THEZPIZZAZHASZARRIVED` | `QBCHUWCCDIYFNCHLOZJYG` |
+
+The Rust tests exercise encryption, reciprocal decipherment, streaming, reset, wheel advancement, and key validation. The published references fix the expected ciphertext independently of the implementation under test.
+
+## Scope and next stages
+
+This is a **cipher machine and message-body simulator**, not a complete implementation of historical operating procedures. Do not treat `m209ctl` output as a historically framed military message: external/internal indicators, key lists, procedure-specific padding, and message headers are not generated or checked. The remaining planned work is Step 16 (Divan benchmarks) and Step 17 (demo, TUI, root README, and workspace integration). Any later wartime message-procedure implementation should have its own separately verified fixtures and tests.
+
+### Sources
+
+- U.S. War Department, *TM 11-380: Converter M-209, M-209-A, M-209-B*, 17 March 1944, especially Tables I–II and the machine check: https://deweger.net/apparaten/downloads/M209%20manual.pdf
+- Earlier War Department documents and manuals: https://radionerds.com/index.php/M-209
+- Brian Neal, Python M-209 simulator and published API example: https://m209.readthedocs.io/en/latest/m209.html
+- Key-list notation: https://m209.readthedocs.io/en/latest/keylist.html

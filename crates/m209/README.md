@@ -60,3 +60,14 @@ into the literal published check `TNJUWAUQTKCZKNUTOTBCWARMIO`.
 The integration tests also verify reciprocal decipherment, streaming, reset,
 and the wheel positions after 26 steps. This is a historical key fixture,
 not a factory-fixed key. The Python interoperability fixture is Step 10.
+
+### Step 10 — Independent interoperability vector
+
+`tests/python_interoperability.rs` checks Brian Neal's separately published
+Python M-209 example at `FFEGJP`, including the exact ciphertext, raw
+decipherment, chunked processing, and reset. It expands the ten specified lug
+pairs to 27 physical bars by filling the remaining seventeen with neutral
+`0-0` pairs; see the [published key-list notation](https://m209.readthedocs.io/en/latest/keylist.html).
+
+Space-to-`Z` conversion and five-letter grouping are expressed explicitly in
+the test. The historical text-handling API is deferred to Step 13.

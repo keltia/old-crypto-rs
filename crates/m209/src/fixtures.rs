@@ -48,6 +48,25 @@ pub const PYTHON_REFERENCE_LUGS: &[(u8, u8)] = &[
     (0, 5), (0, 5), (0, 6), (2, 4), (3, 6),
 ];
 
+/// Expand Brian Neal's abbreviated lug notation to all 27 physical bars.
+///
+/// The reference specifies ten non-neutral bars. The other seventeen bars
+/// are neutral on both sides; they do not contribute to displacement.
+/// Preserve the ordered pairs exactly as published.
+pub fn python_reference_drum() -> [DrumBar; DRUM_BAR_COUNT] {
+    let neutral = DrumBar::new(Lug::NEUTRAL, Lug::NEUTRAL);
+    let mut bars = [neutral; DRUM_BAR_COUNT];
+
+    for (bar, &(left, right)) in bars.iter_mut().zip(PYTHON_REFERENCE_LUGS.iter()) {
+        *bar = DrumBar::new(
+            Lug::new(left).expect("validated Python reference left lug"),
+            Lug::new(right).expect("validated Python reference right lug"),
+        );
+    }
+
+    bars
+}
+
 pub const PYTHON_REFERENCE_START: &str = "FFEGJP";
 pub const PYTHON_REFERENCE_PLAINTEXT: &str = "THE PIZZA HAS ARRIVED";
 pub const PYTHON_REFERENCE_CIPHERTEXT: &str = "QBCHU WCCDI YFNCH LOZJY G";
@@ -126,6 +145,16 @@ mod tests {
         assert_ne!(PYTHON_REFERENCE_PINS, MANUAL_1944_PINS);
         assert_eq!(PYTHON_REFERENCE_START.len(), 6);
         assert_eq!(PYTHON_REFERENCE_LUGS.len(), 10);
+
+        let drum = python_reference_drum();
+        assert_eq!(drum.len(), DRUM_BAR_COUNT);
+        assert_eq!(
+            drum.iter().filter(|bar| *bar != &DrumBar::new(Lug::NEUTRAL, Lug::NEUTRAL)).count(),
+            10,
+        );
+        assert!(drum[10..].iter().all(|bar| {
+            bar.left() == Lug::NEUTRAL && bar.right() == Lug::NEUTRAL
+        }));
 
         for (left, right) in PYTHON_REFERENCE_LUGS {
             assert!(Lug::new(*left).is_some());

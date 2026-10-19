@@ -98,6 +98,10 @@ fn bench_m209() -> m209::M209 {
     M209::new(config)
 }
 
+fn bench_kl7() -> kl_7::Kl7 {
+    kl_7::Kl7::new(kl_7::Kl7Config::uss_beagle())
+}
+
 #[divan::bench_group]
 mod b0_encryption {
     use super::*;
@@ -297,6 +301,17 @@ mod b0_encryption {
     #[divan::bench]
     fn b20_m209(bencher: Bencher) {
         let cipher = bench_m209();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+
+        bencher.bench_local(|| {
+            cipher.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b21_kl7(bencher: Bencher) {
+        let cipher = bench_kl7();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
 
@@ -553,6 +568,19 @@ mod b1_decryption {
 
         bencher.bench_local(|| {
             cipher.decrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b21_kl7(bencher: Bencher) {
+        let cipher = bench_kl7();
+        let src = PLAIN.as_bytes();
+        let mut ciphertext = vec![0u8; src.len()];
+        let written = cipher.encrypt(&mut ciphertext, src);
+        let mut dst = vec![0u8; written];
+
+        bencher.bench_local(|| {
+            cipher.decrypt(&mut dst, &ciphertext[..written]);
         });
     }
 }

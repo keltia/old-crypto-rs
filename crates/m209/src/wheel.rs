@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn all_wheels_wrap_independently() {
-        let mut bank = manual_bank();
+        let bank = manual_bank();
         let initial = bank.positions();
 
         for wheel in bank.wheels().iter().copied() {

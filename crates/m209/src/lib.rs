@@ -11,6 +11,8 @@ mod core;
 mod drum;
 mod config;
 mod machine;
+mod key_list;
+pub use key_list::{KeyId, KeyList, KeyListError, KeyStore};
 mod public;
 pub use core::M209Core;
 pub use config::M209Config;

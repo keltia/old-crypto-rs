@@ -125,3 +125,20 @@ Parsed under **direct mode**: system `FW`; visible wheel alignment `QAHNKE`; key
 - **Step 23:** documentation, full regression matrix, optional demo/TUI examples where warranted, final review. Pause.
 
 **Open questions before Step 19**: whether we should support the 1944 *direct* system-indicator variant in the initial API or defer it, and whether the 24-character reference fallback merits an explicit compatibility profile. Neither is silently enabled in this specification.
+
+
+## Step 19: Typed key lists and key stores
+
+Implemented in `src/key_list.rs`. `KeyId` is exactly two uppercase ASCII
+letters; `KeyList` owns a validated `M209Config` and its verified 26-character
+check; `KeyStore` rejects duplicates and requires explicit lookup by key ID.
+
+The example `config/key-list-reference.yaml` contains a **demonstration** key
+identified as `XA` using the original TM 11-380 (1944) pin and lug settings.
+The `XA` assignment here is for reproducible tests, not evidence of a
+historical operational key-list identifier. The `check` field is compared
+against actual encryption of 26 A letters at wheel windows `AAAAAA`.
+
+YAML parsing uses `noyalib` and Serde's `deny_unknown_fields`. This step does
+not generate random daily keys, infer missing key IDs, derive message
+indicators, or produce message envelopes. Those are later steps.

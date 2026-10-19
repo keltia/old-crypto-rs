@@ -81,3 +81,15 @@ parsing and fixture creation are excluded from the throughput timings. The
 reusable destination buffer and reconstructs the starting state each call.
 The numbers therefore measure distinct public operations, not identical
 workloads. No reported benchmark timing is claimed without running Divan.
+
+
+### Named key lists (Step 19)
+
+`KeyStore::from_yaml` loads strictly validated collections of daily keys.
+Each key requires a two-uppercase-letter ID, six effective-pin sets,
+exactly 27 ordered lug pairs, and a verified 26-letter check. See
+[`config/key-list-reference.yaml`](config/key-list-reference.yaml) for a
+historical-mechanics test fixture. The key ID in that fixture is illustrative.
+
+Indicator derivation and complete message-envelope processing are reserved for
+Steps 20–21; the existing `m209ctl` key-file format is unchanged in Step 19.

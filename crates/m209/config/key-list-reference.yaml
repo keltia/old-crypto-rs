@@ -1,0 +1,39 @@
+# TM 11-380 (1944), validated 26-A sample check
+keys:
+  - id: XA
+    check: TNJUWAUQTKCZKNUTOTBCWARMIO
+    pins:
+      - ABDHIKMNSTVW
+      - ADEGJKLORSUX
+      - ABGHJLMNRSTUX
+      - CEFHIMNPSTU
+      - BDEFHIMNPS
+      - ABDHKNOQ
+    lugs:
+      - [3, 6]
+      - [0, 6]
+      - [1, 6]
+      - [1, 5]
+      - [4, 5]
+      - [0, 4]
+      - [0, 4]
+      - [0, 4]
+      - [0, 4]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 0]
+      - [2, 5]
+      - [2, 5]
+      - [0, 5]
+      - [0, 5]
+      - [0, 5]
+      - [0, 5]
+      - [0, 5]
+      - [0, 5]

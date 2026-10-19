@@ -1,13 +1,15 @@
 //! Historical Hagelin M-209 cipher-machine simulation.
 //!
-//! Step 4 adds documented historical key fixtures; it does not
-//! implement wheel stepping, drum engagement, or encryption.
+//! Step 5 implements six independent pin wheels and historical sensing
+//! offsets; the lug drum and encryption will follow in later steps.
 //!
 //! The machine will use the shared [`old_crypto_rs::Block`] trait when its
 //! public cipher facade is introduced in Step 12. Do not duplicate that trait.
 
 pub mod fixtures;
 mod types;
+mod wheel;
+pub use wheel::{PinWheel, WheelBank};
 pub use types::{Contact, DRUM_BAR_COUNT, DrumBar, KeyError, Lug, PinPattern,
     WHEEL_ALPHABETS, WHEEL_COUNT, WHEEL_SIZES, WheelId, WheelPosition};
 

@@ -32,6 +32,8 @@ pub enum KeyError {
     InvalidWheelLetter { wheel: WheelId, letter: char },
     #[error("pin bits {bits:#x} exceed wheel {wheel:?} capacity")]
     InvalidPinBits { wheel: WheelId, bits: u32 },
+    #[error("wheel identity mismatch: expected {expected:?}, got {actual:?}")]
+    WheelMismatch { expected: WheelId, actual: WheelId },
     #[error("M-209 lug {0} is outside 0..=6")]
     InvalidLug(u8),
 }

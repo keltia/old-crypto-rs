@@ -16,3 +16,12 @@ cargo clippy -p m209 --all-targets -- -D warnings
 ```
 
 Future work will reuse core-library helpers where practical and the canonical `old_crypto_rs::Block` trait, without defining another local trait.
+
+## Step 5 — mechanical pin wheels
+
+`PinWheel` and `WheelBank` model the independently advancing wheels and
+their guide-arm pin sensing. The displayed wheel letters `AAAAAA` sense
+`PONMLK`, and after one advancement `BBBBBB` senses `QPONML`. The
+1944 example key initially activates wheels 2, 3, 4, and 6.
+
+The drum and printable substitution are not yet implemented.

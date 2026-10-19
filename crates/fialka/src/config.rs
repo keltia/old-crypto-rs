@@ -12,6 +12,7 @@ use super::machine::FialkaCore;
 use super::{
     Commutator, CoreSetting, CoreSide, FialkaMachine, Proton2Rotor, RingSetting,
     RotorDrum, RotorId, RotorPosition,
+    error::FialkaConfigError,
 };
 
 /// Historically documented adjustable-rotor series available to the machine.

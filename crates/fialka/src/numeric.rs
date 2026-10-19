@@ -18,7 +18,7 @@
 //! v2.0, section 4.8, pp.110-112.
 
 
-use super::{CONTACT_COUNT, Contact};
+use super::{CONTACT_COUNT, Contact, error::NumericModeError};
 
 /// Reflector contact -> card-reader contact in NumLock `10` mode.
 ///

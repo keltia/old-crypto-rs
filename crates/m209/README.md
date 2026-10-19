@@ -93,3 +93,11 @@ historical-mechanics test fixture. The key ID in that fixture is illustrative.
 
 Indicator derivation and complete message-envelope processing are reserved for
 Steps 20–21; the existing `m209ctl` key-file format is unchanged in Step 19.
+
+### Derived message indicators (Step 20)
+
+`derive_internal_indicator(&key_list, 'K', "DUFLJB")` implements the
+strict twelve-contact derived-indicator procedure. It returns the intermediate
+letters and the six typed secret starting positions; it does **not** construct
+a complete wartime message. See `docs/message-procedures.md` for the precise
+historical profile and limitations.

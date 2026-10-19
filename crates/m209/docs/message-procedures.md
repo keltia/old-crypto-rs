@@ -142,3 +142,20 @@ against actual encryption of 26 A letters at wheel windows `AAAAAA`.
 YAML parsing uses `noyalib` and Serde's `deny_unknown_fields`. This step does
 not generate random daily keys, infer missing key IDs, derive message
 indicators, or produce message envelopes. Those are later steps.
+
+## Step 20: Deterministic twelve-letter internal indicators
+
+Implemented in `src/indicator.rs` as `derive_internal_indicator(&KeyList, char, &str)`.
+The function checks the one-letter uppercase system marker and the external
+six-position setting against the **actual alphabet of each wheel**. It clones
+the mechanical key into a fresh `M209Config` at the external alignment,
+enciphers exactly twelve copies of the system letter, then scans the resulting
+stream, accepting the first admissible letter for wheels 1 through 6 in order.
+A letter rejected by the current wheel is discarded. If fewer than six positions
+can be selected, `IndicatorError::InsufficientLetters` is returned; there is no
+silent fallback to 24 letters.
+
+The returned `DerivedIndicator` exposes both the ungrouped intermediate output
+and the six typed positions. The published `K` / `DUFLJB` example is asserted
+as an exact regression test (`PEQGBJGCDFUP` / `PEQGBJ`). This step does not
+construct, pad, or parse complete message envelopes. That remains Step 21.

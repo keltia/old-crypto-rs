@@ -12,6 +12,8 @@ mod drum;
 mod config;
 mod machine;
 mod key_list;
+mod indicator;
+pub use indicator::{derive_internal_indicator, DerivedIndicator, IndicatorError, INDICATOR_CONTACTS};
 pub use key_list::{KeyId, KeyList, KeyListError, KeyStore};
 mod public;
 pub use core::M209Core;

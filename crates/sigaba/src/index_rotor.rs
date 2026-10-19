@@ -25,7 +25,7 @@ use super::{
 #[cfg(test)]
 use super::{
     data::{index_rotor, IndexRotorId},
-    rotor_set::RotorSetError,
+    error::RotorSetError,
 };
 
 /// One mounted 10-contact SIGABA index rotor.

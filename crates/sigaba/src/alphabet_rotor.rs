@@ -36,7 +36,7 @@ use super::{
 use super::{
     data::{large_rotor, reference_rotor_set, LargeRotorSet},
     permutation::Permutation,
-    rotor_set::RotorSetError,
+    error::RotorSetError,
 };
 
 /// Physical insertion orientation of a 26-contact SIGABA rotor.

@@ -13,7 +13,7 @@
 //! enforces the cross-bank uniqueness/partition invariants and constructs the
 //! staged `SigabaCore` without exposing raw integer arrays.
 
-use core::fmt;
+use crate::error::ConfigError;
 
 use super::{
     alphabet_rotor::{AlphabetRotor, Orientation},
@@ -67,26 +67,7 @@ impl IndexRotorSetting {
     }
 }
 
-/// Invalid SIGABA key/configuration.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ConfigError {
-    /// A large rotor appears more than once across cipher/control banks.
-    DuplicateLargeRotor {
-        id: LargeRotorId,
-        first_bank: LargeRotorBank,
-        first_slot: usize,
-        second_bank: LargeRotorBank,
-        second_slot: usize,
-    },
-    /// An index rotor appears in more than one index slot.
-    DuplicateIndexRotor {
-        id: IndexRotorId,
-        first_slot: usize,
-        second_slot: usize,
-    },
-    /// A validated reference wiring could not be constructed.
-    InvalidReferenceWiring,
-}
+
 
 /// Which 26-contact bank contains a large rotor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -95,43 +76,8 @@ pub enum LargeRotorBank {
     Control,
 }
 
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::DuplicateLargeRotor {
-                id,
-                first_bank,
-                first_slot,
-                second_bank,
-                second_slot,
-            } => write!(
-                f,
-                "large rotor {} is duplicated in {:?} slot {} and {:?} slot {}",
-                id.get(),
-                first_bank,
-                first_slot + 1,
-                second_bank,
-                second_slot + 1,
-            ),
-            Self::DuplicateIndexRotor {
-                id,
-                first_slot,
-                second_slot,
-            } => write!(
-                f,
-                "index rotor {} is duplicated in slots {} and {}",
-                id.get(),
-                first_slot + 1,
-                second_slot + 1,
-            ),
-            Self::InvalidReferenceWiring => {
-                f.write_str("SIGABA reference rotor wiring is invalid")
-            }
-        }
-    }
-}
 
-impl std::error::Error for ConfigError {}
+
 
 /// Complete validated CSP-889 rotor key.
 #[derive(Clone, Debug, Eq, PartialEq)]

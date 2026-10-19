@@ -1,5 +1,6 @@
 //! Configuration management
 
+use crate::error::{ConfigFileError, RotorFileError};
 use serde::Deserialize;
 use sigaba::{
     IndexRotorSetting, LargeRotorSetting, Orientation, RotorSet, SigabaConfig,
@@ -7,7 +8,7 @@ use sigaba::{
 };
 use std::error::Error;
 use std::path::Path;
-use std::{fmt, fs};
+use std::fs;
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -36,27 +37,13 @@ pub struct IndexRotor {
     position: u8,
 }
 
-#[derive(Debug)]
-pub struct ConfigFileError(String);
 
-#[derive(Debug)]
-pub struct RotorFileError(String);
 
-impl fmt::Display for ConfigFileError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
 
-impl Error for ConfigFileError {}
 
-impl fmt::Display for RotorFileError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
 
-impl Error for RotorFileError {}
+
+
 
 pub fn load_rotor_set(path: Option<&Path>) -> Result<RotorSet, RotorFileError> {
     let Some(path) = path else {

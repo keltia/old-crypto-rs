@@ -29,48 +29,19 @@
 //! Source: CSP 1100(C), *Operating Instructions for ECM Mark 2 and CCM Mark 1*,
 //! §§311 and 315, and the controller wiring description in Part 2.
 
-use core::fmt;
+use crate::error::TextError;
 
 use super::{
     contact::Contact26,
     machine::{SigabaCore, SigabaTables},
 };
 
-/// Error from the historical SIGABA text adapter.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum TextError {
-    /// The validated configuration could not construct its static reference wiring.
-    InvalidConfiguration,
-    /// Plaintext contained a character not representable by the wartime
-    /// alphabet/space keyboard path used here.
-    UnsupportedPlaintext(char),
-    /// Ciphertext contained something other than A-Z or grouping whitespace.
-    UnsupportedCiphertext(char),
-}
 
-impl fmt::Display for TextError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::InvalidConfiguration => f.write_str("invalid SIGABA configuration"),
-            Self::UnsupportedPlaintext(ch) => write!(
-                f,
-                "character {ch:?} is not supported by the SIGABA plaintext text layer"
-            ),
-            Self::UnsupportedCiphertext(ch) => write!(
-                f,
-                "character {ch:?} is not valid SIGABA ciphertext"
-            ),
-        }
-    }
-}
 
-impl std::error::Error for TextError {}
 
-impl From<super::config::ConfigError> for TextError {
-    fn from(_: super::config::ConfigError) -> Self {
-        Self::InvalidConfiguration
-    }
-}
+
+
+
 
 /// Encode one human plaintext character into the contact presented to the
 /// cipher bank.

@@ -19,6 +19,7 @@ mod contact;
 mod control;
 mod control_bank;
 mod data;
+mod error;
 mod index_rotor;
 #[cfg(test)]
 mod kat;
@@ -32,13 +33,13 @@ mod text;
 
 pub use alphabet_rotor::Orientation;
 pub use config::{
-    ConfigError as SigabaConfigError, IndexRotorSetting, LargeRotorBank,
+    IndexRotorSetting, LargeRotorBank,
     LargeRotorSetting, SigabaConfig,
 };
 pub use contact::{Position10 as SigabaIndexPosition, Position26 as SigabaRotorPosition};
 pub use data::{IndexRotorId as SigabaIndexRotorId, LargeRotorId as SigabaRotorId, LargeRotorSet};
 pub use public::Sigaba;
-pub use rotor_set::{RotorKind, RotorSet, RotorSetError};
-pub use text::TextError as SigabaTextError;
+pub use rotor_set::{RotorKind, RotorSet};
+pub use error::{ConfigError as SigabaConfigError, RotorSetError, TextError as SigabaTextError};
 
 use old_crypto_rs::Block;

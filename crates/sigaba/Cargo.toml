@@ -23,6 +23,7 @@ name = "sigaba"
 harness = false
 
 [dependencies]
+thiserror = "2.0"
 clap = { version = "4.6", features = ["derive"] }
 noyalib = "0.0"
 old-crypto-rs = { version = "0", path = "../..", default-features = false }

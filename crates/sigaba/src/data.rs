@@ -27,7 +27,7 @@
 use core::fmt;
 use std::sync::OnceLock;
 
-use super::rotor_set::{RotorSet, RotorSetError};
+use super::{rotor_set::RotorSet, error::RotorSetError};
 
 #[cfg(test)]
 use super::permutation::Permutation;

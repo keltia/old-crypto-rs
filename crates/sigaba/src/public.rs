@@ -13,10 +13,11 @@ use crate::Block;
 use super::{
     config::SigabaConfig,
     contact::Contact26,
+    error::TextError,
     machine::SigabaCore,
     text::{
         contact_to_plaintext, decipher_text_with, encipher_text_with,
-        plaintext_to_contact, TextError,
+        plaintext_to_contact,
     },
 };
 

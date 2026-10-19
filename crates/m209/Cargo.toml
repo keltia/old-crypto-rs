@@ -7,6 +7,7 @@ description = "A historically grounded simulation of the Hagelin M-209 cipher ma
 repository = "https://github.com/keltia/old-crypto-rs"
 license = "MIT"
 readme = "README.md"
+default-run = "m209ctl"
 keywords = ["cryptography", "m209", "hagelin", "cipher", "history"]
 categories = ["cryptography"]
 
@@ -16,3 +17,10 @@ linker_messages = "allow"
 [dependencies]
 old-crypto-rs = { version = "0.12", path = "../..", default-features = false }
 thiserror = "2.0"
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+noyalib = "0.0"
+
+[[bin]]
+name = "m209ctl"
+path = "cmd/m209ctl/main.rs"

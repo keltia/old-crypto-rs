@@ -99,3 +99,20 @@ which **loses genuine `Z` characters**, as in the published PIZZA example.
 `ungroup_ciphertext` ignores only ASCII whitespace. No padding or message
 indicators are silently inserted or removed. Full Army message framing and
 indicators are reserved for a separate procedure layer.
+
+
+## Step 14 — `m209ctl`
+
+The command-line tool accepts `encrypt` and `decrypt` subcommands and requires a
+complete YAML key. See `config/reference.yaml` for the 1944 sample key.
+
+```sh
+cargo run -p m209 -- --config crates/m209/config/reference.yaml encrypt --grouped "AAAAAA"
+cargo run -p m209 -- --config crates/m209/config/reference.yaml decrypt "TNJUW"
+```
+
+The default `--mode text` interprets spaces as Z on encryption and decoded Z
+as spaces on decryption. `--mode raw` accepts A–Z contacts only and preserves Z.
+Each invocation starts from the specified wheel indicators. Complete wartime
+message indicators, padding, and key-list selection are not yet implemented;
+this CLI operates on individual message bodies only.

@@ -1,5 +1,5 @@
 //! Checked machine-key primitives. These types do not implement the mechanism.
-use core::fmt;
+use thiserror::Error;
 
 /// Number of independently advancing pin wheels.
 pub const WHEEL_COUNT: usize = 6;
@@ -18,37 +18,23 @@ pub const WHEEL_ALPHABETS: [&str; WHEEL_COUNT] = [
 pub const WHEEL_SIZES: [u8; WHEEL_COUNT] = [26, 25, 23, 21, 19, 17];
 
 /// Error for an invalid M-209 key component.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
 pub enum KeyError {
+    #[error("M-209 contact {0} is outside 0..26")]
     InvalidContact(u8),
+    #[error("{0:?} is not an uppercase A-Z contact")]
     InvalidLetter(char),
+    #[error("M-209 wheel {0} is outside 1..=6")]
     InvalidWheel(u8),
+    #[error("position {index} is outside wheel {wheel:?} range")]
     InvalidPosition { wheel: WheelId, index: u8 },
+    #[error("letter {letter:?} does not occur on wheel {wheel:?}")]
     InvalidWheelLetter { wheel: WheelId, letter: char },
+    #[error("pin bits {bits:#x} exceed wheel {wheel:?} capacity")]
     InvalidPinBits { wheel: WheelId, bits: u32 },
+    #[error("M-209 lug {0} is outside 0..=6")]
     InvalidLug(u8),
 }
-
-impl fmt::Display for KeyError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidContact(n) => write!(f, "M-209 contact {n} is outside 0..26"),
-            Self::InvalidLetter(c) => write!(f, "{c:?} is not an uppercase A-Z contact"),
-            Self::InvalidWheel(n) => write!(f, "M-209 wheel {n} is outside 1..=6"),
-            Self::InvalidPosition { wheel, index } => {
-                write!(f, "position {index} is outside wheel {} range", wheel.number())
-            }
-            Self::InvalidWheelLetter { wheel, letter } => {
-                write!(f, "letter {letter:?} does not occur on wheel {}", wheel.number())
-            }
-            Self::InvalidPinBits { wheel, bits } => {
-                write!(f, "pin bits {bits:#x} exceed wheel {} capacity", wheel.number())
-            }
-            Self::InvalidLug(n) => write!(f, "M-209 lug {n} is outside 0..=6"),
-        }
-    }
-}
-impl std::error::Error for KeyError {}
 
 /// An input/output letter contact (A=0 through Z=25).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

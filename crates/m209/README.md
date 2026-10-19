@@ -101,3 +101,12 @@ strict twelve-contact derived-indicator procedure. It returns the intermediate
 letters and the six typed secret starting positions; it does **not** construct
 a complete wartime message. See `docs/message-procedures.md` for the precise
 historical profile and limitations.
+
+## Complete derived-indicator messages (Step 21)
+
+Use `encipher_message(&KeyStore, KeyId, system, external, plaintext)` with explicit
+indicators and `decipher_message(&KeyStore, transmitted)` for grouped envelopes.
+The API supports the twelve-contact derived-indicator training profile, *not*
+the distinct 1944 direct-indicator profile. The sender reports the number of
+post-encryption `X` padding letters, but received padding is ambiguous and
+is never stripped automatically. Full CLI wiring remains Step 22.

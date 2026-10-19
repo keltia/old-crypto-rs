@@ -13,6 +13,8 @@ mod config;
 mod machine;
 mod key_list;
 mod indicator;
+mod message;
+pub use message::{MessageEnvelope, MessageError, EncipheredMessage, DecipheredMessage, encipher_message, decipher_message};
 pub use indicator::{derive_internal_indicator, DerivedIndicator, IndicatorError, INDICATOR_CONTACTS};
 pub use key_list::{KeyId, KeyList, KeyListError, KeyStore};
 mod public;

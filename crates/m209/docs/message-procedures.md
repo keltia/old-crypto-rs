@@ -159,3 +159,13 @@ The returned `DerivedIndicator` exposes both the ungrouped intermediate output
 and the six typed positions. The published `K` / `DUFLJB` example is asserted
 as an exact regression test (`PEQGBJGCDFUP` / `PEQGBJ`). This step does not
 construct, pad, or parse complete message envelopes. That remains Step 21.
+
+## Step 21: Complete message body and envelope
+
+`src/message.rs` implements the twelve-letter derived-indicator profile of
+this specification. `MessageEnvelope::parse` verifies repeated groups and
+requires nonempty, complete five-letter ciphertext groups. `encipher_message`
+appends 0–4 literal Xs *after* conversion, and returns a sender-visible pad
+count. `decipher_message` preserves all received ciphertext, including
+ambiguous padding; its raw and historical-display APIs are separate.
+The 1944 direct-indicator profile is not implicitly accepted.

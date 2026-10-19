@@ -40,6 +40,12 @@ impl M209Core {
         self.drum.displacement(self.effective_mask())
     }
 
+    /// Advance the internal wheel bank after a character has been converted.
+    /// Kept crate-private so the public frozen conversion remains non-stepping.
+    pub(crate) fn advance_wheels(&mut self) {
+        self.wheels.advance();
+    }
+
     /// Encipher or decipher one contact without modifying wheel positions.
     ///
     /// Beaufort reciprocity means the same operation is used in both directions.

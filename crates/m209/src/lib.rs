@@ -1,7 +1,6 @@
 //! Historical Hagelin M-209 cipher-machine simulation.
 //!
-//! Step 7 adds frozen reciprocal character conversion to the existing
-//! pin-wheel and lug-drum mechanics. Stateful cycling follows in Step 8.
+//! Step 8 adds stateful per-character cycling on top of the frozen core.
 //!
 //! The machine will use the shared [`old_crypto_rs::Block`] trait when its
 //! public cipher facade is introduced in Step 12. Do not duplicate that trait.
@@ -10,8 +9,10 @@ pub mod fixtures;
 mod error;
 mod core;
 mod drum;
+mod machine;
 pub use core::M209Core;
 pub use drum::LugDrum;
+pub use machine::M209Machine;
 pub use error::KeyError;
 mod types;
 mod wheel;

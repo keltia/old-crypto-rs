@@ -80,3 +80,12 @@ constructor. `from_letters` parses six effective-pin strings and six indicator
 letters using each wheel's historical alphabet. `build_core` and
 `build_machine` produce independent instances without coupling key validation
 to the stateful cipher logic. Message-procedure parsing is deferred.
+
+### Step 12: Shared `Block` facade
+
+`M209::new(config)` provides `old_crypto_rs::Block` integration. Every
+`encrypt` or `decrypt` call begins at the validated initial positions and
+writes at most the smaller of the input and output slice lengths. ASCII
+letters are uppercased; other bytes pass through without advancing wheels.
+Use `M209Machine` for continuous stateful streams. Historical text formatting
+and message indicators remain Step 13.

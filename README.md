@@ -164,14 +164,20 @@ historical wiring sources, and test vectors.
 
 ### M-209 Cipher Machine
 
-The [M-209 crate](crates/m209/README.md) implements the six-wheel Hagelin
-pin-and-lug cipher machine, with the 1944 US Army check sequence and an
-independent Python simulator interoperability vector. It provides `m209ctl`,
-a stateful machine API and the shared `old_crypto_rs::Block` interface.
+The [M-209 crate](crates/m209/README.md) implements the US Army's Hagelin
+six-wheel pin-and-lug cipher machine, including its 27-bar drum and the
+historical 1944 machine-check sequence. Its behavior is also tested against
+an independent Python simulator's known-answer vector.
 
-Run `cargo run -p m209 -- --config crates/m209/config/reference.yaml encrypt
-AAAAAAAAAAAAAAAAAAAAAAAAAA` for the historical sample. Full wartime message
-indicator construction and key-list procedures are not implemented.
+The crate provides the `m209ctl` CLI, a stateful machine API, the shared
+`old_crypto_rs::Block` interface, validated YAML key lists, and the documented
+twelve-character derived-indicator message procedure (including complete
+message envelopes). The 1944 direct-indicator variant and automatic indicator
+generation are not yet implemented.
+
+See the [M-209 technical specification](crates/m209/docs/m209.md) and
+[message-procedure documentation](crates/m209/docs/message-procedures.md)
+for historical sources, test vectors, and the exact scope of interoperability.
 
 ## Available demo
 
@@ -224,6 +230,9 @@ Please see CONTRIBUTING.md for some simple rules.
 - [PURPLE Machine Archive](https://cryptocellar.org/simula/purple/)
 - [SIGABA Machine](http://www.cryptomuseum.com/crypto/usa/sigaba/index.htm)
 - [Solitaire](https://www.schneier.com/academic/solitaire/) - Bruce Schneier
+- [M-209: TM 11-380 (1944 US Army manual)](https://m209.virtualcolossus.co.uk/M209%20Manual.pdf)
+- [Virtual Hagelin M-209 simulator and tutorial](https://m209.virtualcolossus.co.uk/)
+- [M-209 Python reference implementation](https://github.com/gremmie/m209)
 
 ## Wikipedia References
 
@@ -246,3 +255,4 @@ Please see CONTRIBUTING.md for some simple rules.
 - [VIC cipher](https://en.wikipedia.org/wiki/Vic-cipher)
 - [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
 - [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
+- [M-209 cipher machine](https://en.wikipedia.org/wiki/M-209)

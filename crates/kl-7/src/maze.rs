@@ -10,13 +10,14 @@
 //!
 //! This re-flexing process typically repeats 1 to 11 times until reaching an alphabet terminal.
 
+pub use crate::error::MazeError;
+
 use super::{
     contact::Contact26,
     data::{letter_to_pin, pin_to_terminal, reentry_to_pin, BasePlateTerminal},
     rotor::Rotor,
     stepping::DRUM_ROTOR_COUNT,
 };
-use core::fmt;
 
 /// Maximum allowable passes through the rotor drum before detecting an infinite cycle.
 pub const MAX_MAZE_PASSES: usize = 32;
@@ -30,29 +31,8 @@ pub enum MazeDirection {
     Backward,
 }
 
-/// Error encountered during maze signal routing.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum MazeError {
-    /// Signal entered an infinite loop without exiting at an alphabet contact.
-    InfiniteLoop {
-        start_letter: Contact26,
-        passes: usize,
-    },
-}
 
-impl fmt::Display for MazeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::InfiniteLoop { start_letter, passes } => write!(
-                f,
-                "re-entry maze infinite loop detected starting from letter {} after {} passes",
-                start_letter, passes
-            ),
-        }
-    }
-}
 
-impl std::error::Error for MazeError {}
 
 /// Trace electrical signal through the 8-rotor drum with re-entry loops.
 ///

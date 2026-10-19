@@ -16,6 +16,7 @@ pub mod actuator;
 pub mod config;
 pub mod contact;
 pub mod data;
+pub mod error;
 pub mod machine;
 pub mod maze;
 pub mod notch_ring;
@@ -29,17 +30,18 @@ pub mod text;
 mod kat;
 
 pub use actuator::{ActuatorState, ACTUATOR_SWITCH_COUNT, MOVABLE_ROTOR_SLOTS};
-pub use config::{ConfigError, KeySheetDto, Kl7Config, OperationMode};
+pub use config::{KeySheetDto, Kl7Config, OperationMode};
 pub use contact::{Contact26, Contact36, Position36, ReentryWire};
 pub use data::{BasePlateTerminal, RotorId};
+pub use error::{ConfigError, Kl7Error, MazeError, TextError};
 pub use machine::Kl7Core;
-pub use maze::{trace_maze, MazeDirection, MazeError, MAX_MAZE_PASSES};
+pub use maze::{trace_maze, MazeDirection, MAX_MAZE_PASSES};
 pub use notch_ring::{NotchRing, NotchRingId};
 pub use permutation::{Permutation, PermutationError};
-pub use public::{Kl7, Kl7Error};
+pub use public::Kl7;
 pub use rotor::{Rotor, RotorWiring};
 pub use stepping::{evaluate_stepping, RotorStepSet, DRUM_ROTOR_COUNT, STATIONARY_ROTOR_SLOT};
 pub use text::{
     contact_to_plaintext, decipher_text_with, encipher_text_with, format_five_letter_groups,
-    plaintext_to_contact, TextError,
+    plaintext_to_contact,
 };

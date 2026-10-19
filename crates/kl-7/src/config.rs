@@ -1,5 +1,7 @@
 //! Configuration for the TSEC/KL-7 cipher machine.
 
+pub use crate::error::ConfigError;
+
 use super::{
     actuator::ACTUATOR_SWITCH_COUNT,
     contact::Position36,
@@ -8,47 +10,10 @@ use super::{
     rotor::Rotor,
     stepping::DRUM_ROTOR_COUNT,
 };
-use core::fmt;
 use serde::{Deserialize, Serialize};
 
-/// Error returned when validating a KL-7 configuration.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ConfigError {
-    /// Duplicate rotor core assigned to multiple slots in the drum.
-    DuplicateRotorCore(RotorId),
-    /// Duplicate notch ring assigned to multiple movable slots.
-    DuplicateNotchRing(NotchRingId),
-    /// Invalid rotor slot index.
-    InvalidRotorSlot(usize),
-    /// Invalid rotor name or identifier.
-    InvalidRotorName(String),
-    /// Invalid notch ring identifier.
-    InvalidNotchRingNumber(u8),
-    /// Invalid position label or number.
-    InvalidPosition(String),
-    /// YAML format or parsing error.
-    Yaml(String),
-}
 
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::DuplicateRotorCore(id) => {
-                write!(f, "rotor core {id} assigned to multiple drum slots")
-            }
-            Self::DuplicateNotchRing(id) => {
-                write!(f, "notch ring {id} assigned to multiple movable slots")
-            }
-            Self::InvalidRotorSlot(slot) => write!(f, "invalid rotor slot index: {slot}"),
-            Self::InvalidRotorName(name) => write!(f, "invalid rotor name: '{name}'"),
-            Self::InvalidNotchRingNumber(num) => write!(f, "invalid notch ring number: {num}"),
-            Self::InvalidPosition(pos) => write!(f, "invalid position: '{pos}'"),
-            Self::Yaml(err) => write!(f, "YAML error: {err}"),
-        }
-    }
-}
 
-impl std::error::Error for ConfigError {}
 
 /// DTO for serializing/deserializing daily key sheet configurations via YAML.
 #[derive(Clone, Debug, Serialize, Deserialize)]

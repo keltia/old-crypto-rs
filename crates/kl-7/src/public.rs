@@ -3,51 +3,21 @@
 //! `Kl7` stores a validated immutable configuration and a fully constructed initial `Kl7Core`.
 //! Each operation copies that initial state, preserving reset-per-call behavior.
 
+pub use crate::error::Kl7Error;
+
 use super::{
     config::Kl7Config,
     contact::Contact26,
     machine::Kl7Core,
-    maze::MazeError,
-    text::{decipher_text_with, encipher_text_with, TextError},
+    text::{decipher_text_with, encipher_text_with},
 };
-use core::fmt;
 
 use old_crypto_rs::Block; 
 
-/// Error type returned by KL-7 public encryption/decryption operations.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Kl7Error {
-    /// An electrical conduction error occurred in the re-entry maze.
-    Maze(MazeError),
-    /// An unsupported or invalid character was encountered.
-    InvalidCharacter(char),
-    /// A text layer formatting or validation error occurred.
-    Text(TextError),
-}
 
-impl fmt::Display for Kl7Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Maze(e) => write!(f, "maze error: {e}"),
-            Self::InvalidCharacter(c) => write!(f, "invalid character: '{c}'"),
-            Self::Text(e) => write!(f, "text error: {e}"),
-        }
-    }
-}
 
-impl std::error::Error for Kl7Error {}
 
-impl From<MazeError> for Kl7Error {
-    fn from(e: MazeError) -> Self {
-        Self::Maze(e)
-    }
-}
 
-impl From<TextError> for Kl7Error {
-    fn from(e: TextError) -> Self {
-        Self::Text(e)
-    }
-}
 
 /// Validated TSEC/KL-7 (ADONIS / POLLUX) cipher machine.
 #[derive(Clone, Debug, Eq, PartialEq)]

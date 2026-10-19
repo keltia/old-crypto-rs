@@ -14,45 +14,16 @@
 //! - Output Formatting:
 //!   - Standard military format groups ciphertext in 5-letter blocks.
 
+pub use crate::error::TextError;
+
 use super::{
     contact::Contact26,
     machine::Kl7Core,
-    maze::MazeError,
 };
-use core::fmt;
 
-/// Error returned by the KL-7 text processing layer.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum TextError {
-    /// Plaintext contained an unsupported character.
-    UnsupportedPlaintext(char),
-    /// Ciphertext contained an invalid character.
-    UnsupportedCiphertext(char),
-    /// An electrical conduction error occurred in the re-entry maze.
-    Maze(MazeError),
-}
 
-impl fmt::Display for TextError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::UnsupportedPlaintext(c) => {
-                write!(f, "character '{c}' is not supported in KL-7 plaintext")
-            }
-            Self::UnsupportedCiphertext(c) => {
-                write!(f, "character '{c}' is not valid KL-7 ciphertext")
-            }
-            Self::Maze(e) => write!(f, "re-entry maze error: {e}"),
-        }
-    }
-}
 
-impl std::error::Error for TextError {}
 
-impl From<MazeError> for TextError {
-    fn from(e: MazeError) -> Self {
-        Self::Maze(e)
-    }
-}
 
 /// Convert a plaintext character into an electrical contact (`A=0..Z=25`).
 pub fn plaintext_to_contact(ch: char) -> Result<Contact26, TextError> {

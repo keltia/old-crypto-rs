@@ -1,5 +1,5 @@
 //! Checked machine-key primitives. These types do not implement the mechanism.
-use thiserror::Error;
+use crate::KeyError;
 
 /// Number of independently advancing pin wheels.
 pub const WHEEL_COUNT: usize = 6;
@@ -16,27 +16,6 @@ pub const WHEEL_ALPHABETS: [&str; WHEEL_COUNT] = [
 ];
 /// Number of pins on each wheel, in physical order.
 pub const WHEEL_SIZES: [u8; WHEEL_COUNT] = [26, 25, 23, 21, 19, 17];
-
-/// Error for an invalid M-209 key component.
-#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
-pub enum KeyError {
-    #[error("M-209 contact {0} is outside 0..26")]
-    InvalidContact(u8),
-    #[error("{0:?} is not an uppercase A-Z contact")]
-    InvalidLetter(char),
-    #[error("M-209 wheel {0} is outside 1..=6")]
-    InvalidWheel(u8),
-    #[error("position {index} is outside wheel {wheel:?} range")]
-    InvalidPosition { wheel: WheelId, index: u8 },
-    #[error("letter {letter:?} does not occur on wheel {wheel:?}")]
-    InvalidWheelLetter { wheel: WheelId, letter: char },
-    #[error("pin bits {bits:#x} exceed wheel {wheel:?} capacity")]
-    InvalidPinBits { wheel: WheelId, bits: u32 },
-    #[error("wheel identity mismatch: expected {expected:?}, got {actual:?}")]
-    WheelMismatch { expected: WheelId, actual: WheelId },
-    #[error("M-209 lug {0} is outside 0..=6")]
-    InvalidLug(u8),
-}
 
 /// An input/output letter contact (A=0 through Z=25).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

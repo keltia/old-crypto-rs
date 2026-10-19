@@ -7,12 +7,14 @@
 //! public cipher facade is introduced in Step 12. Do not duplicate that trait.
 
 pub mod fixtures;
+mod error;
 mod drum;
 pub use drum::LugDrum;
+pub use error::KeyError;
 mod types;
 mod wheel;
 pub use wheel::{PinWheel, WheelBank};
-pub use types::{Contact, DRUM_BAR_COUNT, DrumBar, KeyError, Lug, PinPattern,
+pub use types::{Contact, DRUM_BAR_COUNT, DrumBar, Lug, PinPattern,
     WHEEL_ALPHABETS, WHEEL_COUNT, WHEEL_SIZES, WheelId, WheelPosition};
 
 /// Name of the historical machine represented by this crate.

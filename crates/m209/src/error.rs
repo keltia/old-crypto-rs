@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-use crate::{IndicatorError, KeyListError, TextError, WheelId};
+use crate::{KeyId, WheelId};
 
 /// Error for an invalid M-209 key component.
 #[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
@@ -54,4 +54,62 @@ pub enum MessageError {
 
     #[error("ciphertext body must not be empty")]
     EmptyBody,
+}
+
+/// Errors encountered before or during indicator derivation.
+#[derive(Debug, Error, Clone, PartialEq, Eq)]
+pub enum IndicatorError {
+    #[error("system indicator must be a single uppercase ASCII letter: {0:?}")]
+    InvalidSystemLetter(char),
+
+    #[error("external wheel indicator is invalid: {0}")]
+    InvalidExternalIndicator(#[from] KeyError),
+
+    #[error("only {selected} of six wheel positions could be derived from twelve letters")]
+    InsufficientLetters { selected: usize },
+}
+
+/// Validation and decoding failures for named M-209 key lists.
+#[derive(Debug, Error, PartialEq, Eq)]
+pub enum KeyListError {
+    #[error("key identifier must be exactly two uppercase ASCII letters: {0:?}")]
+    InvalidIdentifier(String),
+
+    #[error("duplicate key identifier {0}")]
+    DuplicateIdentifier(KeyId),
+
+    #[error("unknown key identifier {0}")]
+    UnknownIdentifier(KeyId),
+
+    #[error("key check must be exactly 26 uppercase ASCII letters")]
+    InvalidCheck,
+
+    #[error("key {id} failed its 26-letter check: expected {expected}, computed {computed}")]
+    CheckMismatch {
+        id: KeyId,
+        expected: String,
+        computed: String,
+    },
+
+    #[error("expected {expected} drum bars, received {actual}")]
+    InvalidBarCount { expected: usize, actual: usize },
+
+    #[error("invalid mechanical key: {0}")]
+    Mechanical(#[from] KeyError),
+
+    #[error("invalid key-list YAML: {0}")]
+    Yaml(String),
+
+    #[error("key store must contain at least one key")]
+    EmptyStore,
+}
+
+/// Errors in text prepared for the M-209 alphabet.
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
+pub enum TextError {
+    #[error("invalid plaintext character {character:?} at character index {index}")]
+    InvalidPlaintext { index: usize, character: char },
+
+    #[error("invalid ciphertext character {character:?} at character index {index}")]
+    InvalidCiphertext { index: usize, character: char },
 }

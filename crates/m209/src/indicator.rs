@@ -1,25 +1,11 @@
 //! Deterministic internal-indicator derivation for the documented twelve-letter
 //! M-209 training procedure. Message framing belongs to Step 21.
 
-use thiserror::Error;
 
-use crate::{Contact, KeyError, KeyList, M209Config, WHEEL_COUNT, WheelId, WheelPosition};
+use crate::{Contact, IndicatorError, KeyError, KeyList, M209Config, WHEEL_COUNT, WheelId, WheelPosition};
 
 /// The number of system-letter contacts enciphered in this procedure.
 pub const INDICATOR_CONTACTS: usize = 12;
-
-/// Errors encountered before or during indicator derivation.
-#[derive(Debug, Error, Clone, PartialEq, Eq)]
-pub enum IndicatorError {
-    #[error("system indicator must be a single uppercase ASCII letter: {0:?}")]
-    InvalidSystemLetter(char),
-
-    #[error("external wheel indicator is invalid: {0}")]
-    InvalidExternalIndicator(#[from] KeyError),
-
-    #[error("only {selected} of six wheel positions could be derived from twelve letters")]
-    InsufficientLetters { selected: usize },
-}
 
 /// Fully reproducible intermediate state for the twelve-letter procedure.
 #[derive(Debug, Clone, PartialEq, Eq)]

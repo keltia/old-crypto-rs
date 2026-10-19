@@ -6,19 +6,8 @@
 //! This module does not construct message indicators or remove padding.
 
 use old_crypto_rs::helpers::output_as_block;
-use thiserror::Error;
 
-use crate::{Contact, M209Config};
-
-/// Errors in text prepared for the M-209 alphabet.
-#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
-pub enum TextError {
-    #[error("invalid plaintext character {character:?} at character index {index}")]
-    InvalidPlaintext { index: usize, character: char },
-
-    #[error("invalid ciphertext character {character:?} at character index {index}")]
-    InvalidCiphertext { index: usize, character: char },
-}
+use crate::{Contact, M209Config, TextError};
 
 /// Interpret spaces as `Z`, and normalize ASCII letters to uppercase.
 ///

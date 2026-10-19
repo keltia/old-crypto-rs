@@ -69,3 +69,15 @@ This is a **cipher machine and message-body simulator**, not a complete implemen
 - Earlier War Department documents and manuals: https://radionerds.com/index.php/M-209
 - Brian Neal, Python M-209 simulator and published API example: https://m209.readthedocs.io/en/latest/m209.html
 - Key-list notation: https://m209.readthedocs.io/en/latest/keylist.html
+
+## Benchmarks (Step 16)
+
+Run `cargo bench -p m209 --bench m209` from the workspace root. The Divan
+suite measures validated-key construction, machine construction, reset, frozen
+contact conversion, stateful contact conversion and batches of 32, 256 and
+4096 contacts, plus bounded `Block` encryption and decryption. Machine-key
+parsing and fixture creation are excluded from the throughput timings. The
+`stateful_convert_contacts` batch API allocates its result; `Block` uses a
+reusable destination buffer and reconstructs the starting state each call.
+The numbers therefore measure distinct public operations, not identical
+workloads. No reported benchmark timing is claimed without running Divan.

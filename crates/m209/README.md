@@ -51,3 +51,12 @@ the first `A` converts to `T` and the visible wheels then read `BBBBBB`.
 
 The full 26-character historical verification string remains a Step 9 test;
 message formatting, indicators and the shared `Block` adapter are later stages.
+
+### Step 9: Original 1944 full-machine check
+
+`tests/historical_1944.rs` exercises the original War Department TM 11-380
+Table I and Table II setup (visible wheels `AAAAAA`), converting 26 `A`s
+into the literal published check `TNJUWAUQTKCZKNUTOTBCWARMIO`.
+The integration tests also verify reciprocal decipherment, streaming, reset,
+and the wheel positions after 26 steps. This is a historical key fixture,
+not a factory-fixed key. The Python interoperability fixture is Step 10.

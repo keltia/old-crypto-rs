@@ -28,7 +28,7 @@ pub const MANUAL_1944_LUGS: [(u8, u8); DRUM_BAR_COUNT] = [
 ];
 
 /// TM 11-380, p. 15, setup-check output with the two tables above.
-/// This is NOT executed as a cipher known-answer test until Step 9.
+/// Verified end-to-end in `tests/historical_1944.rs` (Step 9).
 pub const MANUAL_1944_CHECK: &str = "TNJUWAUQTKCZKNUTOTBCWARMIO";
 
 /// Brian Neal's published Python `m209` interoperability fixture.

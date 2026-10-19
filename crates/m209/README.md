@@ -25,3 +25,15 @@ their guide-arm pin sensing. The displayed wheel letters `AAAAAA` sense
 1944 example key initially activates wheels 2, 3, 4, and 6.
 
 The drum and printable substitution are not yet implemented.
+
+### Step 6: 27-bar drum
+
+`LugDrum` holds all 27 ordered pairs of adjustable lugs. Given a wheel-bank
+six-bit effective-wheel mask, each bar engages when either non-neutral lug
+addresses an effective wheel. The bar is counted **once** even when both lugs
+engage. `engaged_bar_mask()` exposes physical bar indices for tests and
+`displacement()` returns the unreduced tooth count (0–27).
+
+For the original 1944 manual's sample key, wheels 2, 3, 4 and 6 are active
+at `AAAAAA`; exactly bars 1–3 and 5–21 engage, producing 20 teeth.
+This is a drum fixture only, **not yet a ciphertext known-answer test**.

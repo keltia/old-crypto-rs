@@ -89,3 +89,13 @@ writes at most the smaller of the input and output slice lengths. ASCII
 letters are uppercased; other bytes pass through without advancing wheels.
 Use `M209Machine` for continuous stateful streams. Historical text formatting
 and message indicators remain Step 13.
+
+### Step 13: Historical text conventions
+
+`encrypt_text` converts ASCII letters and spaces (mapped to `Z`) before
+stepping and can group ciphertext into five-letter groups. `decrypt_text_raw`
+returns the exact machine letters; `decrypt_text` displays `Z` as spaces,
+which **loses genuine `Z` characters**, as in the published PIZZA example.
+`ungroup_ciphertext` ignores only ASCII whitespace. No padding or message
+indicators are silently inserted or removed. Full Army message framing and
+indicators are reserved for a separate procedure layer.

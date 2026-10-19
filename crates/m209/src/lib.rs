@@ -18,6 +18,8 @@ pub use drum::LugDrum;
 pub use machine::M209Machine;
 pub use public::M209;
 pub use error::KeyError;
+mod text;
+pub use text::{TextError, decrypt_text, decrypt_text_raw, display_plaintext, encrypt_text, group_five, prepare_plaintext, ungroup_ciphertext};
 mod types;
 mod wheel;
 pub use wheel::{PinWheel, WheelBank};

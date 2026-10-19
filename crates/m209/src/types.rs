@@ -39,6 +39,7 @@ pub enum KeyError {
 /// An input/output letter contact (A=0 through Z=25).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Contact(u8);
+
 impl Contact {
     pub const COUNT: u8 = 26;
     pub const A: Self = Self(0);
@@ -52,6 +53,7 @@ impl Contact {
         else { Err(KeyError::InvalidLetter(letter)) }
     }
 }
+
 impl TryFrom<u8> for Contact {
     type Error = KeyError;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -62,6 +64,7 @@ impl TryFrom<u8> for Contact {
 /// A physically numbered wheel (1 through 6).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WheelId(u8);
+
 impl WheelId {
     pub const fn new(number: u8) -> Option<Self> {
         if number >= 1 && number <= WHEEL_COUNT as u8 { Some(Self(number)) } else { None }
@@ -76,6 +79,7 @@ impl WheelId {
             .ok_or(KeyError::InvalidWheelLetter { wheel: self, letter })
     }
 }
+
 impl TryFrom<u8> for WheelId {
     type Error = KeyError;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -87,6 +91,7 @@ impl TryFrom<u8> for WheelId {
 /// This does not yet encode the offset to the mechanically sensed pin.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct WheelPosition { wheel: WheelId, index: u8 }
+
 impl WheelPosition {
     pub const fn new(wheel: WheelId, index: u8) -> Option<Self> {
         if index < wheel.size() { Some(Self { wheel, index }) } else { None }
@@ -103,6 +108,7 @@ impl WheelPosition {
 /// Unused higher bits must be zero. Pin sensing is implemented in Step 5.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PinPattern { wheel: WheelId, bits: u32 }
+
 impl PinPattern {
     pub const fn empty(wheel: WheelId) -> Self { Self { wheel, bits: 0 } }
     pub fn from_bits(wheel: WheelId, bits: u32) -> Result<Self, KeyError> {
@@ -128,6 +134,7 @@ impl PinPattern {
 /// Drum-bar lug setting: zero is neutral; 1..=6 identifies a wheel.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Lug(u8);
+
 impl Lug {
     pub const NEUTRAL: Self = Self(0);
     pub const fn new(value: u8) -> Option<Self> {
@@ -136,6 +143,7 @@ impl Lug {
     pub const fn value(self) -> u8 { self.0 }
     pub const fn wheel(self) -> Option<WheelId> { WheelId::new(self.0) }
 }
+
 impl TryFrom<u8> for Lug {
     type Error = KeyError;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
@@ -147,6 +155,7 @@ impl TryFrom<u8> for Lug {
 /// Historical column restrictions will be validated in Step 6.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DrumBar { left: Lug, right: Lug }
+
 impl DrumBar {
     pub const fn new(left: Lug, right: Lug) -> Self { Self { left, right } }
     pub const fn left(self) -> Lug { self.left }

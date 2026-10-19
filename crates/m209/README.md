@@ -37,3 +37,5 @@ engage. `engaged_bar_mask()` exposes physical bar indices for tests and
 For the original 1944 manual's sample key, wheels 2, 3, 4 and 6 are active
 at `AAAAAA`; exactly bars 1–3 and 5–21 engage, producing 20 teeth.
 This is a drum fixture only, **not yet a ciphertext known-answer test**.
+
+Step 7 adds `M209Core`, which converts a letter at fixed wheel positions using the reciprocal M-209 substitution. It never advances the wheels; stateful cycling is introduced in Step 8.

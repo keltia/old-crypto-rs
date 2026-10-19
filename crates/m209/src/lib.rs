@@ -1,14 +1,16 @@
 //! Historical Hagelin M-209 cipher-machine simulation.
 //!
-//! Step 6 implements the six advancing pin wheels and the 27-bar lug
-//! drum; letter conversion and full encryption follow in later steps.
+//! Step 7 adds frozen reciprocal character conversion to the existing
+//! pin-wheel and lug-drum mechanics. Stateful cycling follows in Step 8.
 //!
 //! The machine will use the shared [`old_crypto_rs::Block`] trait when its
 //! public cipher facade is introduced in Step 12. Do not duplicate that trait.
 
 pub mod fixtures;
 mod error;
+mod core;
 mod drum;
+pub use core::M209Core;
 pub use drum::LugDrum;
 pub use error::KeyError;
 mod types;

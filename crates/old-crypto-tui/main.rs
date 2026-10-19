@@ -7,6 +7,8 @@ use fialka::{
     Commutator as FialkaCommutator, Fialka, FialkaConfig, RotorSeries as FialkaRotorSeries,
 };
 use kl_7::{Kl7, Kl7Config, Position36};
+use m209::{M209Config, fixtures::{MANUAL_1944_PINS, manual_1944_drum}};
+use m209::encrypt_text as m209_encrypt_text;
 use old_crypto_rs::helpers::{self, English, EnglishExt, Horizontal, LatinSC};
 use old_crypto_rs::{
     ADFGVXCipher, AutocryptCipher, AutokeyCipher, Block as CipherBlock, CaesarCipher, Chaocipher,
@@ -22,10 +24,10 @@ use sigaba::{
     Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
     SigabaRotorId, SigabaRotorPosition,
 };
-
 use purple::{
     Purple, PurpleAlphabet, PurpleConfig, PurpleMotion, SwitchPosition, TwentiesSwitchId,
 };
+
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
@@ -96,6 +98,7 @@ impl App {
                 "Sigaba",
                 "KL-7",
                 "PURPLE",
+                "M-209",
             ],
             cipher_list_state,
             selected_cipher_index: 0,
@@ -324,6 +327,25 @@ impl App {
                 }
                 Err(e) => self.result = format!("Error: {e}"),
             },
+            "M-209" => {
+                let indicators = if self.key1.trim().is_empty() {
+                    "AAAAAA"
+                } else {
+                    self.key1.trim()
+                };
+
+                match M209Config::from_letters(
+                    MANUAL_1944_PINS,
+                    indicators,
+                    manual_1944_drum(),
+                ) {
+                    Ok(config) => match m209_encrypt_text(&config, &self.cleartext, false) {
+                        Ok(ciphertext) => self.result = ciphertext,
+                        Err(error) => self.result = format!("Error: {error}"),
+                    },
+                    Err(error) => self.result = format!("Error: {error}"),
+                }
+            }
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
         let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7" || cipher_name == "PURPLE";
@@ -598,6 +620,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Twenties #1,#2,#3 (blank = 1,24,6)", &app.key3),
             ("Motion fast,middle,slow (blank = 2,3,1)", &app.key4),
         ],
+        "M-209" => vec![("Wheel indicators (6 letters; blank = AAAAAA)", &app.key1)],
         "KL-7" => vec![("Initial Positions (8 labels / YAML; blank = USS Beagle)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };
@@ -774,5 +797,24 @@ mod purple_tui_tests {
         assert!(purple_tui_config("", "", "1,0,6", "").is_err());
         assert!(purple_tui_config("", "", "", "2,2,1").is_err());
         assert!(purple_tui_config("", "", "", "4,2,1").is_err());
+    }
+}
+
+#[cfg(test)]
+mod m209_tui_tests {
+    use super::*;
+
+    #[test]
+    fn historical_reference_vector() {
+        let config = M209Config::from_letters(
+            MANUAL_1944_PINS,
+            "AAAAAA",
+            manual_1944_drum(),
+        ).unwrap();
+
+        assert_eq!(
+            m209_encrypt_text(&config, "AAAAAAAAAAAAAAAAAAAAAAAAAA", false).unwrap(),
+            "TNJUWAUQTKCZKNUTOTBCWARMIO"
+        );
     }
 }

@@ -86,6 +86,18 @@ fn bench_purple() -> Purple {
     Purple::new(config)
 }
 
+fn bench_m209() -> m209::M209 {
+    use m209::{M209, M209Config, fixtures::{MANUAL_1944_PINS, manual_1944_drum}};
+
+    let config = M209Config::from_letters(
+        MANUAL_1944_PINS,
+        "AAAAAA",
+        manual_1944_drum(),
+    ).expect("historical M-209 test key");
+
+    M209::new(config)
+}
+
 #[divan::bench_group]
 mod b0_encryption {
     use super::*;
@@ -279,6 +291,17 @@ mod b0_encryption {
         let mut dst = vec![0u8; src.len()];
         bencher.bench_local(|| {
             c.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b20_m209(bencher: Bencher) {
+        let cipher = bench_m209();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+
+        bencher.bench_local(|| {
+            cipher.encrypt(&mut dst, src);
         });
     }
 }
@@ -519,6 +542,17 @@ mod b1_decryption {
         let mut dst = vec![0u8; written];
         bencher.bench_local(|| {
             c.decrypt(&mut dst, &ct[..written]);
+        });
+    }
+
+    #[divan::bench]
+    fn b20_m209(bencher: Bencher) {
+        let cipher = bench_m209();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+
+        bencher.bench_local(|| {
+            cipher.decrypt(&mut dst, src);
         });
     }
 }

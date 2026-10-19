@@ -246,6 +246,7 @@ fn main() -> Result<()>{
     demo_sigaba()?;
     demo_kl7()?;
     demo_purple()?;
+    demo_m209()?;
     Ok(())
 }
 
@@ -408,6 +409,43 @@ fn demo_purple() -> eyre::Result<()> {
     assert_eq!(ciphertext, EXPECTED);
     assert_eq!(recovered, REFPLAIN);
     println!("decrypt ok\n");
+    Ok(())
+}
+
+
+fn demo_m209() -> Result<()> {
+    use m209::{M209Config, fixtures::{MANUAL_1944_CHECK, MANUAL_1944_PINS, manual_1944_drum}};
+    use m209::{decrypt_text_raw, encrypt_text};
+
+    let config = M209Config::from_letters(
+        MANUAL_1944_PINS,
+        "AAAAAA",
+        manual_1944_drum(),
+    )?;
+
+    // Use the same plaintext as the other cipher demonstrations.
+    let ciphertext = encrypt_text(&config, PLAIN, false)?;
+    let recovered = decrypt_text_raw(&config, &ciphertext)?;
+
+    println!("==> Hagelin M-209 (shared demonstration plaintext)");
+    println!("Plain:  {PLAIN}");
+    println!("Cipher: {}", output_as_block(&ciphertext));
+    assert_eq!(recovered, PLAIN);
+    println!("decrypt ok\n");
+
+    // Independently verify the original 1944 Army known-answer example.
+    const PLAINTEXT: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAA";
+    let ciphertext = encrypt_text(&config, PLAINTEXT, false)?;
+    let recovered = decrypt_text_raw(&config, &ciphertext)?;
+
+    println!("==> Hagelin M-209 (1944 US Army reference key)");
+    println!("Plain:  {PLAINTEXT}");
+    println!("Cipher: {}", output_as_block(&ciphertext));
+
+    assert_eq!(ciphertext, MANUAL_1944_CHECK);
+    assert_eq!(recovered, PLAINTEXT);
+    println!("decrypt ok\n");
+
     Ok(())
 }
 

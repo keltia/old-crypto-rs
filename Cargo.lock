@@ -903,7 +903,12 @@ dependencies = [
 name = "m209"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "divan",
+ "noyalib",
  "old-crypto-rs",
+ "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1078,6 +1083,7 @@ dependencies = [
  "eyre",
  "fialka",
  "kl-7",
+ "m209",
  "purple",
  "rand 0.10.3",
  "ratatui",
@@ -1094,6 +1100,7 @@ dependencies = [
  "crossterm",
  "fialka",
  "kl-7",
+ "m209",
  "old-crypto-rs",
  "purple",
  "ratatui",

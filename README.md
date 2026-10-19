@@ -53,6 +53,7 @@ It also implements simulation for some cipher devices/machines:
 - [Fialka M-125-3](crates/fialka/README.md), with Polish 3K and Czechoslovak 6K adjustable rotor sets
 - [SIGABA](crates/sigaba/README.md), a US cipher machine from WWII
 - [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
+- [M-209](crates/m209/README.md), the US Army Hagelin six-wheel pin-and-lug cipher machine
 - [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
@@ -160,6 +161,17 @@ twenties switches and their historical stepping mechanism. It also provides the
 
 See the [technical documentation](crates/purple/docs/purple.md) for design details,
 historical wiring sources, and test vectors.
+
+### M-209 Cipher Machine
+
+The [M-209 crate](crates/m209/README.md) implements the six-wheel Hagelin
+pin-and-lug cipher machine, with the 1944 US Army check sequence and an
+independent Python simulator interoperability vector. It provides `m209ctl`,
+a stateful machine API and the shared `old_crypto_rs::Block` interface.
+
+Run `cargo run -p m209 -- --config crates/m209/config/reference.yaml encrypt
+AAAAAAAAAAAAAAAAAAAAAAAAAA` for the historical sample. Full wartime message
+indicator construction and key-list procedures are not implemented.
 
 ## Available demo
 

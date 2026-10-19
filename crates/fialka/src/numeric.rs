@@ -17,7 +17,6 @@
 //! Source: Paul Reuvers & Marc Simons, The Fialka M-125 Reference Manual,
 //! v2.0, section 4.8, pp.110-112.
 
-use core::fmt;
 
 use super::{CONTACT_COUNT, Contact};
 
@@ -111,38 +110,6 @@ impl ReductionSwitch {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum NumericModeError {
-    UnsupportedCharacter(char),
-    ReductionCycle {
-        reflector_contact: u8,
-    },
-    NonNumericOutput {
-        contact: u8,
-    },
-}
-
-impl fmt::Display for NumericModeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::UnsupportedCharacter(ch) => {
-                write!(f, "character {ch:?} is not a decimal digit accepted by Fialka NumLock")
-            }
-            Self::ReductionCycle {
-                reflector_contact,
-            } => write!(
-                f,
-                "Fialka NumLock reduction entered a cycle at reflector contact {reflector_contact}"
-            ),
-            Self::NonNumericOutput { contact } => write!(
-                f,
-                "Fialka NumLock produced non-numeric keyboard contact {contact}"
-            ),
-        }
-    }
-}
-
-impl std::error::Error for NumericModeError {}
 
 pub(crate) struct NumericAlphabet;
 

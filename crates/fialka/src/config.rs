@@ -5,7 +5,6 @@
 //! a layer above the electrical machine, and the M-125-3 `30 <-> 10` reduction
 //! mode remains deferred until its routing is implemented.
 
-use std::{error::Error, fmt};
 
 #[cfg(test)]
 use super::machine::FialkaCore;
@@ -121,51 +120,6 @@ impl RotorConfig {
     }
 }
 
-/// Errors rejected before a keyed Fialka machine is assembled.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum FialkaConfigError {
-    /// The same mechanical wheel body occurs in more than one physical slot.
-    DuplicateBody {
-        body: RotorId,
-        first_slot: usize,
-        second_slot: usize,
-    },
-    /// The same removable electrical core occurs in more than one slot.
-    DuplicateCore {
-        core: RotorId,
-        first_slot: usize,
-        second_slot: usize,
-    },
-}
-
-impl fmt::Display for FialkaConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::DuplicateBody {
-                body,
-                first_slot,
-                second_slot,
-            } => write!(
-                f,
-                "Fialka wheel body {body:?} is used in both slots {} and {}",
-                first_slot + 1,
-                second_slot + 1
-            ),
-            Self::DuplicateCore {
-                core,
-                first_slot,
-                second_slot,
-            } => write!(
-                f,
-                "Fialka wiring core {core:?} is used in both slots {} and {}",
-                first_slot + 1,
-                second_slot + 1
-            ),
-        }
-    }
-}
-
-impl Error for FialkaConfigError {}
 
 /// Complete validated key material for the implemented 30-contact M-125-3.
 #[derive(Clone, Debug, Eq, PartialEq)]

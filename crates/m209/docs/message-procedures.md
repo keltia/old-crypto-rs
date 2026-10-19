@@ -183,3 +183,35 @@ as a space. In either output mode, potential post-encryption padding is retained
 Body-only `encrypt` and `decrypt` continue to require `--config`, and the
 mechanical implementation is unchanged. The CLI does not generate random
 indicators and does not implement the separate direct-indicator profile.
+
+## Step 23 — Final validation and support boundaries
+
+The public integration tests in `tests/message_procedure.rs` exercise the
+published twelve-contact indicator (`PEQGBJGCDFUP`), the complete transmitted
+message, keyed decryption, grouped-versus-ungrouped envelope equivalence,
+unknown-key rejection, and malformed message detection. The existing mechanical
+1944 and Python tests remain independent of the message-procedure layer.
+
+**Verified reference data versus implementation status:** the historical
+mechanical check is sourced to TM 11-380 (1944); the complete derived-indicator
+example is sourced to the Virtual Hagelin tutorial. The `XA` key-list identifier
+paired with the manual mechanics is a *demonstration fixture*, not an authentic
+daily-key attribution. Rust integration tests require confirmation on the
+user's toolchain; source inspection and patch checks do not substitute for
+running the tests or independent cryptographic cross-checks.
+
+Known limits: the direct-indicator operating variant in TM 11-380 is not
+implemented; the simulator's optional 24-letter indicator fallback is not
+implemented; complete message padding is ambiguous to the receiver; and the
+CLI does not choose random indicators. Neither the raw nor displayed plaintext
+output makes a claim to recover the original count of padding symbols.
+
+Recommended final workspace checks:
+
+```sh
+cargo fmt --all --check
+cargo test --workspace --all-targets
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test -p m209 --test message_procedure
+cargo bench -p m209 --bench m209
+```

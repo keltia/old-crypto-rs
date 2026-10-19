@@ -2,7 +2,7 @@
 
 Historically grounded Rust simulation of the U.S. Army Hagelin **M-209** mechanical cipher machine, built within `old-crypto-rs`.
 
-**Implementation status (Step 15):** Six pin wheels, 27-bar lug drum, frozen and stateful machine, verified 1944 and independent Python known-answer tests, validated key configuration, shared `old_crypto_rs::Block` facade, historical text conventions, and the `m209ctl` CLI. **Wartime message envelopes and indicator/key-list procedures are not implemented.**
+**Implementation status (Step 23):** Historical six-wheel/27-bar mechanism, independent known-answer tests, the shared `old_crypto_rs::Block` facade, strict named key lists, twelve-contact derived indicators, complete message envelopes, and `m209ctl` commands. The 1944 direct-indicator procedure and other wartime variations are not implemented.
 
 The [technical specification](docs/m209.md) records the original sources, fixture provenance, mechanical conventions, implementation plan, and verification boundaries.
 
@@ -59,9 +59,44 @@ Historical string operations (`encrypt_text`, `decrypt_text_raw`, and `decrypt_t
 
 The Rust tests exercise encryption, reciprocal decipherment, streaming, reset, wheel advancement, and key validation. The published references fix the expected ciphertext independently of the implementation under test.
 
-## Scope and next stages
+## Supported message procedure and limitations
 
-This is a **cipher machine and message-body simulator**, not a complete implementation of historical operating procedures. Do not treat `m209ctl` output as a historically framed military message: external/internal indicators, key lists, procedure-specific padding, and message headers are not generated or checked. The remaining planned work is Step 16 (Divan benchmarks) and Step 17 (demo, TUI, root README, and workspace integration). Any later wartime message-procedure implementation should have its own separately verified fixtures and tests.
+The **derived-indicator twelve-contact profile** is supported. It transmits
+repeated opening and closing indicators, chooses a daily key by its two-letter
+identifier, derives an internal wheel alignment, enciphers the message body,
+and adds literal `X` padding *after* encryption to complete five-letter groups.
+The sender knows the padding count, but **a receiver cannot reliably remove
+padding** without independent message-length information. Raw decryption thus
+preserves all body contacts, including those produced from trailing padding;
+historical display maps decoded `Z` to spaces and is inherently lossy.
+
+The example key ID `XA` is **illustrative**, not a verified operational wartime
+assignment. The complete-message training fixture is from the
+[Virtual Hagelin tutorial](https://m209.virtualcolossus.co.uk/tutorial.html),
+not a claim that the 1944 manual prescribed this procedure universally.
+Other wartime profiles, notably the 1944 direct-indicator procedure, the Python
+24-contact fallback, and random indicator generation are **not implemented**.
+
+For the detailed procedure and source distinctions, see
+[`docs/message-procedures.md`](docs/message-procedures.md).
+
+### Complete-message CLI example
+
+```sh
+cargo run -p m209 -- message-encrypt \
+  --key-store crates/m209/config/key-list-reference.yaml \
+  --key-id XA --system K --external DUFLJB \
+  'OPERATION ZEBRA STARTS AT SUNSET'
+# KKDUF LJBXA KBMUN ODDDC YWLVM RBVUS QYRHT XNZUI HXXXX KKDUF LJBXA
+
+cargo run -p m209 -- message-decrypt \
+  --key-store crates/m209/config/key-list-reference.yaml \
+  'KKDUF LJBXA KBMUN ODDDC YWLVM RBVUS QYRHT XNZUI HXXXX KKDUF LJBXA'
+```
+
+Body-only `encrypt` and `decrypt` still accept a single `--config` YAML;
+message commands instead use `--key-store`. These formats are intentionally
+distinct and parsed using `noyalib`.
 
 ### Sources
 
@@ -91,8 +126,8 @@ exactly 27 ordered lug pairs, and a verified 26-letter check. See
 [`config/key-list-reference.yaml`](config/key-list-reference.yaml) for a
 historical-mechanics test fixture. The key ID in that fixture is illustrative.
 
-Indicator derivation and complete message-envelope processing are reserved for
-Steps 20–21; the existing `m209ctl` key-file format is unchanged in Step 19.
+Steps 20–22 add indicator derivation, message envelopes, and their CLI commands.
+The original body-only key-file format remains supported.
 
 ### Derived message indicators (Step 20)
 

@@ -1,9 +1,8 @@
 //! Historical Hagelin M-209 cipher-machine simulation.
 //!
-//! Step 8 adds stateful per-character cycling on top of the frozen core.
-//!
-//! The machine will use the shared [`old_crypto_rs::Block`] trait when its
-//! public cipher facade is introduced in Step 12. Do not duplicate that trait.
+//! Provides the validated mechanical core, historical checks, named key lists,
+//! twelve-contact derived message indicators, and complete message envelopes.
+//! The public cipher facade uses the shared [`old_crypto_rs::Block`] trait.
 
 pub mod fixtures;
 mod error;

@@ -4,7 +4,7 @@
 //! slots lead to the sixes switch; its remaining twenty slots lead to the
 //! twenties switch bank. All indices within either bank are zero-based.
 
-use core::fmt;
+use crate::AlphabetError;
 
 use crate::{SixesContact, TwentiesContact};
 
@@ -15,27 +15,7 @@ pub enum AlphabetContact {
     Twenties(TwentiesContact),
 }
 
-/// Error encountered when validating a PURPLE alphabet or external letter.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum AlphabetError {
-    InvalidLength { actual: usize },
-    InvalidLetter { index: usize, byte: u8 },
-    DuplicateLetter { byte: u8 },
-    InvalidInputLetter { byte: u8 },
-}
 
-impl fmt::Display for AlphabetError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            Self::InvalidLength { actual } => write!(f, "alphabet must have 26 bytes, got {actual}"),
-            Self::InvalidLetter { index, byte } => write!(f, "invalid alphabet byte {byte} at index {index}"),
-            Self::DuplicateLetter { byte } => write!(f, "duplicate alphabet letter {}", char::from(byte)),
-            Self::InvalidInputLetter { byte } => write!(f, "input byte {byte} is not an uppercase ASCII letter"),
-        }
-    }
-}
-
-impl std::error::Error for AlphabetError {}
 
 /// A validated daily alphabet, expressed in contact order (6 + 20).
 #[derive(Clone, Debug, Eq, PartialEq)]

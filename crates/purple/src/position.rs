@@ -1,18 +1,6 @@
 //! Switch positions and their historical one-based numbering.
 
-use core::fmt;
-
-/// Invalid historical switch position (the valid range is 1–25).
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct PositionError(pub u8);
-
-impl fmt::Display for PositionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "switch position {} is outside 1..=25", self.0)
-    }
-}
-
-impl std::error::Error for PositionError {}
+use crate::PositionError;
 
 /// A PURPLE switch position, expressed externally as a historical number 1–25.
 ///

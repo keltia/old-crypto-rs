@@ -1,23 +1,6 @@
 //! Zero-based electrical contacts within the separate PURPLE switch banks.
 
-use core::fmt;
-
-/// Error returned when a numeric contact is outside its bank.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ContactError {
-    /// The rejected zero-based contact number.
-    pub value: u8,
-    /// Number of contacts in the requested bank.
-    pub count: u8,
-}
-
-impl fmt::Display for ContactError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "contact {} is outside 0..{}", self.value, self.count)
-    }
-}
-
-impl std::error::Error for ContactError {}
+use crate::ContactError;
 
 macro_rules! contact_type {
     ($name:ident, $count:expr, $description:literal) => {

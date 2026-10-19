@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 
 mod alphabet;
+mod error;
 mod contact;
 mod config;
 mod core;
@@ -17,14 +18,15 @@ mod public;
 mod switch;
 mod stepping;
 
-pub use alphabet::{AlphabetContact, AlphabetError, PurpleAlphabet};
+pub use error::{AlphabetError, ContactError, MotionError, PositionError};
+pub use alphabet::{AlphabetContact, PurpleAlphabet};
 pub use core::PurpleCore;
 pub use config::PurpleConfig;
 pub use public::Purple;
-pub use contact::{ContactError, SixesContact, TwentiesContact};
-pub use motion::{MotionError, PurpleMotion};
+pub use contact::{SixesContact, TwentiesContact};
+pub use motion::{PurpleMotion};
 pub use machine::PurpleMachine;
-pub use position::{PositionError, SwitchPosition, TwentiesSwitchId};
+pub use position::{SwitchPosition, TwentiesSwitchId};
 pub use switch::{SixesSwitch, TwentiesSwitch};
 pub use stepping::PurpleStepping;
 pub use old_crypto_rs::helpers::{Permutation, PermutationError};

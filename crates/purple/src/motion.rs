@@ -2,24 +2,11 @@
 //!
 //! The speed order is part of a PURPLE key; it does not perform stepping.
 
-use core::fmt;
+use crate::MotionError;
 
 use crate::TwentiesSwitchId;
 
-/// Invalid speed assignment: a physical twenties switch was selected more than once.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct MotionError {
-    /// The physical switch used by more than one speed.
-    pub repeated: TwentiesSwitchId,
-}
 
-impl fmt::Display for MotionError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "twenties switch {:?} occurs more than once in motion order", self.repeated)
-    }
-}
-
-impl std::error::Error for MotionError {}
 
 /// Physical twenties switches assigned to fast, middle, and slow motion, in that order.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

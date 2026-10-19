@@ -13,11 +13,11 @@ pub enum OutputMode {
 #[derive(Debug, Parser)]
 #[command(name = "m209ctl", about = "Hagelin M-209 cipher-machine simulator")]
 pub struct Cli {
-    /// YAML key file containing pins, wheel indicators, and 27 drum lug pairs.
+    /// Single mechanical key YAML for the legacy body-only commands.
     #[arg(short, long, global = true)]
     pub config: Option<PathBuf>,
 
-    /// Select raw A-Z contacts or historical text conventions.
+    /// Select raw A-Z contacts or historical text conventions for body-only commands.
     #[arg(long, value_enum, default_value_t = OutputMode::Text, global = true)]
     pub mode: OutputMode,
 
@@ -27,7 +27,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Encipher from the key's initial wheel positions.
+    /// Encipher a message body using the single mechanical key.
     Encrypt {
         /// Input text; reads standard input when omitted.
         text: Option<String>,
@@ -37,7 +37,7 @@ pub enum Command {
         grouped: bool,
     },
 
-    /// Decipher from the key's initial wheel positions.
+    /// Decipher a message body using the single mechanical key.
     Decrypt {
         /// Ciphertext; reads standard input when omitted.
         text: Option<String>,
@@ -46,12 +46,47 @@ pub enum Command {
         #[arg(long)]
         raw_output: bool,
     },
+
+    /// Encipher a complete twelve-contact derived-indicator message.
+    MessageEncrypt {
+        /// YAML collection of named, checked daily keys.
+        #[arg(long)]
+        key_store: PathBuf,
+
+        /// Two-letter daily key identifier.
+        #[arg(long)]
+        key_id: String,
+
+        /// One uppercase system-indicator letter.
+        #[arg(long)]
+        system: char,
+
+        /// Six-letter external wheel indicator.
+        #[arg(long)]
+        external: String,
+
+        /// Plaintext; reads standard input when omitted.
+        text: Option<String>,
+    },
+
+    /// Decipher a complete transmitted message using its embedded indicators.
+    MessageDecrypt {
+        /// YAML collection of named, checked daily keys.
+        #[arg(long)]
+        key_store: PathBuf,
+
+        /// Preserve raw Z letters rather than displaying them as spaces.
+        #[arg(long)]
+        raw_output: bool,
+
+        /// Grouped transmitted message; reads standard input when omitted.
+        text: Option<String>,
+    },
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use clap::Parser;
 
     #[test]
     fn accepts_commands_and_modes() {
@@ -62,5 +97,27 @@ mod tests {
 
         let cli = Cli::try_parse_from(["m209ctl", "decrypt", "--raw-output"]).unwrap();
         assert!(matches!(cli.command, Command::Decrypt { raw_output: true, .. }));
+    }
+
+    #[test]
+    fn parses_complete_message_commands() {
+        let cli = Cli::try_parse_from([
+            "m209ctl", "message-encrypt", "--key-store", "keys.yaml",
+            "--key-id", "XA", "--system", "K", "--external", "DUFLJB",
+            "OPERATION ZEBRA STARTS AT SUNSET",
+        ]).unwrap();
+        assert!(matches!(cli.command, Command::MessageEncrypt { .. }));
+
+        let cli = Cli::try_parse_from([
+            "m209ctl", "message-decrypt", "--key-store", "keys.yaml", "--raw-output",
+        ]).unwrap();
+        assert!(matches!(cli.command, Command::MessageDecrypt { raw_output: true, .. }));
+    }
+
+    #[test]
+    fn indicator_arguments_are_required() {
+        assert!(Cli::try_parse_from([
+            "m209ctl", "message-encrypt", "--key-store", "keys.yaml", "--key-id", "XA",
+        ]).is_err());
     }
 }

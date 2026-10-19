@@ -169,3 +169,17 @@ appends 0–4 literal Xs *after* conversion, and returns a sender-visible pad
 count. `decipher_message` preserves all received ciphertext, including
 ambiguous padding; its raw and historical-display APIs are separate.
 The 1944 direct-indicator profile is not implicitly accepted.
+
+## Step 22 — CLI integration
+
+`m209ctl message-encrypt` accepts `--key-store`, `--key-id`, `--system`,
+`--external`, and optional positional plaintext (otherwise stdin). It invokes
+`KeyStore::from_yaml`, `KeyId::parse`, and `encipher_message`, then emits the
+complete transmitted envelope. `message-decrypt` reads its key ID and
+indicators **from the envelope**, using only `--key-store` plus ciphertext;
+`--raw-output` retains the raw machine letters. By default, decrypted Z appears
+as a space. In either output mode, potential post-encryption padding is retained.
+
+Body-only `encrypt` and `decrypt` continue to require `--config`, and the
+mechanical implementation is unchanged. The CLI does not generate random
+indicators and does not implement the separate direct-indicator profile.

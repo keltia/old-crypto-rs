@@ -110,3 +110,33 @@ The API supports the twelve-contact derived-indicator training profile, *not*
 the distinct 1944 direct-indicator profile. The sender reports the number of
 post-encryption `X` padding letters, but received padding is ambiguous and
 is never stripped automatically. Full CLI wiring remains Step 22.
+
+## Complete-message CLI (Step 22)
+
+The twelve-contact derived-indicator training procedure is available through
+separate `m209ctl` subcommands. The original body-only `encrypt` and `decrypt`
+commands remain available with `--config` and `--mode`.
+
+From the workspace root, run:
+
+```sh
+cargo run -p m209 -- message-encrypt \
+  --key-store crates/m209/config/key-list-reference.yaml \
+  --key-id XA --system K --external DUFLJB \
+  'OPERATION ZEBRA STARTS AT SUNSET'
+
+cargo run -p m209 -- message-decrypt \
+  --key-store crates/m209/config/key-list-reference.yaml \
+  --raw-output \
+  'KKDUF LJBXA KBMUN ODDDC YWLVM RBVUS QYRHT XNZUI HXXXX KKDUF LJBXA'
+```
+
+The first command produces the published grouped message. The second deciphers
+all received body contacts, **including ambiguous post-encryption padding**.
+Omit `--raw-output` to display decoded `Z` as spaces; this is lossy and does
+not recover literal Z characters. `--key-store` contains independently verified
+named daily keys, not the single-key `--config` YAML schema. Indicators must be
+supplied explicitly; no randomness or indicator generation is implied.
+
+These commands implement the *derived-indicator training profile only*; they
+must not be described as covering every historical U.S. Army procedure.

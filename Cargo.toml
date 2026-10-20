@@ -47,19 +47,18 @@ dhat-ad-hoc = []
 
 [dependencies]
 ahash = "0.8"
-crossterm = "0.29"
 dhat = "0.3"
 eyre = "0.6"
 rand = "0.10"
-ratatui = "0.30"
 smallvec = "1"
 thiserror = "2.0"
 
 [dev-dependencies]
-m209 = { path = "crates/m209", version = "0.1" }
+m209 = { version = "0", path = "crates/m209" }
 divan = "0.1"
-fialka = { version = "0.1.0", path = "crates/fialka" }
-kl-7 = { version = "0.1.0", path = "crates/kl-7" }
+fialka = { version = "0", path = "crates/fialka" }
+kl-7 = { version = "0", path = "crates/kl-7" }
 rstest = "0.28"
-sigaba = { version = "0.2.0", path = "crates/sigaba" }
-purple = { version = "0.1.0", path = "crates/purple" }
+sigaba = { version = "0", path = "crates/sigaba" }
+purple = { version = "0", path = "crates/purple" }
+sg-41 = { version = "0", path = "crates/sg-41" }

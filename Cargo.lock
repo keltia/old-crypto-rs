@@ -1068,7 +1068,6 @@ name = "old-crypto-rs"
 version = "0.13.0"
 dependencies = [
  "ahash",
- "crossterm",
  "dhat",
  "divan",
  "eyre",
@@ -1077,8 +1076,8 @@ dependencies = [
  "m209",
  "purple",
  "rand 0.10.3",
- "ratatui",
  "rstest",
+ "sg-41",
  "sigaba",
  "smallvec",
  "thiserror 2.0.21",

@@ -105,6 +105,30 @@ fn bench_kl7() -> kl_7::Kl7 {
     kl_7::Kl7::new(kl_7::Kl7Config::uss_beagle())
 }
 
+fn bench_sg41() -> sg_41::SG41 {
+    use sg_41::{SG41, Sg41Config, WindowLabel};
+
+    const PINS: [&str; 6] = [
+        "0001101011000100010001101",
+        "0110100100001011100101100",
+        "11001001000100100100010",
+        "01001000111010001110010",
+        "001001001010000101011010",
+        "011001100110001011010100",
+    ];
+
+    let windows = [
+        WindowLabel::Letter('A'),
+        WindowLabel::Letter('B'),
+        WindowLabel::Letter('C'),
+        WindowLabel::Letter('D'),
+        WindowLabel::Number(1),
+        WindowLabel::Number(0),
+    ];
+
+    SG41::new(Sg41Config::from_key_settings(windows, PINS).unwrap())
+}
+
 #[divan::bench_group]
 mod b0_encryption {
     use super::*;
@@ -315,6 +339,17 @@ mod b0_encryption {
     #[divan::bench]
     fn b21_kl7(bencher: Bencher) {
         let cipher = bench_kl7();
+        let src = PLAIN.as_bytes();
+        let mut dst = vec![0u8; src.len()];
+
+        bencher.bench_local(|| {
+            cipher.encrypt(&mut dst, src);
+        });
+    }
+
+    #[divan::bench]
+    fn b22_sg41(bencher: Bencher) {
+        let cipher = bench_sg41();
         let src = PLAIN.as_bytes();
         let mut dst = vec![0u8; src.len()];
 
@@ -577,6 +612,19 @@ mod b1_decryption {
     #[divan::bench]
     fn b21_kl7(bencher: Bencher) {
         let cipher = bench_kl7();
+        let src = PLAIN.as_bytes();
+        let mut ciphertext = vec![0u8; src.len()];
+        let written = cipher.encrypt(&mut ciphertext, src);
+        let mut dst = vec![0u8; written];
+
+        bencher.bench_local(|| {
+            cipher.decrypt(&mut dst, &ciphertext[..written]);
+        });
+    }
+
+    #[divan::bench]
+    fn b22_sg41(bencher: Bencher) {
+        let cipher = bench_sg41();
         let src = PLAIN.as_bytes();
         let mut ciphertext = vec![0u8; src.len()];
         let written = cipher.encrypt(&mut ciphertext, src);

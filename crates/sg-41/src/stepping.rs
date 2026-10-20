@@ -136,7 +136,7 @@ mod tests {
         let trace = step_after_cipher(&mut wheels, pre);
 
         assert_eq!(trace.second_latch, refreshed);
-        assert_eq!(trace.phase_three[0], false);
+        assert!(!trace.phase_three[0]);
         assert_eq!(&trace.phase_three[1..], &refreshed.bits()[..5]);
         assert_eq!(trace.phase_four, [true; WHEEL_COUNT]);
         assert_eq!(trace.final_positions, wheels.positions());

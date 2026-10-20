@@ -60,6 +60,6 @@ m209 = { path = "crates/m209", version = "0.1" }
 divan = "0.1"
 fialka = { version = "0.1.0", path = "crates/fialka" }
 kl-7 = { version = "0.1.0", path = "crates/kl-7" }
-rstest = "0.27"
+rstest = "0.28"
 sigaba = { version = "0.2.0", path = "crates/sigaba" }
 purple = { version = "0.1.0", path = "crates/purple" }

@@ -3,26 +3,7 @@
 //! The disguise key is a *daily* key, distinct from the mechanical SG-41 key.
 //! All character indexing is ASCII A-Z; shifts in the disguise table wrap at 26.
 
-use thiserror::Error;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
-pub enum MessageError {
-    #[error("invalid {field} letter at position {index}: {value:?}; expected A-Z")]
-    InvalidLetter {
-        field: &'static str,
-        index: usize,
-        value: u8,
-    },
-
-    #[error("disguise alphabet contains duplicate letter {0:?}")]
-    DuplicateLetter(char),
-
-    #[error("invalid disguise digit at position {index}: {value}; expected 1-9")]
-    InvalidDigit { index: usize, value: u8 },
-
-    #[error("message indicator redundancy check failed")]
-    IndicatorCheckFailed,
-}
+use crate::error::MessageError;
 
 fn validate_letters<const N: usize>(
     letters: &[u8; N],

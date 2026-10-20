@@ -32,3 +32,23 @@ pub enum ConfigError {
     #[error(transparent)]
     Wheel(#[from] WheelError),
 }
+
+/// Message indicators related errors.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
+pub enum MessageError {
+    #[error("invalid {field} letter at position {index}: {value:?}; expected A-Z")]
+    InvalidLetter {
+        field: &'static str,
+        index: usize,
+        value: u8,
+    },
+
+    #[error("disguise alphabet contains duplicate letter {0:?}")]
+    DuplicateLetter(char),
+
+    #[error("invalid disguise digit at position {index}: {value}; expected 1-9")]
+    InvalidDigit { index: usize, value: u8 },
+
+    #[error("message indicator redundancy check failed")]
+    IndicatorCheckFailed,
+}

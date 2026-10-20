@@ -4,14 +4,14 @@ resolver = "3"
 
 [package]
 name = "old-crypto-rs"
-version = "0.12.1"
+version = "0.13.0"
 edition = "2024"
 authors = ["Ollivier Robert <roberto@keltia.net>"]
 keywords = ["cryptography", "old-crypto", "pen-and-paper", "education", "history"]
 repository = "https://github.com/keltia/old-crypto-rs"
 license = "MIT"
 readme = "README.md"
-description = "Rust implementation of my Go module called old-crypto."
+description = "Rust implementation of historical cryptosystems."
 documentation = "https://docs.rs/old-crypto-rs"
 categories = ["command-line-utilities", "cryptography", "simulation"]
 

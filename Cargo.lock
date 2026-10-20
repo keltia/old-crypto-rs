@@ -1065,7 +1065,7 @@ dependencies = [
 
 [[package]]
 name = "old-crypto-rs"
-version = "0.12.1"
+version = "0.13.0"
 dependencies = [
  "ahash",
  "crossterm",

@@ -64,6 +64,37 @@ permutations and five index rotors with quoted ten-digit permutations. The
 reference settings from the Pekelney/Dunn paper in 1999 are included as
 `config/reference.yaml`.
 
+## Library Usage
+
+```rust,no_run
+use old_crypto_rs::{
+    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
+    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
+    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
+};
+
+let large = |id| SigabaLargeRotorSetting::new(
+    SigabaRotorId::new(id).unwrap(),
+    SigabaRotorPosition::new(14).unwrap(), // O
+    SigabaOrientation::Normal,
+);
+let index = |id| SigabaIndexRotorSetting::new(
+    SigabaIndexRotorId::new(id).unwrap(),
+    SigabaIndexPosition::ZERO,
+);
+
+let config = SigabaConfig::new(
+    SigabaRotorSet::PekelneyReference,
+    [large(0), large(1), large(2), large(3), large(4)],
+    [large(5), large(6), large(7), large(8), large(9)],
+    [index(0), index(1), index(2), index(3), index(4)],
+)?;
+let sigaba = Sigaba::new(config);
+
+assert_eq!(sigaba.encrypt_text("HELLO WORLD")?, "FLQGFQUEQCH");
+```
+
+
 ## References
 
 [Original Java Simulator]: https://maritime.org/tech/ecmapp.php

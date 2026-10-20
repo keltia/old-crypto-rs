@@ -8,7 +8,7 @@
 [![SemVer](https://img.shields.io/badge/semver-2.0.0-blue)](https://semver.org/spec/v2.0.0.html)
 [![License](https://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/keltia/old-crypto-rs/main/LICENSE)
 
-`old-crypto-rs` is a [Rust](https://rust-lang.org/) evolution of my [cipher](https://github.com/keltia/cipher) Go package,
+`old-crypto-rs` is a [Rust](https://rust-lang.org/) evolution of my previous [cipher](https://github.com/keltia/cipher) Go package,
 which was a port of my [old-crypto](https://github.com/keltia/old-crypto) Ruby code.
 
 >NOTE: Neither package is currently maintained, only this one in Rust.  I do not plan to retrofit the added algorithms
@@ -73,10 +73,10 @@ cipher machines crate.
 > NOTE: the crate is not yet published on crates.io,
 
 ```shell
-    git clone https://github.com/keltia/old-crypto-rs.git
-    cd old-crypto-rs
-    cargo nextest run
-    cargo bench
+git clone https://github.com/keltia/old-crypto-rs.git
+cd old-crypto-rs
+cargo nextest run
+cargo bench
 ```
 
 There is an alternate repository hosted on [Codeberg](https://codeberg.org/) in case
@@ -87,13 +87,17 @@ Repository is [here](https://codeberg.org/keltounet/old-crypto-rs).
 The library is fetched, compiled and installed. You can find a "demo" program in the `examples` directory, to showcase
 all ciphers; it also checks that you can decrypt back to the original plaintext.
 
+```shell
     cargo run --example demo
+```
 
 There will also be a TUI tool called `old-crypto-tui` which can be used to encrypt/decrypt text.
 
 To run the TUI:
 
+```shell
     cargo run -p old-crypto-tui
+```
 
 ## Crypto Machines Simulators
 
@@ -117,35 +121,8 @@ the Pekelney large-rotor wirings are reference/simulator data rather than surviv
 
 SIGABA uses a typed configuration: five cipher rotors, five control rotors, and
 five 10-contact index rotors. This is the Pekelney/Dunn reference configuration
-used by the interoperability suite (`OOOOO/OOOOO/00000`):
+used by the interoperability suite (`OOOOO/OOOOO/00000`).
 
-```rust,no_run
-use old_crypto_rs::{
-    Sigaba, SigabaConfig, SigabaIndexPosition, SigabaIndexRotorId,
-    SigabaIndexRotorSetting, SigabaLargeRotorSetting, SigabaOrientation,
-    SigabaRotorId, SigabaRotorPosition, SigabaRotorSet,
-};
-
-let large = |id| SigabaLargeRotorSetting::new(
-    SigabaRotorId::new(id).unwrap(),
-    SigabaRotorPosition::new(14).unwrap(), // O
-    SigabaOrientation::Normal,
-);
-let index = |id| SigabaIndexRotorSetting::new(
-    SigabaIndexRotorId::new(id).unwrap(),
-    SigabaIndexPosition::ZERO,
-);
-
-let config = SigabaConfig::new(
-    SigabaRotorSet::PekelneyReference,
-    [large(0), large(1), large(2), large(3), large(4)],
-    [large(5), large(6), large(7), large(8), large(9)],
-    [index(0), index(1), index(2), index(3), index(4)],
-)?;
-let sigaba = Sigaba::new(config);
-
-assert_eq!(sigaba.encrypt_text("HELLO WORLD")?, "FLQGFQUEQCH");
-```
 
 The `sigaba` crate also provides `sigabactl`, which reads the complete rotor configuration from YAML:
 
@@ -154,14 +131,13 @@ cargo run -p sigaba --bin sigabactl -- \
   --config crates/sigaba/config/reference.yaml encrypt "HELLO WORLD"
 ```
 
-### KL-7 Cipher Machine
+### [TSEC/KL-7](https://en.wikipedia.org/wiki/KL-7)) Cipher Machine
 
 This is an implementation of the KL-7 cipher machine, a US cipher machine created 
 to replace the SIGABA during the Cold War.  It also provides the
 `kl7ctl` command-line utility.
 
-
-### PURPLE Cipher Machine
+### [PURPLE](https://en.wikipedia.org/wiki/PURPLE_(cipher)) Cipher Machine
 
 The [PURPLE implementation](crates/purple/README.md) is a standalone workspace crate
 simulating the Japanese WWII diplomatic cipher machine, including the sixes and
@@ -171,7 +147,7 @@ twenties switches and their historical stepping mechanism. It also provides the
 See the [technical documentation](crates/purple/docs/purple.md) for design details,
 historical wiring sources, and test vectors.
 
-### M-209 Cipher Machine
+### [M-209](https://en.wikipedia.org/wiki/M-209) Cipher Machine
 
 The [M-209 crate](crates/m209/README.md) implements the US Army's Hagelin
 six-wheel pin-and-lug cipher machine, including its 27-bar drum and the
@@ -188,7 +164,7 @@ See the [M-209 technical specification](crates/m209/docs/m209.md) and
 [message-procedure documentation](crates/m209/docs/message-procedures.md)
 for historical sources, test vectors, and the exact scope of interoperability.
 
-### SG-41 Cipher Machine
+### [SG-41](https://en.wikipedia.org/wiki/Schl%C3%BCsselger%C3%A4t_41) Cipher Machine
 
 The [SG-41 crate](crates/sg-41/README.md) simulates the German WWII
 Schlüsselgerät 41 (*Hitlermühle*), with six pin-wheels, four-phase irregular
@@ -200,7 +176,7 @@ German-language text preparation is separate from the core cipher.
 See the [technical specification](crates/sg-41/docs/sg-41.md) and the
 [reference configuration](crates/sg-41/config/reference.yaml).
 
-## Available demo
+## Available demo for all ciphers
 
 ```sh
 cargo run --example demo
@@ -217,13 +193,13 @@ just install
 or just run all the commands from [this file](justfile):
 
 ```shell
-	cargo install --path crates/old-crypto-tui
-	cargo install --path crates/sigaba
-	cargo install --path crates/kl-7
-	cargo install --path crates/purple
-	cargo install --path crates/fialka
-	cargo install --path crates/m209
-	cargo install --path crates/sg-41
+cargo install --path crates/old-crypto-tui
+cargo install --path crates/sigaba
+cargo install --path crates/kl-7
+cargo install --path crates/purple
+cargo install --path crates/fialka
+cargo install --path crates/m209
+cargo install --path crates/sg-41
 ```
 
 ## Benchmarks & Tests
@@ -233,12 +209,14 @@ implementations.
 
 You can run them with
 
-    cargo nextest run (or cargo test)
-    cargo bench
+````shell
+cargo nextest run (or cargo test)
+cargo bench
+````
 
 Tests for the cipher machines are runnable with
 ```shell
-	cargo nextest run -workspace
+cargo nextest run -workspace
 ```
 
 ## Benchmarks

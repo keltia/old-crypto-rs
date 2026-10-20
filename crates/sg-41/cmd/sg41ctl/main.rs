@@ -1,54 +1,13 @@
+mod cli;
 mod config;
 
-use std::path::PathBuf;
-
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::Parser;
 use old_crypto_rs::{Block, helpers::read_input_optional};
 use sg_41::{
     SG41, Sg41Config, display_plaintext, format_ciphertext, parse_ciphertext, prepare_plaintext,
 };
 
-#[derive(Debug, Clone, Copy, ValueEnum, PartialEq, Eq)]
-enum Mode {
-    /// Encrypt/decrypt ASCII letters without historical text substitution.
-    Raw,
-    /// Apply historical SG-41 German plaintext conventions.
-    Text,
-}
-
-#[derive(Debug, Subcommand)]
-enum Command {
-    /// Encrypt the input text, or read from standard input.
-    Encrypt {
-        text: Option<String>,
-
-        /// Group ciphertext into five-letter groups (text mode only).
-        #[arg(long)]
-        grouped: bool,
-    },
-    /// Decrypt input ciphertext, or read from standard input.
-    Decrypt {
-        text: Option<String>,
-
-        /// Preserve the electrical J instead of displaying spaces (text mode only).
-        #[arg(long)]
-        raw_output: bool,
-    },
-}
-
-#[derive(Debug, Parser)]
-#[command(name = "sg41ctl", about = "Schlüsselgerät 41 cipher simulator")]
-struct Cli {
-    /// YAML file containing all six wheel windows and pin patterns.
-    #[arg(long, global = true)]
-    config: Option<PathBuf>,
-
-    #[arg(long, value_enum, default_value_t = Mode::Text, global = true)]
-    mode: Mode,
-
-    #[command(subcommand)]
-    command: Command,
-}
+use cli::{Cli, Command, Mode};
 
 fn convert(config: &Sg41Config, input: &str, encrypt: bool) -> Result<String, Box<dyn std::error::Error>> {
     let machine = SG41::new(config.clone());

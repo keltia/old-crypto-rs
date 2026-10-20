@@ -1,6 +1,8 @@
 # SG-41 historical message procedures
 
-Status: research-backed specification draft (2026-10-20). No code changes yet.
+Status: implemented and locally tested through Step 22 (2026-10-20).
+The historical indicator has an independent published known-answer check;
+a complete archival end-to-end transmission vector remains unavailable.
 
 This document describes the **SG-41** (not SG-41Z) historical keying,
 message-indicator, and traffic procedures. It is separate from the mechanical
@@ -44,18 +46,19 @@ Evidence categories used below:
 
 1. **Monthly table (`Monatstafel`) — documented.** A table with 26 rows labeled
    A–Z; each row is 25 pin-state entries (active `+`, inactive symbol). The
-   six wheels together have 144 pins; applying a row to a wheel must respect
-   that wheel's actual pin count and the documentary table layout. Do *not*
-   assume that all wheels have 25 pins.
+   six wheels together have 144 pins. As specified in Antal et al., footnote
+   17, use all 25 symbols for wheels 1–2, the first 23 for wheels 3–4,
+   and the first 24 for wheels 5–6.
 2. **Daily key (`Tagesschlüssel`) — documented.** Six letters select six rows
    of the monthly table, one for each wheel in order. Reconfigure pin settings
    daily. The example for 16 March 1945 uses `ACHUKW`.
 3. **Disguise key (`Tarnschlüssel`) — documented.** For the day, a permutation
    of A–Z with a position-aligned length-26 sequence of digits from 1–9
    (without zero). Duplicates are necessarily allowed in the digits. This is
-   *not* a 26-digit permutation. Its original, exact 16 March 1945 sequences
-   must be transcribed from the source illustration before a full independent
-   worked-vector test can be added.
+   *not* a 26-digit permutation. Figure 12 supplies the 16 March 1945 key:
+   alphabet `SYIZBJEHOCKUGPDRVFTXLNMWAQ` and digits
+   `96585138157834794289563262`. These are recorded in the historical
+   YAML fixture and checked by `tests/message_indicator_historical.rs`.
 4. **Station number — documented.** Each station has two two-digit numbers.
    They change at the start of each calendar quarter (1 Jan, 1 Apr, 1 Jul,
    1 Oct). Wheels 5 and 6 are positioned according to the **sending**
@@ -96,11 +99,11 @@ Documented sequence, with implementation boundaries noted:
    five-letter groups. The first real ciphertext character is transmitted as
    position **11** (1-based), following the ten-letter header.
 
-**Open framing nuance:** The article specifies 600 letters as the maximum
-message length and describes ciphertext padding. Verify against the original
-manual whether the cap counts pre-padding cipher letters alone, any other
-operational framing, and/or the ten-letter indicator header. Do not reject
-boundary lengths on an unverified interpretation.
+**Historical framing qualification:** The implementation limits the
+*machine-produced ciphertext body*, including encrypted padding, to 600 letters.
+The archival report gives a 600-letter maximum; whether the original manual
+counts the header or describes further boundary exceptions has not been
+independently verified here. The enforced limit is an implementation decision.
 
 ## Masking the message indicator
 
@@ -145,10 +148,11 @@ sample random header pad: WT
 transmitted header:       RIAVMDQOWT   (RIAVM DQOWT)
 ```
 
-The **masked character** fixture depends on the exact 16 March 1945
-scrambled alphabet. Its full historical alphabet and digit row must be
-verified/transcribed from the paper's Figure 12 / archived key sheet, not
-reverse-engineered to force the expected output.
+The complete March 16 disguise-key alphabet and digits were transcribed
+from Figure 12, and the resulting masked header is checked independently
+by `tests/message_indicator_historical.rs` using a YAML fixture parsed with
+`noyalib`. This is an **indicator-only** known answer, not a complete-message
+wartime ciphertext vector.
 
 ### Receiving procedure
 
@@ -199,55 +203,48 @@ and from any existing general-purpose SG-41 text helper. In particular, do not
 apply a blind `J -> II` transform *after* inserting J word separators; the
 ordering would corrupt those separators.
 
-## Proposed Rust API boundaries (design only)
+## Implemented Rust modules and CLI
 
-Keep a new operational module, for example `message.rs`, independent of the
-rotor/print-head mechanisms. Prefer existing core helpers (especially
-`old_crypto_rs::helpers::text`) wherever semantics match; avoid duplication.
+The historical procedure is implemented separately from the established
+SG-41 wheel and cipher mechanics:
 
-- `MonthlyTable`: validated 26 pin-pattern rows with explicit wheel slicing
-  rules; exact storage decision after inspecting current SG-41 types.
-- `DailyKey`: six row selectors plus the daily disguise key.
-- `DisguiseKey`: validated `[u8; 26]` letter permutation and `[u8; 26]`
-  digit row (digits 1–9, repetitions allowed).
-- `StationNumber`: validated display markings for wheels 5 and 6, mapped by
-  existing wheel-position types instead of guessed modular arithmetic.
-- `MessageIndicator`: four A–Z letters; randomness supplied by caller or a
-  pluggable source rather than new mandatory dependencies.
-- Pure `mask_indicator` / `unmask_indicator` functions returning a structured
-  error (using `thiserror`) for malformed key tables, illegal letters, short
-  payloads and failed consistency checks.
-- An explicit high-level `encipher_message` / `decipher_message` wrapper
-  consuming daily key, sender station, indicator and padding input, while
-  leaving existing `Sg41Core`, `Sg41Config` and `Block` unchanged.
-- Decryption results should retain the padding-containing plaintext and
-  optionally expose a caller-supplied original length, if appropriate. Do not
-  infer that length or strip guessed padding.
+- `src/message.rs`: `DisguiseKey`, `MessageIndicator`, `make_header`,
+  `mask_indicator`, `unmask_header`, and `unmask_indicator`.
+- `src/procedure.rs`: `DailyKey`, `MonthlyPinTable`, `Quarter`,
+  `StationAssignment`, `StationNumbers`, and `historical_config`.
+- `src/transmission.rs`: `encipher_message`, `decipher_message`,
+  `EncipheredMessage`, `DecipheredMessage`, and `MAX_MESSAGE_LETTERS`.
+- `src/error.rs`: centralized errors `MessageError`, `ProcedureError`,
+  and `TransmissionError`, derived with `thiserror`.
+- `cmd/sg41ctl`: `message-encrypt` and `message-decrypt` commands in addition
+  to the original elementary `encrypt` and `decrypt` commands. Historical
+  key configuration uses YAML decoded with `noyalib`; command input uses
+  the existing `old_crypto_rs::helpers` routines.
 
-## Test plan and open verification items
+The caller supplies the random indicator, header filler, and any plaintext
+padding; the library does not implicitly generate random material.
+Decryption retains the plaintext corresponding to enciphered padding,
+because no in-band original-length field is established.
 
-1. Transcribe the **actual** March 16 disguise alphabet and digit row, and
-   verify the sample `KNVP / CMQ -> RIAVMDQOWT` end-to-end. Preserve the
-   complete historical key sheet as attributed test fixture if licensing
-   permits; otherwise publish an appropriately described derived fixture.
-2. Round-trip a fixed fabricated valid disguise key over numerous indicators
-   and three-letter prefixes, including wraparound at positions 25/0/1.
-3. Verify that `D` can contain duplicate digits, that zero is forbidden,
-   and that `A` is a permutation with no duplicate letters.
-4. Validate `S[4..8] == succ(S[0..4])` during unmasking; test tampering and
-   wrong daily key. Note that not every substitution must be detected.
-5. Verify the historical mapping of wheel 5 display `18` and wheel 6 display
-   `37` to positions in the current six-wheel model; verify their reversal
-   on receiving instead of assuming ordinary wheel indexes.
-6. Ensure encrypted *padding* changes wheel stepping; test 5-group formatting,
-   complete header length, boundary 600, short ciphertext, and multipart
-   handling. Confirm what the 600-letter limit actually counts.
-7. Test input-layer `J` handling and `II` literal encoding carefully,
-   including words containing J; historical spellings and suffixes require
-   explicit operator-provided normalized text or separate, tested rules.
-8. Compare against the Antal et al. Appendix B example and original document
-   scans before declaring full historical interoperability.
+## Tests and limits of verification
 
-**Stage gate:** do not implement the higher-level API until the exact archive
-mask table and the current SG-41 typed wheel/config interfaces have been
-checked. The machine-cipher known-answer tests must remain unchanged.
+- `tests/message_indicator_historical.rs`: the independently documented
+  March 16, 1945 indicator `KNVP`, prefix `CMQ`, shift sequence `57832629`,
+  masked text `RIAVMDQO`, and ten-letter header `RIAVMDQOWT`.
+- Existing machine known-answer tests verify the SG-41 mechanics for their
+  reference settings; they are not full historical message vectors.
+- Transmission and CLI tests, including
+  `tests/message_transmission_regression.rs`, verify synthetic round trips,
+  body limits, grouping, and malformed transmission handling.
+- The historical 25/23/24 pin-row selection is supported by the archival
+  study's footnote 17 and is implemented by the daily-key configuration.
+
+**Remaining historical evidence gap:** No independently published full
+message ciphertext has yet been matched using its complete monthly table,
+daily key, station numbers, per-message indicator, and disguise key. The
+published `CMQ` prefix proves the indicator computation but does not prove
+full end-to-end 1945 interoperability. See `docs/step22-verification.md`.
+
+Historical German operator rules for numbers, inflection, and literal `J`
+are documented above; do not assume all such editorial transformations are
+automated by the text helper or CLI.

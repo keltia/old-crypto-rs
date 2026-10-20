@@ -1679,6 +1679,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "sg-41"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"

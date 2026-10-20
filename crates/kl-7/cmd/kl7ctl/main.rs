@@ -3,13 +3,11 @@
 mod cli;
 mod config;
 
-use std::{
-    error::Error,
-    io::{self, Read},
-};
+use std::error::Error;
 
 use clap::Parser;
 use kl_7::{Contact26, Kl7, Position36};
+use old_crypto_rs::helpers::read_input;
 
 use cli::{Command, Opts};
 use config::load_config;
@@ -80,14 +78,4 @@ fn run(cli: Opts) -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-fn read_input(words: &[String]) -> io::Result<String> {
-    if words.is_empty() {
-        let mut input = String::new();
-        io::stdin().read_to_string(&mut input)?;
-        Ok(input)
-    } else {
-        Ok(words.join(" "))
-    }
 }

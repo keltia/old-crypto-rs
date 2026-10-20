@@ -4,13 +4,11 @@ mod cli;
 mod config;
 mod error;
 
-use std::{
-    error::Error,
-    io::{self, Read},
-};
+use std::error::Error;
 
 use clap::Parser;
 
+use old_crypto_rs::helpers::read_input;
 use sigaba::Sigaba;
 
 use cli::{Command, Opts};
@@ -40,14 +38,4 @@ fn run(cli: Opts) -> Result<(), Box<dyn Error>> {
     };
     println!("{output}");
     Ok(())
-}
-
-fn read_input(words: &[String]) -> io::Result<String> {
-    if words.is_empty() {
-        let mut input = String::new();
-        io::stdin().read_to_string(&mut input)?;
-        Ok(input)
-    } else {
-        Ok(words.join(" "))
-    }
 }

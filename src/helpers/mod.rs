@@ -2,6 +2,7 @@
 //!
 
 mod alphabet;
+mod cli;
 mod coord;
 mod derive;
 mod fill;
@@ -13,6 +14,7 @@ mod text;
 mod types;
 
 pub use alphabet::*;
+pub use cli::*;
 pub use coord::*;
 pub use derive::*;
 pub use fill::*;

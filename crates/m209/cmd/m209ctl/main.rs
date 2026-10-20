@@ -1,7 +1,7 @@
 mod cli;
 mod config;
 
-use std::{fs, io::{self, Read}, path::Path};
+use std::{fs, io, path::Path};
 
 use clap::Parser;
 use cli::{Cli, Command, OutputMode};
@@ -9,6 +9,7 @@ use m209::{
     Contact, KeyId, KeyStore, M209Config, decipher_message, decrypt_text,
     decrypt_text_raw, encipher_message, encrypt_text,
 };
+use old_crypto_rs::helpers::read_input_optional;
 
 fn raw_convert(config: &M209Config, input: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut machine = config.build_machine();
@@ -28,14 +29,8 @@ fn raw_convert(config: &M209Config, input: &str) -> Result<String, Box<dyn std::
 }
 
 fn input_text(text: Option<String>) -> io::Result<String> {
-    match text {
-        Some(text) => Ok(text),
-        None => {
-            let mut text = String::new();
-            io::stdin().read_to_string(&mut text)?;
-            Ok(text.trim_end_matches(['\n', '\r']).to_owned())
-        }
-    }
+    let text = read_input_optional(text)?;
+    Ok(text.trim_end_matches(['\n', '\r']).to_owned())
 }
 
 fn load_key_store(path: &Path) -> Result<KeyStore, Box<dyn std::error::Error>> {

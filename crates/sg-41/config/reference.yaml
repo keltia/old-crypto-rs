@@ -1,0 +1,10 @@
+# SG-41 alphabetic machine, Crypto Museum Table 5 historical reference key.
+# Physical wheel order is 1 through 6.
+windows: ["A", "B", "C", "D", "01", "00"]
+pins:
+  - "0001101011000100010001101"
+  - "0110100100001011100101100"
+  - "11001001000100100100010"
+  - "01001000111010001110010"
+  - "001001001010000101011010"
+  - "011001100110001011010100"

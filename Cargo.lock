@@ -1682,7 +1682,10 @@ dependencies = [
 name = "sg-41"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "noyalib",
  "old-crypto-rs",
+ "serde",
  "thiserror 2.0.21",
 ]
 

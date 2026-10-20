@@ -16,9 +16,10 @@ which was a port of my [old-crypto](https://github.com/keltia/old-crypto) Ruby c
 
 Part of the conversion has been done through the AI plugin inside RustRover called Junie.
 
-It features a simple CLI-based tool called `old-crypto` which serve both as a collection of use-cases for the library,
-and an easy way to use it.  It now uses [ratatui](https://crates.io/crates/ratatui) to provide an interactive
-TUI.  Key bindings and the whole UI are still a work in progress, this is my first TUI program, in fact.
+It features a simple TUI-based tool called `old-crypto-tui` which serve both as a 
+collection of use-cases for the library,  and an easy way to use it.  It now uses
+[ratatui](https://crates.io/crates/ratatui) to provide an interactive  TUI.  Key bindings and the whole UI 
+are still a work in progress, this is my first TUI program, in fact.
 
 **Work in progress, still incomplete**
 
@@ -31,7 +32,7 @@ TUI.  Key bindings and the whole UI are still a work in progress, this is my fir
 
 ## Features
 
-It currently implements a few more compared to the Go/Ruby code, namely:
+The main library currently implements a few more compared to the Go/Ruby code, namely:
 
 - Caesar (you can choose the shift number)
 - Vigenère and its 2 autoclave variants
@@ -46,35 +47,42 @@ It currently implements a few more compared to the Go/Ruby code, namely:
   and an irregular one)
 - SECOM (a field cipher closely related to the VIC cipher, but different)
 - Solitaire cipher, a made-up cipher created by Bruce Schneier
-
-It also implements simulation for some cipher devices/machines:
 - Chaocipher
 - Wheatstone cipher machine
-- [Fialka M-125-3](crates/fialka/README.md), with Polish 3K and Czechoslovak 6K adjustable rotor sets
-- [SIGABA](crates/sigaba/README.md), a US cipher machine from WWII
-- [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
-- [M-209](crates/m209/README.md), the US Army Hagelin six-wheel pin-and-lug cipher machine
-- [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
-- [Schlüsselgerät 41 (SG-41)](crates/sg-41/README.md), a German WWII six-wheel pin-wheel cipher machine with irregular stepping
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.  Some implementations were pretty
 naive, so I am now working to improve them.
 
+There are also some cipher machines simulation implemented in the [crates](crates) directory:
+
+- [Fialka M-125-3](crates/fialka/README.md), with Polish 3K and Czechoslovak 6K adjustable rotor sets
+- [SIGABA](crates/sigaba/README.md), a US cipher machine from WWII
+- [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
+- [M-209](crates/m209/README.md), the US Army Hagelin six-wheel pin-and-lug cipher machine
+- [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
+- [Schlüsselgerät 41 (SG-41)](crates/sg-41/README.md), a German WWII six-wheel pin-wheel cipher machine with irregular  stepping
+
+Whenever possible, historical data & simulators in different languages were used 
+to implement the simulators, and more importantly as source for keys, settings and
+verification of the Rust code.  There are many references below, and in each of the
+cipher machines crate.
+
 ## Installation
-
-Like many Rust crates, the installation is straightforward:
-
-    cargo install old-crypto-rs
 
 > NOTE: the crate is not yet published on crates.io,
 
-or
-
+```shell
     git clone https://github.com/keltia/old-crypto-rs.git
     cd old-crypto-rs
     cargo nextest run
     cargo bench
+```
+
+There is an alternate repository hosted on [Codeberg](https://codeberg.org/) in case
+Github (read: Microsoft) somehow becomes unhospitable.
+
+Repository is [here](https://codeberg.org/keltounet/old-crypto-rs).
 
 The library is fetched, compiled and installed. You can find a "demo" program in the `examples` directory, to showcase
 all ciphers; it also checks that you can decrypt back to the original plaintext.
@@ -198,6 +206,26 @@ See the [technical specification](crates/sg-41/docs/sg-41.md) and the
 cargo run --example demo
 ```
 
+## Installable Binaries
+
+If you have the [`just`](https://just.systems/) utility, you can install all cipher-machine binaries
+by running
+
+```shell
+just install
+```
+or just run all the commands from [this file](justfile):
+
+```shell
+	cargo install --path crates/old-crypto-tui
+	cargo install --path crates/sigaba
+	cargo install --path crates/kl-7
+	cargo install --path crates/purple
+	cargo install --path crates/fialka
+	cargo install --path crates/m209
+	cargo install --path crates/sg-41
+```
+
 ## Benchmarks & Tests
 
 I tried to provide benchmarks for all ciphers (including key scheduling/expansion) and in some cases several
@@ -208,9 +236,16 @@ You can run them with
     cargo nextest run (or cargo test)
     cargo bench
 
+Tests for the cipher machines are runnable with
+```shell
+	cargo nextest run -workspace
+```
+
 ## Benchmarks
 
 See [README.md](benches/README.md) file in the `benches` directory.
+
+Most cipher machines in `crates`  have benchmark for internal parts as well.
 
 ## TODO
 

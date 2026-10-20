@@ -52,3 +52,28 @@ pub enum MessageError {
     #[error("message indicator redundancy check failed")]
     IndicatorCheckFailed,
 }
+
+/// Errors while preparing the historical SG-41 per-message wheel settings.
+#[derive(Debug, Error)]
+pub enum ProcedureError {
+    #[error("daily key contains invalid letter {letter:?} at index {index}")]
+    InvalidDailyLetter { index: usize, letter: u8 },
+
+    #[error("invalid historical quarter {0}; expected 1 through 4")]
+    InvalidQuarter(u8),
+
+    #[error("invalid calendar month {0}; expected 1 through 12")]
+    InvalidMonth(u8),
+
+    #[error("sender station assignment is not valid for this quarter")]
+    StationQuarterMismatch,
+
+    #[error("monthly table row {row} must contain exactly 25 binary pin settings")]
+    InvalidMonthlyRow { row: char },
+
+    #[error(transparent)]
+    Wheel(#[from] WheelError),
+
+    #[error(transparent)]
+    Config(#[from] ConfigError),
+}

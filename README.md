@@ -55,6 +55,7 @@ It also implements simulation for some cipher devices/machines:
 - [PURPLE](crates/purple/README.md), the Japanese WWII diplomatic cipher machine
 - [M-209](crates/m209/README.md), the US Army Hagelin six-wheel pin-and-lug cipher machine
 - [TSEC/KL-7](crates/kl-7/README.md) (ADONIS / POLLUX), a Cold War 8-rotor cipher machine with re-entry maze
+- [Schlüsselgerät 41 (SG-41)](crates/sg-41/README.md), a German WWII six-wheel pin-wheel cipher machine with irregular stepping
 
 It does not try to reinvent the wheel and implements the `Block` trait, copying the Go interface for block ciphers.
 Most of these ciphers can be mixed, just like The VIC or the ADFGVX ciphers.  Some implementations were pretty
@@ -179,6 +180,18 @@ See the [M-209 technical specification](crates/m209/docs/m209.md) and
 [message-procedure documentation](crates/m209/docs/message-procedures.md)
 for historical sources, test vectors, and the exact scope of interoperability.
 
+### SG-41 Cipher Machine
+
+The [SG-41 crate](crates/sg-41/README.md) simulates the German WWII
+Schlüsselgerät 41 (*Hitlermühle*), with six pin-wheels, four-phase irregular
+stepping, sixth-wheel inversion, and historical print-head permutations.
+The implementation is tested against the published 32-character reference
+vector and provides `sg41ctl`, a stateful core, and the shared `Block` interface.
+German-language text preparation is separate from the core cipher.
+
+See the [technical specification](crates/sg-41/docs/sg-41.md) and the
+[reference configuration](crates/sg-41/config/reference.yaml).
+
 ## Available demo
 
 ```sh
@@ -233,6 +246,8 @@ Please see CONTRIBUTING.md for some simple rules.
 - [M-209: TM 11-380 (1944 US Army manual)](https://m209.virtualcolossus.co.uk/M209%20Manual.pdf)
 - [Virtual Hagelin M-209 simulator and tutorial](https://m209.virtualcolossus.co.uk/)
 - [M-209 Python reference implementation](https://github.com/gremmie/m209)
+- [SG-41 technical reconstruction (Crypto Museum, version 1.05)](https://www.cryptomuseum.com/pub/files/CM_SG41.pdf)
+- [SG-41 reference simulator](https://github.com/hughcoleman/sg41)
 
 ## Wikipedia References
 
@@ -256,3 +271,4 @@ Please see CONTRIBUTING.md for some simple rules.
 - [Vigenère Ciphers](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher)
 - [Wheatstone cipher](https://en.wikipedia.org/wiki/Wheatstone_cipher)
 - [M-209 cipher machine](https://en.wikipedia.org/wiki/M-209)
+- [Schlüsselgerät 41](https://en.wikipedia.org/wiki/Schl%C3%BCsselger%C3%A4t_41)

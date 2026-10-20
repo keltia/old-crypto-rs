@@ -23,6 +23,7 @@ use sigaba::{
     SigabaRotorId, SigabaRotorPosition,
 };
 
+use sg_41::{SG41, Sg41Config, WindowLabel};
 use eyre::Result;
 
 #[cfg(feature = "dhat-heap")]
@@ -247,6 +248,7 @@ fn main() -> Result<()>{
     demo_kl7()?;
     demo_purple()?;
     demo_m209()?;
+    demo_sg41()?;
     Ok(())
 }
 
@@ -447,6 +449,60 @@ fn demo_m209() -> Result<()> {
     println!("decrypt ok\n");
 
     Ok(())
+}
+
+
+fn demo_sg41() -> Result<()> {
+    let machine = SG41::new(sg41_reference_config()?);
+    let mut ciphertext = vec![0; PLAIN.len()];
+    let n = machine.encrypt(&mut ciphertext, PLAIN.as_bytes());
+    let mut recovered = vec![0; n];
+    let n1 = machine.decrypt(&mut recovered, &ciphertext[..n]);
+
+    println!("==> Schlüsselgerät 41 (historical reference key)");
+    println!("Plain:  {PLAIN}");
+    println!("Cipher: {}", output_as_block(&String::from_utf8_lossy(&ciphertext[..n])));
+
+    assert_eq!(&recovered[..n1], PLAIN.as_bytes());
+    println!("decrypt ok\n");
+
+    const REFERENCE_PLAIN: &str = "SCHLUESSELGERAETVIEREINSWANDERER";
+    const REFERENCE_CIPHER: &str = "IHEPLRETQSDSNDCWHPIVVGLYMHOWSJQS";
+
+    let mut encrypted = [0; 32];
+    let n = machine.encrypt(&mut encrypted, REFERENCE_PLAIN.as_bytes());
+    assert_eq!(&encrypted[..n], REFERENCE_CIPHER.as_bytes());
+
+    let mut decrypted = [0; 32];
+    let n = machine.decrypt(&mut decrypted, &encrypted);
+
+    println!("==> SG-41 historical known-answer test:");
+    println!("Plain:  {REFERENCE_PLAIN}");
+    println!("Cipher: {}", output_as_block(&REFERENCE_CIPHER));
+    assert_eq!(&decrypted[..n], REFERENCE_PLAIN.as_bytes());
+    println!("decrypt ok");
+    Ok(())
+}
+
+fn sg41_reference_config() -> Result<Sg41Config, sg_41::ConfigError> {
+    let windows = [
+        WindowLabel::Letter('A'),
+        WindowLabel::Letter('B'),
+        WindowLabel::Letter('C'),
+        WindowLabel::Letter('D'),
+        WindowLabel::Number(1),
+        WindowLabel::Number(0),
+    ];
+    const PINS: [&str; 6] = [
+        "0001101011000100010001101",
+        "0110100100001011100101100",
+        "11001001000100100100010",
+        "01001000111010001110010",
+        "001001001010000101011010",
+        "011001100110001011010100",
+    ];
+
+    Sg41Config::from_key_settings(windows, PINS)
 }
 
 #[cfg(test)]

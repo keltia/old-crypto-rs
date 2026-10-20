@@ -32,6 +32,7 @@ use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
+use sg_41::{SG41, Sg41Config, WindowLabel, prepare_plaintext, format_ciphertext};
 use std::io::{self, stdout};
 
 enum InputMode {
@@ -98,6 +99,7 @@ impl App {
                 "Sigaba",
                 "KL-7",
                 "PURPLE",
+                "SG-41",
                 "M-209",
             ],
             cipher_list_state,
@@ -346,9 +348,26 @@ impl App {
                     Err(error) => self.result = format!("Error: {error}"),
                 }
             }
+            "SG-41" => match sg41_reference_config() {
+                Ok(config) => match prepare_plaintext(&self.cleartext) {
+                    Ok(plaintext) => {
+                        let cipher = SG41::new(config);
+                        let mut output = vec![0u8; plaintext.len()];
+                        let written = cipher.encrypt(&mut output, plaintext.as_bytes());
+                        let ciphertext = String::from_utf8_lossy(&output[..written]);
+                        self.result = format_ciphertext(&ciphertext);
+                    }
+                    Err((index, character)) => {
+                        self.result = format!(
+                            "Error: invalid SG-41 plaintext character {character:?} at position {index}"
+                        );
+                    }
+                },
+                Err(error) => self.result = format!("Error: {error}"),
+            },
             _ => self.result = "Not implemented in TUI yet".to_string(),
         }
-        let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7" || cipher_name == "PURPLE";
+        let skip_block_output = cipher_name == "Fialka" || cipher_name == "KL-7" || cipher_name == "PURPLE" || cipher_name == "SG-41";
         if !skip_block_output {
             self.result = helpers::output_as_block(self.result.as_str());
         }
@@ -447,6 +466,27 @@ fn sigaba_reference_config() -> Result<SigabaConfig, String> {
         [index(0)?, index(1)?, index(2)?, index(3)?, index(4)?],
     )
     .map_err(|e| e.to_string())
+}
+
+fn sg41_reference_config() -> Result<Sg41Config, sg_41::ConfigError> {
+    let windows = [
+        WindowLabel::Letter('A'),
+        WindowLabel::Letter('B'),
+        WindowLabel::Letter('C'),
+        WindowLabel::Letter('D'),
+        WindowLabel::Number(1),
+        WindowLabel::Number(0),
+    ];
+    const PINS: [&str; 6] = [
+        "0001101011000100010001101",
+        "0110100100001011100101100",
+        "11001001000100100100010",
+        "01001000111010001110010",
+        "001001001010000101011010",
+        "011001100110001011010100",
+    ];
+
+    Sg41Config::from_key_settings(windows, PINS)
 }
 
 fn main() -> io::Result<()> {
@@ -621,6 +661,7 @@ fn ui(f: &mut Frame, app: &mut App) {
             ("Motion fast,middle,slow (blank = 2,3,1)", &app.key4),
         ],
         "M-209" => vec![("Wheel indicators (6 letters; blank = AAAAAA)", &app.key1)],
+        "SG-41" => vec![],
         "KL-7" => vec![("Initial Positions (8 labels / YAML; blank = USS Beagle)", &app.key1)],
         _ => vec![("Key 1", &app.key1), ("Key 2", &app.key2)],
     };

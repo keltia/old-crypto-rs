@@ -20,3 +20,4 @@ kl-7 = { version = "0", path = "../kl-7" }
 m209 = { version = "0", path = "../m209" }
 purple = { version = "0", path = "../purple" }
 sigaba = { version = "0", path = "../sigaba" }
+sg-41 = { version = "0", path = "../sg-41" }

@@ -199,7 +199,6 @@ pub fn ungroup_ciphertext(ciphertext: &str) -> Result<String, (usize, char)> {
 ///     "PI  A"
 /// );
 /// ```
-
 #[must_use]
 pub fn display_tactical_plaintext(raw: &str) -> String {
     raw.replace('Z', " ")

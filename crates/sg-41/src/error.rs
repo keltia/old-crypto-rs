@@ -25,3 +25,10 @@ pub enum WheelError {
     #[error("cannot use a position from wheel {position_wheel} with wheel {pattern_wheel} pins")]
     WheelMismatch { pattern_wheel: u8, position_wheel: u8 },
 }
+
+/// Invalid or inconsistent SG-41 key settings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Error)]
+pub enum ConfigError {
+    #[error(transparent)]
+    Wheel(#[from] WheelError),
+}

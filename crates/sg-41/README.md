@@ -9,3 +9,7 @@ this crate must not yet be used for message encryption.
 
 See [the technical specification](docs/sg-41.md) and the
 [YAML reference fixture](docs/fixtures/sg41-reference.yaml).
+
+Step 8 adds `Sg41Core`, a stateful per-character encipher/decipher engine.
+The full 32-letter historical test vector is checked in both directions.
+The public `Block` facade, key-file loading and text procedures remain future work.

@@ -77,3 +77,34 @@ pub enum ProcedureError {
     #[error(transparent)]
     Config(#[from] ConfigError),
 }
+
+/// Errors in the complete historical wire-message procedure.
+#[derive(Debug, Error)]
+pub enum TransmissionError {
+    #[error(transparent)]
+    Procedure(#[from] ProcedureError),
+
+    #[error(transparent)]
+    Indicator(#[from] MessageError),
+
+    #[error("invalid plaintext character {ch:?} at index {index}")]
+    InvalidPlaintext { index: usize, ch: char },
+
+    #[error("invalid ciphertext character {ch:?} at index {index}")]
+    InvalidCiphertext { index: usize, ch: char },
+
+    #[error("padding must contain exactly {expected} uppercase A-Z letters")]
+    InvalidPadding { expected: usize },
+
+    #[error("SG-41 message must contain at least three ciphertext letters, got {0}")]
+    TooShort(usize),
+
+    #[error("SG-41 message exceeds 600 ciphertext letters: {0}")]
+    TooLong(usize),
+
+    #[error("missing ten-letter message header")]
+    MissingHeader,
+
+    #[error("ciphertext must be a multiple of five letters")]
+    InvalidGrouping,
+}

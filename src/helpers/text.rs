@@ -3,6 +3,19 @@
 //! Provides utilities for standard WWII and Cold War tactical encipherment
 //! text preparation conventions (e.g. CSP-889 / SIGABA, TSEC/KL-7, Hagelin M-209),
 //! including space and letter substitution rules, ciphertext grouping, and whitespace filtering.
+//!
+//! # Lossy plaintext conventions
+//!
+//! Historical plaintext preparation may map distinct input characters
+//! to the same electrical or transmitted character.
+//!
+//! In SIGABA/KL-7-style handling, both an original `X` and an
+//! original `Z` can become electrical `X`. In M-209-style handling,
+//! both a word space and a literal `Z` become `Z`.
+//!
+//! These ambiguities cannot be resolved by decryption alone.
+//! Human-readable display helpers should therefore not be treated
+//! as exact inverses of plaintext preparation functions.
 
 use crate::helpers::output_as_block;
 
@@ -25,12 +38,42 @@ pub const fn plaintext_to_military_us(ch: char) -> Option<u8> {
     }
 }
 
-/// Convert one deciphered electrical contact (`0..25`) back to human plaintext.
+
+/// Convert one deciphered electrical contact (`0..25`) to human-readable
+/// plaintext according to SIGABA/KL-7 conventions.
 ///
 /// # Conventions
-/// - Electrical contact `'Z'` (index 25) maps to `' '` (space).
-/// - Electrical contacts `0..=24` map to `'A'..='Y'`.
-/// - Contact indices >= 26 return `None`.
+///
+/// - Contact `25` (`'Z'`) is displayed as a space.
+/// - Contacts `0..=24` are displayed as `'A'..='Y'`.
+/// - Invalid contact indices return `None`.
+///
+/// # Lossy conversion
+///
+/// This is not the inverse of [`plaintext_to_military_us`].
+///
+/// During plaintext preparation, an original `'Z'` is substituted with
+/// electrical `'X'` (contact 23), while an original `'X'` also maps to
+/// contact 23. Consequently, a deciphered `'X'` cannot be identified
+/// unambiguously as an original `'X'` or `'Z'`.
+///
+/// The function therefore returns `'X'` for both cases. Recovering the
+/// original spelling requires external context.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{
+///     military_us_to_plaintext, plaintext_to_military_us,
+/// };
+///
+/// assert_eq!(military_us_to_plaintext(25), Some(' '));
+/// assert_eq!(military_us_to_plaintext(23), Some('X'));
+/// assert_eq!(
+///     military_us_to_plaintext(plaintext_to_military_us('Z').unwrap()),
+///     Some('X')
+/// );
+/// ```
 #[must_use]
 pub const fn military_us_to_plaintext(contact: u8) -> Option<char> {
     match contact {
@@ -114,6 +157,49 @@ pub fn ungroup_ciphertext(ciphertext: &str) -> Result<String, (usize, char)> {
 }
 
 /// Replace every raw `'Z'` with a word space `' '` for historical display presentation.
+///
+/// Render raw deciphered tactical plaintext with word spaces.
+///
+/// Replaces every uppercase `'Z'` with a space, following the
+/// presentation convention used by machines such as the M-209.
+///
+/// # Lossy conversion
+///
+/// During [`prepare_tactical_plaintext`], spaces are encoded as `'Z'`,
+/// but literal `'Z'` characters are also preserved. The resulting
+/// representation cannot distinguish an original space from an original
+/// `'Z'`.
+///
+/// This function interprets **every** uppercase `'Z'` as a space.
+/// Consequently, it is intended for human-readable presentation only,
+/// not for lossless recovery of the original message.
+///
+/// Callers that need to preserve the deciphered character stream should
+/// retain the raw plaintext instead.
+///
+/// # Examples
+///
+/// ```
+/// use old_crypto_rs::helpers::{
+///     display_tactical_plaintext, prepare_tactical_plaintext,
+/// };
+///
+/// assert_eq!(
+///     display_tactical_plaintext("ATTACKZATZDAWN"),
+///     "ATTACK AT DAWN"
+/// );
+///
+/// assert_eq!(
+///     prepare_tactical_plaintext("PIZZA").unwrap(),
+///     "PIZZA"
+/// );
+///
+/// assert_eq!(
+///     display_tactical_plaintext("PIZZA"),
+///     "PI  A"
+/// );
+/// ```
+
 #[must_use]
 pub fn display_tactical_plaintext(raw: &str) -> String {
     raw.replace('Z', " ")

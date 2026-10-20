@@ -20,3 +20,10 @@ noyalib = "0.0"
 [[bin]]
 name = "sg41ctl"
 path = "cmd/sg41ctl/main.rs"
+
+[dev-dependencies]
+divan = "0.1"
+
+[[bench]]
+name = "sg41"
+harness = false

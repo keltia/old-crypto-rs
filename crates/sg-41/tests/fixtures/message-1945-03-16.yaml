@@ -1,0 +1,21 @@
+# SG-41 historical message indicator reference, 16 March 1945.
+# Source: Antal, Dahlke & Jahn, "Revealing secrets from WWII: the original
+# German instructions of Schlüsselgerät 41," Cryptologia (2025 online).
+# DOI: https://doi.org/10.1080/01611194.2025.2557311
+# Disguise key transcribed from the user-supplied scan of the monthly key table
+# (Figure 12 in the supplied illustration), bottom row labeled "1. 16.".
+# The expected result is independently published in the worked example.
+date: '1945-03-16'
+daily_key: ACHUKW
+disguise_alphabet: SYIZBJEHOCKUGPDRVFTXLNMWAQ
+disguise_digits: '96585138157834794289563262'
+sending_station:
+  wheel_5: 18
+  wheel_6: 37
+message_indicator: KNVP
+successor_indicator: LOWQ
+ciphertext_prefix: CMQ
+shifts: '57832629'
+masked_indicator: RIAVMDQO
+filler: WT
+transmitted_header: RIAVMDQOWT

@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod historical;
 
 use clap::Parser;
 use old_crypto_rs::{Block, helpers::read_input_optional};
@@ -7,7 +8,7 @@ use sg_41::{
     SG41, Sg41Config, display_plaintext, format_ciphertext, parse_ciphertext, prepare_plaintext,
 };
 
-use cli::{Cli, Command, Mode};
+use cli::{Opts, Command, Mode};
 
 fn convert(config: &Sg41Config, input: &str, encrypt: bool) -> Result<String, Box<dyn std::error::Error>> {
     let machine = SG41::new(config.clone());
@@ -32,7 +33,7 @@ fn raw_input(text: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(text.to_ascii_uppercase())
 }
 
-fn run_with_config(cli: Cli, config: &Sg41Config, input: &str) -> Result<String, Box<dyn std::error::Error>> {
+fn run_with_config(cli: Opts, config: &Sg41Config, input: &str) -> Result<String, Box<dyn std::error::Error>> {
     match cli.command {
         Command::Encrypt { grouped, .. } => {
             if grouped && cli.mode == Mode::Raw {
@@ -74,10 +75,28 @@ fn run_with_config(cli: Cli, config: &Sg41Config, input: &str) -> Result<String,
                 plaintext
             })
         }
+        Command::MessageEncrypt { .. } | Command::MessageDecrypt { .. } => {
+            unreachable!("message commands are handled before legacy key loading")
+        }
     }
 }
 
-fn run(cli: Cli) -> Result<String, Box<dyn std::error::Error>> {
+fn run(cli: Opts) -> Result<String, Box<dyn std::error::Error>> {
+    match &cli.command {
+        Command::MessageEncrypt { key, indicator, padding, filler, text } => {
+            let keys = historical::load_keys(key)?;
+            let input = read_input_optional(text.clone())?;
+            return historical::encrypt(&keys, indicator, padding, filler,
+                input.trim_end_matches(['\n', '\r']));
+        }
+        Command::MessageDecrypt { key, raw_output, text } => {
+            let keys = historical::load_keys(key)?;
+            let input = read_input_optional(text.clone())?;
+            return historical::decrypt(&keys, &input, *raw_output);
+        }
+        Command::Encrypt { .. } | Command::Decrypt { .. } => {}
+    }
+
     let config_path = cli
         .config
         .as_deref()
@@ -86,6 +105,7 @@ fn run(cli: Cli) -> Result<String, Box<dyn std::error::Error>> {
 
     let argument = match &cli.command {
         Command::Encrypt { text, .. } | Command::Decrypt { text, .. } => text.clone(),
+        Command::MessageEncrypt { .. } | Command::MessageDecrypt { .. } => unreachable!(),
     };
 
     let input = read_input_optional(argument)?;
@@ -95,7 +115,7 @@ fn run(cli: Cli) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", run(Cli::parse())?);
+    println!("{}", run(Opts::parse())?);
     Ok(())
 }
 
@@ -109,7 +129,7 @@ mod tests {
 
     #[test]
     fn cli_reference_vector_in_raw_mode() {
-        let cli = Cli::try_parse_from([
+        let cli = Opts::try_parse_from([
             "sg41ctl", "--config", "unused.yaml", "--mode", "raw",
             "encrypt", "SCHLUESSELGERAETVIEREINSWANDERER",
         ]).unwrap();
@@ -122,7 +142,7 @@ mod tests {
 
     #[test]
     fn text_mode_roundtrips_spaces() {
-        let cli = Cli::try_parse_from([
+        let cli = Opts::try_parse_from([
             "sg41ctl", "--config", "unused.yaml", "encrypt", "--grouped",
             "HALLO WELT",
         ]).unwrap();
@@ -130,7 +150,7 @@ mod tests {
         let ciphertext = run_with_config(cli, &config(), "HALLO WELT").unwrap();
         assert!(ciphertext.contains(' '));
 
-        let cli = Cli::try_parse_from([
+        let cli = Opts::try_parse_from([
             "sg41ctl", "--config", "unused.yaml", "decrypt", "ignored",
         ]).unwrap();
         assert_eq!(run_with_config(cli, &config(), &ciphertext).unwrap(), "HALLO WELT");
@@ -138,7 +158,7 @@ mod tests {
 
     #[test]
     fn invalid_input_is_not_silently_accepted() {
-        let cli = Cli::try_parse_from([
+        let cli = Opts::try_parse_from([
             "sg41ctl", "--config", "unused.yaml", "encrypt", "ignored",
         ]).unwrap();
         assert!(run_with_config(cli, &config(), "A!").is_err());

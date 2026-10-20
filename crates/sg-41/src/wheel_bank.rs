@@ -15,6 +15,11 @@ use super::types::{PinPattern, PinSensor, WHEEL_COUNT, WheelId, WheelPosition, W
 pub struct PinSnapshot([bool; WHEEL_COUNT]);
 
 impl PinSnapshot {
+    /// Construct a pin latch from six physical wheel states (1 through 6).
+    pub const fn from_bits(bits: [bool; WHEEL_COUNT]) -> Self {
+        Self(bits)
+    }
+
     pub const fn bits(self) -> [bool; WHEEL_COUNT] {
         self.0
     }

@@ -32,3 +32,4 @@ install:
 	cargo install --path crates/purple
 	cargo install --path crates/fialka
 	cargo install --path crates/m209
+	cargo install --path crates/sg-41

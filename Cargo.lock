@@ -1094,6 +1094,7 @@ dependencies = [
  "old-crypto-rs",
  "purple",
  "ratatui",
+ "sg-41",
  "sigaba",
 ]
 

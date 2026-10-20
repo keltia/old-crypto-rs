@@ -12,3 +12,4 @@ categories = ["cryptography"]
 
 [dependencies]
 thiserror = "2.0"
+old-crypto-rs = { path = "../..", version = "0" }

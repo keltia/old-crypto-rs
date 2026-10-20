@@ -1682,6 +1682,7 @@ dependencies = [
 name = "sg-41"
 version = "0.1.0"
 dependencies = [
+ "old-crypto-rs",
  "thiserror 2.0.21",
 ]
 

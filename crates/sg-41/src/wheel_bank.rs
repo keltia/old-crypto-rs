@@ -5,8 +5,7 @@
 //! advance direction, and the stepping sensor reads five rows behind the
 //! displayed window. The cage sensor reads eight rows ahead.
 //!
-//! This module does not decide *when* wheels advance. That belongs to the
-//! four-phase stepping mechanism, which will be implemented separately.
+//! Stepping decisions and their timing live in `stepping.rs`.
 
 use super::error::WheelError;
 use super::types::{PinPattern, PinSensor, WHEEL_COUNT, WheelId, WheelPosition, WindowLabel};
@@ -224,29 +223,8 @@ mod tests {
                 break;
             }
 
-            // Latch the original -5 pins, before either pre-cipher phase.
-            let first_latch = bank.sense(PinSensor::Stepping).bits();
-
-            // Phase I: active original wheel 6 gates pin-directed rightward steps.
-            if first_latch[5] {
-                let mut mask = [false; WHEEL_COUNT];
-                mask[1..].copy_from_slice(&first_latch[..5]);
-                bank.advance_mask(mask);
-
-                // Phase II: every wheel, using the *original* wheel-6 latch.
-                bank.advance_mask([true; WHEEL_COUNT]);
-            }
-
-            // After phase II the stepping sensors are latched anew.
-            let second_latch = bank.sense(PinSensor::Stepping).bits();
-
-            // Phase III is independent of the state of wheel 6.
-            let mut mask = [false; WHEEL_COUNT];
-            mask[1..].copy_from_slice(&second_latch[..5]);
-            bank.advance_mask(mask);
-
-            // Phase IV always advances all wheels.
-            bank.advance_mask([true; WHEEL_COUNT]);
+            let trace = crate::stepping::step_crank(&mut bank);
+            assert_eq!(trace.final_positions, bank.positions());
         }
     }
 }

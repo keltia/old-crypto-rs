@@ -4,8 +4,10 @@
 
 mod error;
 mod types;
+mod wheel_bank;
 
 pub use error::WheelError;
+pub use wheel_bank::{PinSnapshot, WheelBank};
 pub use types::{
     PinPattern, PinSensor, SIXTH_WHEEL_MARKINGS, WHEEL_COUNT, WHEEL_LENGTHS,
     WheelId, WheelPosition, WindowLabel,

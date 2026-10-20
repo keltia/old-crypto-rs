@@ -1,0 +1,414 @@
+metadata:
+  machine: SG-41 alphabetic (not SG-41Z)
+  primary_source: Kopacz and Reuvers, Crypto Museum, version 1.05 (2023)
+  primary_url: https://www.cryptomuseum.com/pub/files/CM_SG41.pdf
+  source_tables:
+    print_head: 2
+    pin_settings: 5
+    pre_character_positions: 6
+  secondary_pin_crosscheck: https://github.com/hughcoleman/sg41
+wheel_lengths:
+- 25
+- 25
+- 23
+- 23
+- 24
+- 24
+wheel_labels:
+- ABCDEFGHIKLMNOPQRSTUVWXYZ
+- ABCDEFGHIKLMNOPQRSTUVWXYZ
+- ABCDEFGHIKLMNOPQRSTUVWX
+- ABCDEFGHIKLMNOPQRSTUVWX
+- - "01"
+  - "02"
+  - "03"
+  - "04"
+  - "05"
+  - "06"
+  - "07"
+  - "08"
+  - "09"
+  - "10"
+  - "11"
+  - "12"
+  - "13"
+  - "14"
+  - "15"
+  - "16"
+  - "17"
+  - "18"
+  - "19"
+  - "20"
+  - "21"
+  - "22"
+  - "23"
+  - "24"
+- - "00"
+  - "02"
+  - "05"
+  - "07"
+  - "10"
+  - "12"
+  - "15"
+  - "17"
+  - "20"
+  - "22"
+  - "25"
+  - "27"
+  - "30"
+  - "32"
+  - "35"
+  - "37"
+  - "40"
+  - "42"
+  - "45"
+  - "47"
+  - "50"
+  - "52"
+  - "55"
+  - "57"
+pin_bits_in_table_row_order:
+- "0001101011000100010001101"
+- "0110100100001011100101100"
+- "11001001000100100100010"
+- "01001000111010001110010"
+- "001001001010000101011010"
+- "011001100110001011010100"
+pin_bit_zero_is_inactive: true
+print_head:
+  position_indexing: 1-based; strings ordered from position 1 (bottom of printed Table 2) to 26 (top)
+  ring_1_ciphertext: PAKRHFIDZQNXMTBWJVGSOCLYUE
+  ring_2_ciphertext: FHRKAPEUYLCOSGVJWBTMXNQZDI
+  ring_3_plaintext: FHRKAPEUYLCOSGVJWBTMXNQZDI
+  ring_4_plaintext: PAKRHFIDZQNXMTBWJVGSOCLYUE
+example:
+  initial_windows:
+  - A
+  - B
+  - C
+  - D
+  - "01"
+  - "00"
+  plaintext: SCHLUESSELGERAETVIEREINSWANDERER
+  ciphertext: IHEPLRETQSDSNDCWHPIVVGLYMHOWSJQS
+  pre_character_trace:
+  - position: 1
+    windows:
+    - A
+    - B
+    - C
+    - D
+    - "01"
+    - "00"
+    plaintext: S
+    ciphertext: I
+  - position: 2
+    windows:
+    - C
+    - E
+    - G
+    - F
+    - "04"
+    - "07"
+    plaintext: C
+    ciphertext: H
+  - position: 3
+    windows:
+    - D
+    - G
+    - H
+    - H
+    - "05"
+    - "12"
+    plaintext: H
+    ciphertext: E
+  - position: 4
+    windows:
+    - E
+    - H
+    - K
+    - I
+    - "06"
+    - "15"
+    plaintext: L
+    ciphertext: P
+  - position: 5
+    windows:
+    - G
+    - L
+    - O
+    - M
+    - "08"
+    - "20"
+    plaintext: U
+    ciphertext: L
+  - position: 6
+    windows:
+    - H
+    - M
+    - P
+    - N
+    - "09"
+    - "25"
+    plaintext: E
+    ciphertext: R
+  - position: 7
+    windows:
+    - K
+    - P
+    - S
+    - P
+    - "12"
+    - "30"
+    plaintext: S
+    ciphertext: E
+  - position: 8
+    windows:
+    - L
+    - R
+    - T
+    - Q
+    - "14"
+    - "32"
+    plaintext: S
+    ciphertext: T
+  - position: 9
+    windows:
+    - M
+    - S
+    - U
+    - R
+    - "16"
+    - "37"
+    plaintext: E
+    ciphertext: Q
+  - position: 10
+    windows:
+    - O
+    - V
+    - A
+    - U
+    - "18"
+    - "45"
+    plaintext: L
+    ciphertext: S
+  - position: 11
+    windows:
+    - P
+    - X
+    - C
+    - V
+    - "19"
+    - "47"
+    plaintext: G
+    ciphertext: D
+  - position: 12
+    windows:
+    - R
+    - A
+    - F
+    - A
+    - "22"
+    - "52"
+    plaintext: E
+    ciphertext: S
+  - position: 13
+    windows:
+    - T
+    - C
+    - I
+    - E
+    - "01"
+    - "57"
+    plaintext: R
+    ciphertext: N
+  - position: 14
+    windows:
+    - U
+    - E
+    - L
+    - F
+    - "02"
+    - "02"
+    plaintext: A
+    ciphertext: D
+  - position: 15
+    windows:
+    - V
+    - F
+    - M
+    - G
+    - "03"
+    - "07"
+    plaintext: E
+    ciphertext: C
+  - position: 16
+    windows:
+    - W
+    - G
+    - N
+    - H
+    - "05"
+    - "10"
+    plaintext: T
+    ciphertext: W
+  - position: 17
+    windows:
+    - X
+    - H
+    - P
+    - K
+    - "06"
+    - "12"
+    plaintext: V
+    ciphertext: H
+  - position: 18
+    windows:
+    - Y
+    - K
+    - R
+    - L
+    - "08"
+    - "15"
+    plaintext: I
+    ciphertext: P
+  - position: 19
+    windows:
+    - A
+    - M
+    - U
+    - O
+    - "10"
+    - "22"
+    plaintext: E
+    ciphertext: I
+  - position: 20
+    windows:
+    - B
+    - N
+    - V
+    - Q
+    - "12"
+    - "25"
+    plaintext: R
+    ciphertext: V
+  - position: 21
+    windows:
+    - D
+    - R
+    - A
+    - T
+    - "15"
+    - "32"
+    plaintext: E
+    ciphertext: V
+  - position: 22
+    windows:
+    - E
+    - S
+    - B
+    - U
+    - "16"
+    - "35"
+    plaintext: I
+    ciphertext: G
+  - position: 23
+    windows:
+    - G
+    - V
+    - F
+    - X
+    - "18"
+    - "42"
+    plaintext: N
+    ciphertext: L
+  - position: 24
+    windows:
+    - H
+    - W
+    - H
+    - B
+    - "20"
+    - "45"
+    plaintext: S
+    ciphertext: Y
+  - position: 25
+    windows:
+    - I
+    - X
+    - K
+    - C
+    - "21"
+    - "47"
+    plaintext: W
+    ciphertext: M
+  - position: 26
+    windows:
+    - L
+    - B
+    - N
+    - F
+    - "23"
+    - "55"
+    plaintext: A
+    ciphertext: H
+  - position: 27
+    windows:
+    - N
+    - E
+    - R
+    - I
+    - "01"
+    - "02"
+    plaintext: N
+    ciphertext: O
+  - position: 28
+    windows:
+    - O
+    - F
+    - S
+    - L
+    - "02"
+    - "07"
+    plaintext: D
+    ciphertext: W
+  - position: 29
+    windows:
+    - P
+    - H
+    - T
+    - M
+    - "03"
+    - "12"
+    plaintext: E
+    ciphertext: S
+  - position: 30
+    windows:
+    - Q
+    - K
+    - V
+    - N
+    - "04"
+    - "15"
+    plaintext: R
+    ciphertext: J
+  - position: 31
+    windows:
+    - S
+    - M
+    - A
+    - Q
+    - "07"
+    - "22"
+    plaintext: E
+    ciphertext: Q
+  - position: 32
+    windows:
+    - T
+    - N
+    - B
+    - R
+    - "09"
+    - "25"
+    plaintext: R
+    ciphertext: S

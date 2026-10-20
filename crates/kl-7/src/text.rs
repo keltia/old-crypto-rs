@@ -14,6 +14,9 @@
 //! - Output Formatting:
 //!   - Standard military format groups ciphertext in 5-letter blocks.
 
+pub use old_crypto_rs::helpers::format_five_letter_groups;
+use old_crypto_rs::helpers::{military_us_to_plaintext, plaintext_to_military_us};
+
 pub use crate::error::TextError;
 
 use super::{
@@ -21,48 +24,17 @@ use super::{
     machine::Kl7Core,
 };
 
-
-
-
-
 /// Convert a plaintext character into an electrical contact (`A=0..Z=25`).
 pub fn plaintext_to_contact(ch: char) -> Result<Contact26, TextError> {
-    match ch {
-        ' ' => Ok(Contact26::new(b'Z' - b'A').unwrap()),
-        'z' | 'Z' => Ok(Contact26::new(b'X' - b'A').unwrap()),
-        'a'..='y' => Ok(Contact26::from_ascii_letter(ch).unwrap()),
-        'A'..='Y' => Ok(Contact26::from_ascii_letter(ch).unwrap()),
-        _ => Err(TextError::UnsupportedPlaintext(ch)),
-    }
+    plaintext_to_military_us(ch)
+        .map(|idx| Contact26::new(idx).expect("valid 26-contact index"))
+        .ok_or(TextError::UnsupportedPlaintext(ch))
 }
 
 /// Convert a deciphered contact (`A=0..Z=25`) into a human-readable character.
 #[must_use]
 pub fn contact_to_plaintext(contact: Contact26) -> char {
-    if contact.get() == b'Z' - b'A' {
-        ' '
-    } else {
-        contact.to_ascii_char()
-    }
-}
-
-/// Format a continuous stream of ciphertext letters into standard 5-letter groups.
-#[must_use]
-pub fn format_five_letter_groups(ciphertext: &str) -> String {
-    let mut result = String::with_capacity(ciphertext.len() + ciphertext.len() / 5);
-    let mut count = 0;
-
-    for ch in ciphertext.chars() {
-        if ch.is_ascii_alphabetic() {
-            if count > 0 && count % 5 == 0 {
-                result.push(' ');
-            }
-            result.push(ch.to_ascii_uppercase());
-            count += 1;
-        }
-    }
-
-    result
+    military_us_to_plaintext(contact.get()).expect("valid 26-contact index")
 }
 
 /// Encipher human-readable plaintext with the given core into formatted 5-letter groups.

@@ -9,6 +9,7 @@ mod lang;
 mod mask;
 mod numeric;
 mod permutation;
+mod text;
 mod types;
 
 pub use alphabet::*;
@@ -19,6 +20,7 @@ pub use lang::*;
 pub use mask::*;
 pub use numeric::*;
 pub use permutation::*;
+pub use text::*;
 pub use types::*;
 
 use std::collections::HashSet;

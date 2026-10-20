@@ -5,7 +5,10 @@
 //! Five-letter grouping is presentation-only and does not step the machine.
 //! This module does not construct message indicators or remove padding.
 
-use old_crypto_rs::helpers::output_as_block;
+use old_crypto_rs::helpers::{
+    display_tactical_plaintext, group_five as helpers_group_five, prepare_tactical_plaintext,
+    ungroup_ciphertext as helpers_ungroup_ciphertext,
+};
 
 use crate::{Contact, M209Config, TextError};
 
@@ -14,41 +17,21 @@ use crate::{Contact, M209Config, TextError};
 /// This transformation is lossy when displayed as words after decipherment:
 /// genuine `Z` letters cannot be distinguished from encoded spaces.
 pub fn prepare_plaintext(plaintext: &str) -> Result<String, TextError> {
-    let mut prepared = String::with_capacity(plaintext.len());
-
-    for (index, character) in plaintext.chars().enumerate() {
-        match character {
-            ' ' => prepared.push('Z'),
-            'A'..='Z' => prepared.push(character),
-            'a'..='z' => prepared.push(character.to_ascii_uppercase()),
-            _ => return Err(TextError::InvalidPlaintext { index, character }),
-        }
-    }
-
-    Ok(prepared)
+    prepare_tactical_plaintext(plaintext)
+        .map_err(|(index, character)| TextError::InvalidPlaintext { index, character })
 }
 
 /// Remove ASCII whitespace used solely to group ciphertext.
 ///
 /// Invalid characters are rejected rather than silently passed through.
 pub fn ungroup_ciphertext(ciphertext: &str) -> Result<String, TextError> {
-    let mut ungrouped = String::with_capacity(ciphertext.len());
-
-    for (index, character) in ciphertext.chars().enumerate() {
-        match character {
-            'A'..='Z' => ungrouped.push(character),
-            'a'..='z' => ungrouped.push(character.to_ascii_uppercase()),
-            c if c.is_ascii_whitespace() => {}
-            _ => return Err(TextError::InvalidCiphertext { index, character }),
-        }
-    }
-
-    Ok(ungrouped)
+    helpers_ungroup_ciphertext(ciphertext)
+        .map_err(|(index, character)| TextError::InvalidCiphertext { index, character })
 }
 
 /// Group the supplied *already normalized* letters, without padding them.
 pub fn group_five(letters: &str) -> String {
-    output_as_block(letters)
+    helpers_group_five(letters)
 }
 
 /// Replace every raw `Z` with a word space for historical presentation.
@@ -56,7 +39,7 @@ pub fn group_five(letters: &str) -> String {
 /// This does **not** recover literal `Z` letters; use `decrypt_text_raw`
 /// when lossless raw-machine text is required.
 pub fn display_plaintext(raw: &str) -> String {
-    raw.replace('Z', " ")
+    display_tactical_plaintext(raw)
 }
 
 /// Encipher a text message from the configuration's initial wheel positions.
@@ -103,6 +86,8 @@ pub fn decrypt_text(config: &M209Config, ciphertext: &str) -> Result<String, Tex
 
 #[cfg(test)]
 mod tests {
+    use old_crypto_rs::helpers::output_as_block;
+
     use super::*;
     use crate::fixtures::{
         PYTHON_REFERENCE_CIPHERTEXT, PYTHON_REFERENCE_PINS, PYTHON_REFERENCE_PLAINTEXT,

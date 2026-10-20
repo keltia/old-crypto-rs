@@ -29,6 +29,10 @@
 //! Source: CSP 1100(C), *Operating Instructions for ECM Mark 2 and CCM Mark 1*,
 //! §§311 and 315, and the controller wiring description in Part 2.
 
+use old_crypto_rs::helpers::{
+    ciphertext_to_military_us, military_us_to_plaintext, plaintext_to_military_us,
+};
+
 use crate::error::TextError;
 
 use super::{
@@ -36,26 +40,15 @@ use super::{
     machine::{SigabaCore, SigabaTables},
 };
 
-
-
-
-
-
-
-
 /// Encode one human plaintext character into the contact presented to the
 /// cipher bank.
 ///
 /// ASCII lowercase is normalized to uppercase.  `Z` deliberately aliases `X`;
 /// ordinary ASCII space uses electrical contact Z.
 pub(crate) fn plaintext_to_contact(ch: char) -> Result<Contact26, TextError> {
-    match ch {
-        ' ' => Ok(contact(b'Z')),
-        'z' | 'Z' => Ok(contact(b'X')),
-        'a'..='y' => Ok(contact(ch.to_ascii_uppercase() as u8)),
-        'A'..='Y' => Ok(contact(ch as u8)),
-        _ => Err(TextError::UnsupportedPlaintext(ch)),
-    }
+    plaintext_to_military_us(ch)
+        .map(|idx| Contact26::new(idx).expect("valid 26-contact index"))
+        .ok_or(TextError::UnsupportedPlaintext(ch))
 }
 
 /// Convert one deciphered electrical contact to human plaintext.
@@ -63,11 +56,7 @@ pub(crate) fn plaintext_to_contact(ch: char) -> Result<Contact26, TextError> {
 /// Electrical Z is the printer's word-space path in decipher mode.
 #[must_use]
 pub(crate) fn contact_to_plaintext(contact: Contact26) -> char {
-    if contact.get() == b'Z' - b'A' {
-        ' '
-    } else {
-        char::from(b'A' + contact.get())
-    }
+    military_us_to_plaintext(contact.get()).expect("valid 26-contact index")
 }
 
 /// Parse one ciphertext character.
@@ -77,12 +66,9 @@ pub(crate) fn contact_to_plaintext(contact: Contact26) -> char {
 pub(crate) fn ciphertext_to_contact(
     ch: char,
 ) -> Result<Option<Contact26>, TextError> {
-    match ch {
-        'a'..='z' => Ok(Some(contact(ch.to_ascii_uppercase() as u8))),
-        'A'..='Z' => Ok(Some(contact(ch as u8))),
-        ' ' | '\t' | '\r' | '\n' => Ok(None),
-        _ => Err(TextError::UnsupportedCiphertext(ch)),
-    }
+    ciphertext_to_military_us(ch)
+        .map(|opt| opt.map(|idx| Contact26::new(idx).expect("valid 26-contact index")))
+        .map_err(TextError::UnsupportedCiphertext)
 }
 
 /// Encipher human plaintext through an already-configured mutable SIGABA core.
@@ -147,6 +133,7 @@ pub(crate) fn decipher_text(
     decipher_text_with(machine, &tables, src)
 }
 
+#[cfg(test)]
 fn contact(letter: u8) -> Contact26 {
     Contact26::new(letter - b'A')
         .expect("ASCII A-Z is always a valid SIGABA alphabet contact")
